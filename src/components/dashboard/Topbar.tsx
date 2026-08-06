@@ -32,24 +32,24 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
 
   return (
     <>
-      <header className="sticky top-0 z-20 h-16 px-4 sm:px-6 flex items-center gap-3 bg-white border-b border-[#3A3A38]/20 select-none">
+      <header className="sticky top-0 z-20 h-18 px-4 sm:px-6 flex items-center gap-3 bg-white/92 backdrop-blur-md border-b border-[#3A3A38]/20 shadow-xs select-none">
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-2 rounded-[10px] text-[#1A3C2B] hover:bg-[#1A3C2B]/10 transition-colors"
+          className="lg:hidden p-2.5 rounded-[10px] text-[#1A3C2B] hover:bg-[#1A3C2B]/10 transition-colors"
           aria-label="Toggle Sidebar Menu"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-6 w-6" />
         </button>
 
         {/* Global Search Bar */}
         <button
           onClick={() => setPaletteOpen(true)}
-          className="flex items-center gap-2 h-9 px-3 rounded-[12px] bg-[#F7F7F5] border border-[#3A3A38]/20 text-xs font-['Public_Sans'] text-[#3A3A38] hover:border-[#1A3C2B] transition-colors w-full max-w-md cursor-pointer"
+          className="flex items-center gap-2.5 h-11 px-4 rounded-[12px] bg-[#F7F7F5]/90 border border-[#3A3A38]/20 text-sm font-['Public_Sans'] text-[#3A3A38] hover:border-[#1A3C2B] transition-colors w-full max-w-md cursor-pointer shadow-xs"
         >
           <Search className="h-4 w-4 text-[#1A3C2B]" />
-          <span className="flex-1 text-left">Search reports, lab values, or specialists…</span>
-          <kbd className="hidden sm:flex items-center gap-0.5 text-[10px] font-['JetBrains_Mono'] bg-white px-1.5 py-0.5 rounded-[10px] border border-[#3A3A38]/20 text-[#3A3A38]">
-            <Command className="h-3 w-3" />K
+          <span className="flex-1 text-left text-sm sm:text-base">Search reports, lab values, or specialists…</span>
+          <kbd className="hidden sm:flex items-center gap-0.5 text-xs font-['JetBrains_Mono'] bg-white px-2 py-0.5 rounded-[8px] border border-[#3A3A38]/20 text-[#3A3A38]">
+            <Command className="h-3.5 w-3.5" />K
           </kbd>
         </button>
 

@@ -1,252 +1,206 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
-  Activity,
   FileText,
-  Calendar,
-  CheckCircle2,
-  AlertTriangle,
-  ChevronRight,
-  TrendingUp,
   Filter,
   Upload,
-  ArrowRight,
-  Sparkles,
+  Search,
+  Trash2,
+  ExternalLink,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import { HeaderComponent } from '@/components/layout/HeaderComponent';
 import { FooterComponent } from '@/components/layout/FooterComponent';
-
-interface TimelineEntry {
-  id: string;
-  title: string;
-  category: 'Blood Tests' | 'Imaging' | 'Prescriptions';
-  date: string;
-  summary: string;
-  status: 'Analyzed' | 'Stable' | 'Action Needed';
-  statusColor: string;
-  value: string;
-  facility: string;
-}
-
-const mockTimeline: TimelineEntry[] = [
-  {
-    id: 't-1',
-    title: 'Comprehensive Blood Panel',
-    category: 'Blood Tests',
-    date: 'Jan 24, 2026',
-    summary: 'Ferritin low at 14 ng/mL. Fasting glucose normal at 92 mg/dL.',
-    status: 'Action Needed',
-    statusColor: 'bg-[#FF8C69]/20 text-[#FF8C69] border-[#FF8C69]',
-    value: '14 ng/mL Ferritin',
-    facility: 'Central Diagnostics Lab',
-  },
-  {
-    id: 't-2',
-    title: 'Lumbar Spine MRI Scan',
-    category: 'Imaging',
-    date: 'Jan 15, 2026',
-    summary: 'Mild L4-L5 disc protrusion noted without nerve root compression.',
-    status: 'Stable',
-    statusColor: 'bg-[#9EFFBF]/30 text-[#1A3C2B] border-[#1A3C2B]',
-    value: 'L4-L5 Mild Protrusion',
-    facility: 'Advanced Imaging Center',
-  },
-  {
-    id: 't-3',
-    title: 'Chest X-Ray Digital',
-    category: 'Imaging',
-    date: 'Jan 02, 2026',
-    summary: 'Clear lung fields without focal consolidation or pleural effusion.',
-    status: 'Analyzed',
-    statusColor: 'bg-[#9EFFBF]/30 text-[#1A3C2B] border-[#1A3C2B]',
-    value: 'Normal Lungs',
-    facility: 'Metro Radiology Institute',
-  },
-  {
-    id: 't-4',
-    title: 'Cardiology Prescription Note',
-    category: 'Prescriptions',
-    date: 'Dec 28, 2025',
-    summary: 'Daily multivitamin & Vitamin D3 (2000 IU) supplementation started.',
-    status: 'Analyzed',
-    statusColor: 'bg-[#F4D35E]/30 text-amber-900 border-[#F4D35E]',
-    value: 'Vitamin D3 Supplement',
-    facility: 'St. Jude Heart Clinic',
-  },
-];
+import { useAuth } from '@/context/AuthContext';
+import { supabase, type ReportRecord } from '@/lib/supabase';
+import toast from 'react-hot-toast';
 
 const categories = ['All Reports', 'Blood Tests', 'Imaging', 'Prescriptions'];
 
 export default function HistoryPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('All Reports');
+  const { profile, session } = useAuth();
   const navigate = useNavigate();
 
-  const filteredHistory = mockTimeline.filter((item) => {
-    if (selectedCategory === 'All Reports') return true;
-    return item.category === selectedCategory;
+  const [reports, setReports] = useState<ReportRecord[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All Reports');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  const userId = profile?.id || session?.user?.id || 'usr-demo';
+
+  // ── Load Real Ingested Reports ──────────────────────────────────────────────
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadReports() {
+      if (!userId) return;
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from('reports')
+        .select('*')
+        .eq('user_id', userId)
+        .order('upload_date', { ascending: false });
+
+      if (isMounted) {
+        if (!error && data && data.length > 0) {
+          setReports(data as ReportRecord[]);
+        }
+        setLoading(false);
+      }
+    }
+
+    loadReports();
+    return () => {
+      isMounted = false;
+    };
+  }, [userId]);
+
+  // Delete Report Handler
+  const handleDeleteReport = async (reportId: string, reportName: string) => {
+    setReports((prev) => prev.filter((r) => r.id !== reportId));
+    toast.success(`Removed "${reportName}" from history.`);
+  };
+
+  // Filtered & Searched Reports
+  const filteredReports = reports.filter((item) => {
+    const matchesCategory = selectedCategory === 'All Reports' || item.report_type === selectedCategory;
+    const matchesSearch = searchQuery.trim() === '' || item.report_name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
   });
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none pt-16">
+    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none pt-16 font-['Public_Sans']">
       <HeaderComponent activeItem="/app/history" />
 
-      <main className="py-12 px-4 sm:px-8 max-w-[80rem] mx-auto w-full space-y-10">
+      <main className="py-12 px-4 sm:px-8 max-w-[80rem] mx-auto w-full space-y-8">
         {/* Page Header */}
         <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
           <div className="space-y-1">
             <span className="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-[#1A3C2B]">
-              LONGITUDINAL TRACKING
+              INGESTED RECORDS
             </span>
             <h1 className="font-['Space_Grotesk'] text-3xl font-bold text-[#111827]">
-              Health & Diagnostic Timeline
+              Report History
             </h1>
             <p className="font-['Public_Sans'] text-xs sm:text-sm text-[#3A3A38]">
-              Track blood panel trends, imaging scan history, and physician notes across time.
+              Manage your uploaded blood panels, diagnostic scans, and medical summaries.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/app/upload')}
-              className="px-4 py-2.5 bg-[#1A3C2B] text-white font-['Public_Sans'] font-semibold text-xs rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="px-4 py-2.5 bg-[#1A3C2B] text-white font-semibold text-xs rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Upload className="h-4 w-4" />
-              <span>Upload Report</span>
+              <span>Upload New Report</span>
             </button>
           </div>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 font-['Public_Sans'] text-xs">
-          <Filter className="h-4 w-4 text-[#3A3A38] shrink-0" />
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-[12px] font-semibold transition-colors shrink-0 cursor-pointer ${
-                selectedCategory === cat
-                  ? 'bg-[#1A3C2B] text-white'
-                  : 'bg-white border border-[#3A3A38]/20 text-[#111827] hover:border-[#1A3C2B]'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Main Content Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Vertical Timeline Left Column */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="relative pl-6 border-l-2 border-[#3A3A38]/20 space-y-8">
-              {filteredHistory.map((item) => (
-                <div key={item.id} className="relative group">
-                  {/* Timeline Dot Marker */}
-                  <div className="absolute -left-[31px] top-1.5 h-4 w-4 rounded-full bg-white border-4 border-[#1A3C2B] transition-transform group-hover:scale-125" />
-
-                  {/* Card Body */}
-                  <div className="bg-white border border-[#3A3A38]/20 p-5 rounded-[14px] space-y-3 hover:border-[#1A3C2B] transition-colors shadow-xs">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-full bg-[#1A3C2B] text-[#9EFFBF] font-['JetBrains_Mono'] text-[10px] uppercase font-bold">
-                          {item.category}
-                        </span>
-                        <span className="font-['JetBrains_Mono'] text-xs text-[#3A3A38]">
-                          {item.date}
-                        </span>
-                      </div>
-                      <span className="font-['JetBrains_Mono'] text-xs font-bold text-[#1A3C2B]">
-                        {item.value}
-                      </span>
-                    </div>
-
-                    <div>
-                      <h3 className="font-['Space_Grotesk'] text-lg font-bold text-[#111827]">
-                        {item.title}
-                      </h3>
-                      <p className="font-['Public_Sans'] text-xs sm:text-sm text-[#3A3A38] mt-1 leading-relaxed">
-                        {item.summary}
-                      </p>
-                    </div>
-
-                    <div className="pt-2 border-t border-[#3A3A38]/10 flex items-center justify-between text-xs">
-                      <span className="font-['JetBrains_Mono'] text-[#3A3A38]">
-                        Facility: {item.facility}
-                      </span>
-                      <button
-                        onClick={() => navigate('/app/ai-analysis')}
-                        className="text-[#1A3C2B] font-semibold hover:underline inline-flex items-center gap-1 cursor-pointer"
-                      >
-                        <span>View Analysis</span>
-                        <ArrowRight className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* Search Bar & Category Filter Pills */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+          {/* Search Input */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#3A3A38]" />
+            <input
+              type="text"
+              placeholder="Search reports by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#3A3A38]/20 rounded-[12px] text-xs text-[#111827] focus:outline-none focus:border-[#1A3C2B] transition-colors"
+            />
           </div>
 
-          {/* Right Sidebar Stats & Vital Trends */}
-          <div className="space-y-6">
-            {/* Health Status Summary Box */}
-            <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 space-y-3 shadow-xs">
-              <div className="flex items-center gap-2 text-[#1A3C2B]">
-                <Activity className="h-5 w-5" />
-                <h4 className="font-['Space_Grotesk'] font-bold text-lg text-[#111827]">
-                  Health Summary Status
-                </h4>
-              </div>
-              <p className="font-['Public_Sans'] text-xs text-[#3A3A38] leading-relaxed">
-                Overall vitals are stable across the past 4 months. Serum Ferritin remains the primary biomarker requiring ongoing dietary monitoring.
-              </p>
-            </div>
+          {/* Filter Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+            <Filter className="h-4 w-4 text-[#3A3A38] shrink-0" />
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3.5 py-1.5 rounded-[12px] font-semibold transition-colors shrink-0 cursor-pointer ${
+                  selectedCategory === cat
+                    ? 'bg-[#1A3C2B] text-white'
+                    : 'bg-white border border-[#3A3A38]/20 text-[#111827] hover:border-[#1A3C2B]'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
 
-            {/* Progress Bars (Iron & Vitamin D) */}
-            <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 space-y-4 shadow-xs">
-              <h4 className="font-['Space_Grotesk'] font-bold text-lg text-[#111827]">
-                Biomarker Progress
-              </h4>
+        {/* Reports Table / List */}
+        <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 space-y-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <h3 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
+              Stored Medical Reports ({filteredReports.length})
+            </h3>
+          </div>
 
-              <div className="space-y-3 font-['Public_Sans'] text-xs">
-                <div>
-                  <div className="flex justify-between font-semibold mb-1">
-                    <span>Iron Reserve Stability</span>
-                    <span className="font-['JetBrains_Mono'] text-[#FF8C69]">65%</span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#FF8C69] w-[65%]" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between font-semibold mb-1">
-                    <span>Vitamin D Target</span>
-                    <span className="font-['JetBrains_Mono'] text-amber-600">45%</span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#F4D35E] w-[45%]" />
-                  </div>
-                </div>
+          <div className="overflow-x-auto">
+            {loading ? (
+              <div className="py-12 text-center text-xs font-['JetBrains_Mono'] text-[#3A3A38] flex items-center justify-center gap-2">
+                <div className="h-4 w-4 border-2 border-[#1A3C2B] border-t-transparent rounded-full animate-spin" />
+                <span>Loading report history...</span>
               </div>
-            </div>
-
-            {/* Trend Visualization (Ferritin over 4 months) */}
-            <div className="bg-[#1A3C2B] text-white border border-[#3A3A38]/30 rounded-[14px] p-6 space-y-3 shadow-xs">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-[#9EFFBF]" />
-                <span className="font-['JetBrains_Mono'] text-xs uppercase text-[#9EFFBF]">
-                  4-MONTH TREND: FERRITIN
-                </span>
+            ) : filteredReports.length === 0 ? (
+              <div className="py-12 text-center space-y-2">
+                <AlertCircle className="h-8 w-8 text-[#3A3A38]/40 mx-auto" />
+                <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">
+                  No matching medical reports found. Click "Upload New Report" to ingest a document!
+                </p>
               </div>
-              <p className="font-['Public_Sans'] text-xs text-slate-300">
-                Oct: 18 ng/mL → Nov: 16 ng/mL → Dec: 15 ng/mL → Jan: 14 ng/mL
-              </p>
-              <div className="pt-2 border-t border-white/10 text-[11px] font-['JetBrains_Mono'] text-[#9EFFBF]">
-                ➡️ Trend slope is stabilizing after supplementation.
-              </div>
-            </div>
+            ) : (
+              <table className="w-full text-left font-['Public_Sans'] text-xs sm:text-sm">
+                <thead>
+                  <tr className="border-b border-[#3A3A38]/20 font-['JetBrains_Mono'] uppercase text-[#3A3A38] text-[10px]">
+                    <th className="py-3 px-4">Report Name</th>
+                    <th className="py-3 px-4">Category</th>
+                    <th className="py-3 px-4">Upload Date</th>
+                    <th className="py-3 px-4">Risk / Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#3A3A38]/10">
+                  {filteredReports.map((item) => (
+                    <tr key={item.id} className="hover:bg-[#F7F7F5] transition-colors">
+                      <td className="py-4 px-4 font-bold text-[#111827] flex items-center gap-2.5">
+                        <FileText className="h-4 w-4 text-[#1A3C2B] shrink-0" />
+                        <span className="truncate max-w-sm">{item.report_name}</span>
+                      </td>
+                      <td className="py-4 px-4 text-[#3A3A38]">{item.report_type}</td>
+                      <td className="py-4 px-4 font-['JetBrains_Mono'] text-[#3A3A38]">{item.upload_date}</td>
+                      <td className="py-4 px-4">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#9EFFBF]/50 text-[#1A3C2B] font-['JetBrains_Mono'] font-bold text-[10px]">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-right space-x-2">
+                        <button
+                          onClick={() => navigate('/app/ai-analysis')}
+                          className="px-3.5 py-1.5 bg-[#1A3C2B] text-white font-semibold text-xs rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>Open Analysis</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteReport(item.id, item.report_name)}
+                          className="p-1.5 text-[#3A3A38] hover:text-red-600 transition-colors inline-block cursor-pointer"
+                          title="Delete Report"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </main>

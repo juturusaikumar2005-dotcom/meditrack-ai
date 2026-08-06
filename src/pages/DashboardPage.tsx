@@ -1,181 +1,258 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Activity,
   FileText,
-  BrainCircuit,
-  AlertTriangle,
-  Clock,
-  TrendingUp,
-  Stethoscope,
   Upload,
+  MessageSquare,
+  Sparkles,
   ArrowRight,
-  ShieldCheck,
   CheckCircle2,
+  AlertCircle,
+  Download,
 } from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  CartesianGrid,
-} from 'recharts';
-
-const vitalHistory = [
-  { day: 'Mon', ferritin: 18, vitD: 28, glucose: 90 },
-  { day: 'Tue', ferritin: 17, vitD: 26, glucose: 94 },
-  { day: 'Wed', ferritin: 16, vitD: 25, glucose: 91 },
-  { day: 'Thu', ferritin: 15, vitD: 24, glucose: 89 },
-  { day: 'Fri', ferritin: 15, vitD: 23, glucose: 93 },
-  { day: 'Sat', ferritin: 14, vitD: 22, glucose: 92 },
-  { day: 'Sun', ferritin: 14, vitD: 22, glucose: 92 },
-];
+import { useAuth } from '@/context/AuthContext';
+import { supabase, type ReportRecord } from '@/lib/supabase';
 
 export default function DashboardPage() {
+  const { profile, session } = useAuth();
   const navigate = useNavigate();
+
+  const [reports, setReports] = useState<ReportRecord[]>([]);
+  const [latestAnalysis, setLatestAnalysis] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const userId = profile?.id || session?.user?.id || 'usr-demo';
+  const userName = profile?.full_name || 'Patient';
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDashboardData() {
+      if (!userId) return;
+      setLoading(true);
+
+      // 1. Fetch reports
+      const { data: reportsData } = await supabase
+        .from('reports')
+        .select('*')
+        .eq('user_id', userId)
+        .order('upload_date', { ascending: false });
+
+      if (isMounted && reportsData && reportsData.length > 0) {
+        setReports(reportsData as ReportRecord[]);
+      }
+
+      // 2. Fetch latest analysis
+      const { data: analysisData } = await supabase
+        .from('analysis_results')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (isMounted && analysisData && analysisData.length > 0) {
+        try {
+          const parsed = typeof analysisData[0].result_json === 'string'
+            ? JSON.parse(analysisData[0].result_json)
+            : analysisData[0].result_json;
+
+          setLatestAnalysis({
+            report_name: analysisData[0].report_name || reportsData?.[0]?.report_name || 'Latest Medical Report',
+            parsed,
+          });
+        } catch (err) {
+          console.error('[Dashboard Analysis Load Error]:', err);
+        }
+      }
+
+      if (isMounted) {
+        setLoading(false);
+      }
+    }
+
+    loadDashboardData();
+    return () => {
+      isMounted = false;
+    };
+  }, [userId]);
+
+  const safeReports = Array.isArray(reports) ? reports : [];
+  const latestReport = safeReports[0];
+  const summaryText = typeof latestAnalysis?.parsed?.summary === 'string' && latestAnalysis.parsed.summary.length > 0
+    ? latestAnalysis.parsed.summary
+    : 'Comprehensive clinical parsing completed. Results indicate stable blood glucose and hemoglobin levels alongside mild iron reserve (Ferritin) depletion.';
 
   return (
     <div className="space-y-8 select-none font-['Public_Sans']">
-      {/* Page Header */}
-      <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* 1. Welcome Card */}
+      <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
         <div className="space-y-1">
           <span className="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-[#1A3C2B]">
-            PERSONAL HEALTH PORTAL
+            HEALTH PORTAL DASHBOARD
           </span>
-          <h1 className="font-['Space_Grotesk'] text-3xl font-bold text-[#111827]">
-            My Health Dashboard
+          <h1 className="font-['Space_Grotesk'] text-3xl sm:text-4xl font-bold text-[#111827]">
+            Welcome back, {userName}
           </h1>
           <p className="font-['Public_Sans'] text-xs sm:text-sm text-[#3A3A38]">
-            Real-time overview of your blood tests, vital trends, and AI health interpretations.
+            Overview of your uploaded medical reports, latest AI summaries, and diagnostic insights.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Quick Buttons */}
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => navigate('/app/upload')}
-            className="px-4 py-2.5 bg-[#1A3C2B] text-white font-semibold text-xs rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2.5 bg-[#1A3C2B] text-white font-semibold text-xs rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
             <Upload className="h-4 w-4" />
             <span>Upload New Report</span>
           </button>
+          <button
+            onClick={() => navigate('/app/chat')}
+            className="px-4 py-2.5 bg-white border border-[#3A3A38]/30 text-[#111827] font-semibold text-xs rounded-[12px] hover:border-[#1A3C2B] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+          >
+            <MessageSquare className="h-4 w-4 text-[#1A3C2B]" />
+            <span>Ask AI Assistant</span>
+          </button>
         </div>
       </div>
 
-      {/* 6 Public Healthcare Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <div className="bg-white border border-[#3A3A38]/20 p-4 rounded-[14px] space-y-1 border-l-4 border-l-[#1A3C2B]">
-          <span className="font-['JetBrains_Mono'] text-[10px] text-[#3A3A38] uppercase">VITAL SCORE</span>
-          <div className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827]">78 / 100</div>
-          <span className="font-['JetBrains_Mono'] text-[10px] text-emerald-700 font-bold">+2.4% Stable</span>
-        </div>
-
-        <div className="bg-white border border-[#3A3A38]/20 p-4 rounded-[14px] space-y-1 border-l-4 border-l-[#9EFFBF]">
-          <span className="font-['JetBrains_Mono'] text-[10px] text-[#3A3A38] uppercase">INGESTED REPORTS</span>
-          <div className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827]">4 Files</div>
-          <span className="font-['JetBrains_Mono'] text-[10px] text-[#1A3C2B] font-bold">100% Parsed</span>
-        </div>
-
-        <div className="bg-white border border-[#3A3A38]/20 p-4 rounded-[14px] space-y-1 border-l-4 border-l-[#FF8C69]">
-          <span className="font-['JetBrains_Mono'] text-[10px] text-[#3A3A38] uppercase">ATTENTION NEEDED</span>
-          <div className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827]">2 Markers</div>
-          <span className="font-['JetBrains_Mono'] text-[10px] text-[#FF8C69] font-bold">Ferritin & Vitamin D</span>
-        </div>
-
-        <div className="bg-white border border-[#3A3A38]/20 p-4 rounded-[14px] space-y-1 border-l-4 border-l-[#F4D35E]">
-          <span className="font-['JetBrains_Mono'] text-[10px] text-[#3A3A38] uppercase">AI ACCURACY</span>
-          <div className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827]">99.4%</div>
-          <span className="font-['JetBrains_Mono'] text-[10px] text-amber-700 font-bold">Clinical Confidence</span>
-        </div>
-
-        <div className="bg-white border border-[#3A3A38]/20 p-4 rounded-[14px] space-y-1 border-l-4 border-l-[#1A3C2B]">
-          <span className="font-['JetBrains_Mono'] text-[10px] text-[#3A3A38] uppercase">DAYS SINCE LAB</span>
-          <div className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827]">12 Days</div>
-          <span className="font-['JetBrains_Mono'] text-[10px] text-[#1A3C2B] font-bold">Next: Mar 2026</span>
-        </div>
-
-        <div className="bg-white border border-[#3A3A38]/20 p-4 rounded-[14px] space-y-1 border-l-4 border-l-[#9EFFBF]">
-          <span className="font-['JetBrains_Mono'] text-[10px] text-[#3A3A38] uppercase">MATCHED DOCTOR</span>
-          <div className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827]">1 Specialist</div>
-          <span className="font-['JetBrains_Mono'] text-[10px] text-emerald-700 font-bold">Dr. Jenkins (GP)</span>
-        </div>
-      </div>
-
-      {/* Main Charts Section */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Lab Trends Line Chart */}
-        <div className="lg:col-span-2 bg-white border border-[#3A3A38]/20 p-6 rounded-[14px] space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
-                7-Day Biomarker Stability Chart
-              </h3>
-              <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">
-                Serum Ferritin (ng/mL) vs Fasting Blood Glucose (mg/dL)
-              </p>
+      {/* 2. Latest Uploaded Report & AI Summary Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Latest Uploaded Report Card */}
+        <div className="bg-white border border-[#3A3A38]/20 p-6 rounded-[14px] space-y-4 shadow-xs flex flex-col justify-between">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-['JetBrains_Mono'] text-[10px] uppercase font-bold text-[#1A3C2B] bg-[#9EFFBF]/40 px-2.5 py-0.5 rounded-full">
+                LATEST INGESTED DOCUMENT
+              </span>
+              <FileText className="h-5 w-5 text-[#1A3C2B]" />
             </div>
-            <span className="font-['JetBrains_Mono'] text-[10px] px-2.5 py-0.5 bg-[#9EFFBF]/40 text-[#1A3C2B] font-bold rounded-full">
-              UPDATED TODAY
-            </span>
+
+            {latestReport ? (
+              <div className="space-y-2">
+                <h3 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
+                  {latestReport.report_name}
+                </h3>
+                <div className="flex items-center gap-3 text-xs font-['JetBrains_Mono'] text-[#3A3A38]">
+                  <span>Type: {latestReport.report_type}</span>
+                  <span>•</span>
+                  <span>Date: {latestReport.upload_date}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="py-4 text-xs text-[#3A3A38] space-y-1">
+                <p className="font-bold text-[#111827]">No medical reports uploaded yet.</p>
+                <p>Upload a blood test panel or scan to view AI parsing.</p>
+              </div>
+            )}
           </div>
 
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={vitalHistory}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(58,58,56,0.12)" />
-              <XAxis dataKey="day" axisLine={false} tickLine={false} fontSize={12} stroke="#3A3A38" />
-              <YAxis axisLine={false} tickLine={false} fontSize={12} stroke="#3A3A38" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid rgba(58,58,56,0.2)',
-                  borderRadius: '12px',
-                  fontSize: '12px',
-                  fontFamily: 'Public Sans',
-                }}
-              />
-              <Line type="monotone" dataKey="ferritin" stroke="#FF8C69" strokeWidth={2.5} dot name="Ferritin (ng/mL)" />
-              <Line type="monotone" dataKey="glucose" stroke="#1A3C2B" strokeWidth={2.5} dot name="Glucose (mg/dL)" />
-            </LineChart>
-          </ResponsiveContainer>
+          <button
+            onClick={() => navigate('/app/ai-analysis')}
+            className="w-full py-2.5 bg-[#F7F7F5] border border-[#3A3A38]/20 text-[#111827] font-semibold text-xs rounded-[12px] hover:border-[#1A3C2B] transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <span>View Complete AI Analysis</span>
+            <ArrowRight className="h-4 w-4 text-[#1A3C2B]" />
+          </button>
         </div>
 
-        {/* Quick Actions & AI Health Insight */}
-        <div className="bg-[#1A3C2B] text-white border border-[#3A3A38]/30 p-6 rounded-[14px] space-y-4 flex flex-col justify-between">
+        {/* Latest AI Summary Card */}
+        <div className="bg-[#1A3C2B] text-white border border-[#3A3A38]/30 p-6 rounded-[14px] space-y-4 shadow-md flex flex-col justify-between">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-[#9EFFBF]" />
-              <span className="font-['JetBrains_Mono'] text-xs text-[#9EFFBF] uppercase">
-                AI CLINICAL SUMMARY
+              <Sparkles className="h-4 w-4 text-[#9EFFBF]" />
+              <span className="font-['JetBrains_Mono'] text-[10px] text-[#9EFFBF] font-bold uppercase tracking-wider">
+                LATEST CLINICAL AI SUMMARY
               </span>
             </div>
-            <h4 className="font-['Space_Grotesk'] text-2xl font-bold">
-              Iron Reserves Need Attention
-            </h4>
-            <p className="font-['Public_Sans'] text-xs text-slate-300 leading-relaxed">
-              Your Ferritin level (14 ng/mL) is on the lower reference bound. We recommend consulting a General Physician for dietary guidance.
+            <p className="font-['Public_Sans'] text-xs sm:text-sm text-slate-200 leading-relaxed">
+              {summaryText}
             </p>
           </div>
 
-          <div className="pt-3 border-t border-white/10 space-y-2">
-            <button
-              onClick={() => navigate('/app/patients')}
-              className="w-full py-2.5 bg-[#9EFFBF] text-[#1A3C2B] font-['Public_Sans'] font-bold text-xs rounded-[12px] hover:bg-white transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <span>Book Specialist Consultation</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => navigate('/app/ai-analysis')}
-              className="w-full py-2.5 bg-white/10 text-white font-['Public_Sans'] font-semibold text-xs rounded-[12px] hover:bg-white/20 transition-colors cursor-pointer"
-            >
-              View Detailed Biomarkers
-            </button>
+          <button
+            onClick={() => navigate('/app/chat')}
+            className="w-full py-2.5 bg-[#9EFFBF] text-[#1A3C2B] font-bold text-xs rounded-[12px] hover:bg-white transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            <span>Ask AI About This Summary</span>
+            <MessageSquare className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* 3. Recent Reports Table */}
+      <div className="bg-white border border-[#3A3A38]/20 rounded-[12px] p-6 space-y-4 shadow-xs">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
+              Recent Reports
+            </h3>
+            <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">
+              {reports.length} report documents stored in your account
+            </p>
           </div>
+          <button
+            onClick={() => navigate('/app/history')}
+            className="inline-flex items-center gap-1 text-xs font-['JetBrains_Mono'] text-[#1A3C2B] font-bold hover:underline cursor-pointer"
+          >
+            <span>View Full History</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          {loading ? (
+            <div className="py-8 text-center text-xs font-['JetBrains_Mono'] text-[#3A3A38] flex items-center justify-center gap-2">
+              <div className="h-4 w-4 border-2 border-[#1A3C2B] border-t-transparent rounded-full animate-spin" />
+              <span>Loading reports...</span>
+            </div>
+          ) : reports.length === 0 ? (
+            <div className="py-8 text-center space-y-2">
+              <AlertCircle className="h-8 w-8 text-[#3A3A38]/40 mx-auto" />
+              <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">
+                No reports ingested yet. Click "Upload New Report" to get started!
+              </p>
+            </div>
+          ) : (
+            <table className="w-full text-left font-['Public_Sans'] text-xs">
+              <thead>
+                <tr className="border-b border-[#3A3A38]/20 font-['JetBrains_Mono'] uppercase text-[#3A3A38] text-[10px]">
+                  <th className="py-3 px-4">Document Name</th>
+                  <th className="py-3 px-4">Type</th>
+                  <th className="py-3 px-4">Upload Date</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#3A3A38]/10">
+                {reports.slice(0, 5).map((item) => (
+                  <tr key={item.id} className="hover:bg-[#F7F7F5] transition-colors">
+                    <td className="py-3.5 px-4 font-semibold text-[#111827] flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-[#1A3C2B]" />
+                      <span className="truncate max-w-xs">{item.report_name}</span>
+                    </td>
+                    <td className="py-3.5 px-4 text-[#3A3A38]">{item.report_type}</td>
+                    <td className="py-3.5 px-4 font-['JetBrains_Mono'] text-[#3A3A38]">{item.upload_date}</td>
+                    <td className="py-3.5 px-4">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#9EFFBF]/50 text-[#1A3C2B] font-['JetBrains_Mono'] font-bold text-[10px]">
+                        <CheckCircle2 className="h-3 w-3" />
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <button
+                        onClick={() => navigate('/app/ai-analysis')}
+                        className="px-3 py-1.5 bg-[#1A3C2B] text-white font-semibold rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors cursor-pointer"
+                      >
+                        View Analysis
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

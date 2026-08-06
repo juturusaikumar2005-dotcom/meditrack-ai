@@ -55,25 +55,21 @@ export function HeaderComponent({
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 h-20 lg:h-22 transition-all duration-300 flex items-center px-6 sm:px-10 lg:px-14 select-none ${
-        scrolled
-          ? 'bg-[#F7F7F5]/98 backdrop-blur-md border-b border-[#3A3A38]/20 shadow-xs'
-          : 'bg-[#F7F7F5]/70 backdrop-blur-xs border-b border-[#3A3A38]/10'
-      }`}
+      className={`fixed top-0 inset-x-0 z-50 h-20 lg:h-22 transition-all duration-300 flex items-center px-6 sm:px-10 lg:px-14 select-none bg-[#F7F7F5]/95 backdrop-blur-md border-b border-[#3A3A38]/20 shadow-xs`}
     >
       <div className="max-w-[88rem] mx-auto w-full flex items-center justify-between gap-6">
         {/* Brand Logo & Application Name */}
         <Link to="/" className="flex items-center gap-3 sm:gap-3.5 group shrink-0">
-          <div className="h-9 w-9 md:h-[42px] md:w-[42px] lg:h-12 lg:w-12 bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center rounded-[10px] transition-transform group-hover:scale-105 border border-[#1A3C2B]">
-            <HeartHandshake className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7" />
+          <div className="h-10 w-10 md:h-[44px] md:w-[44px] lg:h-12 lg:w-12 bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center rounded-[10px] transition-transform group-hover:scale-105 border border-[#1A3C2B]">
+            <HeartHandshake className="h-6 w-6 lg:h-7 lg:w-7" />
           </div>
-          <span className="font-['Space_Grotesk'] text-xl sm:text-2xl md:text-3xl lg:text-[36px] font-bold text-[#111827] tracking-tight leading-none">
+          <span className="font-['Space_Grotesk'] text-2xl sm:text-3xl lg:text-[36px] font-bold text-[#111827] tracking-tight leading-none">
             MEDITRACK <span className="text-[#1A3C2B]">AI</span>
           </span>
         </Link>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-6 lg:gap-10 text-sm lg:text-base font-semibold font-['Public_Sans'] text-[#3A3A38]">
+        <nav className="hidden md:flex items-center gap-6 lg:gap-10 text-base lg:text-lg font-medium font-['Public_Sans'] text-[#3A3A38]">
           {navLinks.map((link) => {
             const isActive = currentPath === link.href;
             const isRouterLink = link.href.startsWith('/');
@@ -105,7 +101,7 @@ export function HeaderComponent({
         <div className="hidden md:flex items-center font-['Public_Sans']">
           <button
             onClick={handleGetStartedClick}
-            className="px-6 py-3 text-sm lg:text-base font-semibold bg-[#1A3C2B] text-white hover:bg-[#1A3C2B]/90 rounded-[12px] transition-all active:scale-95 shadow-none border border-[#1A3C2B] cursor-pointer"
+            className="px-6 py-3.5 text-base lg:text-lg font-semibold bg-[#1A3C2B] text-white hover:bg-[#1A3C2B]/90 rounded-[12px] transition-all active:scale-95 shadow-xs border border-[#1A3C2B] cursor-pointer"
           >
             Get Started
           </button>

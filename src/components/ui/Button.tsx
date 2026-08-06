@@ -15,7 +15,7 @@ interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-[#1A3C2B] text-white hover:bg-[#1A3C2B]/90 border border-[#1A3C2B]',
+  primary: 'bg-[#1A3C2B] text-white hover:bg-[#1A3C2B]/90 border border-[#1A3C2B] shadow-xs',
   secondary: 'bg-[#F7F7F5] text-[#111827] border border-[#3A3A38]/20 hover:bg-[#3A3A38]/10',
   ghost: 'text-[#1A3C2B] hover:bg-[#1A3C2B]/10',
   glass: 'bg-white text-[#111827] border border-[#3A3A38]/20 hover:bg-[#F7F7F5]',
@@ -24,9 +24,9 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'h-9 px-4 text-xs font-semibold rounded-[12px] gap-1.5',
-  md: 'h-11 px-6 text-sm font-semibold rounded-[12px] gap-2',
-  lg: 'h-14 px-8 text-base font-semibold rounded-[12px] gap-2.5',
+  sm: 'h-10 px-4 text-xs sm:text-sm font-semibold rounded-[12px] gap-1.5',
+  md: 'h-12 px-6 text-sm sm:text-base font-semibold rounded-[12px] gap-2',
+  lg: 'h-14 px-8 text-base sm:text-lg font-bold rounded-[12px] gap-2.5',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -37,7 +37,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
       className={clsx(
-        'inline-flex items-center justify-center font-["Public_Sans"] transition-all cursor-pointer select-none relative overflow-hidden shadow-none',
+        'inline-flex items-center justify-center font-["Public_Sans"] transition-all cursor-pointer select-none relative overflow-hidden',
         variantClasses[variant],
         sizeClasses[size],
         fullWidth && 'w-full',

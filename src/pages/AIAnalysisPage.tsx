@@ -138,12 +138,12 @@ export default function AIAnalysisPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none pt-16">
+    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none pt-16 font-['Public_Sans']">
       <HeaderComponent activeItem="/app/ai-analysis" />
 
       <main className="py-12 px-4 sm:px-8 max-w-[80rem] mx-auto w-full space-y-10">
         {/* Report Header */}
-        <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
+        <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="px-3 py-1 bg-[#9EFFBF]/50 text-[#1A3C2B] font-['JetBrains_Mono'] font-bold text-xs uppercase rounded-full">
@@ -156,37 +156,37 @@ export default function AIAnalysisPage() {
             <h1 className="font-['Space_Grotesk'] text-3xl sm:text-4xl font-bold text-[#111827]">
               {reportName}
             </h1>
-            <p className="font-['Public_Sans'] text-xs sm:text-sm text-[#3A3A38]">
+            <p className="font-['Public_Sans'] text-sm sm:text-base text-[#3A3A38]">
               Ingested & Evaluated for Patient: <span className="font-semibold text-[#111827]">{userName}</span> · {keyFindings.length} Biomarkers Analyzed
             </p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               onClick={() => navigate('/app/chat')}
-              className="px-4 py-2.5 bg-[#1A3C2B] text-white font-['Public_Sans'] text-xs font-semibold rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="px-5 py-3 bg-[#1A3C2B] text-white text-sm sm:text-base font-semibold rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors flex items-center gap-2 cursor-pointer shadow-xs"
             >
               <MessageSquare className="h-4 w-4 text-[#9EFFBF]" />
               <span>Ask AI Assistant</span>
             </button>
             <button
               onClick={() => navigate('/app/upload')}
-              className="px-4 py-2.5 bg-white border border-[#3A3A38]/30 text-[#111827] font-['Public_Sans'] text-xs font-semibold rounded-[12px] hover:border-[#1A3C2B] transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-3 bg-white border border-[#3A3A38]/30 text-[#111827] text-sm sm:text-base font-semibold rounded-[12px] hover:border-[#1A3C2B] transition-colors flex items-center gap-2 cursor-pointer shadow-xs"
             >
               <Upload className="h-4 w-4" />
               <span>Upload New</span>
             </button>
             <button
               onClick={handleDownloadPDF}
-              className="p-2.5 bg-white border border-[#3A3A38]/30 text-[#111827] rounded-[12px] hover:border-[#1A3C2B] transition-colors cursor-pointer"
+              className="p-3 bg-white border border-[#3A3A38]/30 text-[#111827] rounded-[12px] hover:border-[#1A3C2B] transition-colors cursor-pointer"
               title="Download PDF"
             >
               <Download className="h-4 w-4" />
             </button>
             <button
               onClick={handleShare}
-              className="p-2.5 bg-white border border-[#3A3A38]/30 text-[#111827] rounded-[12px] hover:border-[#1A3C2B] transition-colors cursor-pointer"
+              className="p-3 bg-white border border-[#3A3A38]/30 text-[#111827] rounded-[12px] hover:border-[#1A3C2B] transition-colors cursor-pointer"
               title="Share"
             >
               <Share2 className="h-4 w-4" />
@@ -195,14 +195,14 @@ export default function AIAnalysisPage() {
         </div>
 
         {/* AI Medical Summary Banner */}
-        <div className="bg-[#1A3C2B] text-white border-l-4 border-l-[#9EFFBF] rounded-[14px] p-6 space-y-2">
+        <div className="bg-[#1A3C2B] text-white border-l-4 border-l-[#9EFFBF] rounded-[14px] p-6 sm:p-8 space-y-2.5 shadow-md">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#9EFFBF]" />
+            <Sparkles className="h-5 w-5 text-[#9EFFBF]" />
             <span className="font-['JetBrains_Mono'] text-xs text-[#9EFFBF] font-bold uppercase tracking-wider">
               CLINICAL AI SUMMARY
             </span>
           </div>
-          <p className="font-['Public_Sans'] text-sm sm:text-base text-slate-200 leading-relaxed">
+          <p className="font-['Public_Sans'] text-base sm:text-lg text-slate-200 leading-relaxed">
             {summaryText}
           </p>
         </div>
@@ -246,18 +246,18 @@ export default function AIAnalysisPage() {
             return (
               <div
                 key={idx}
-                className={`h-full flex flex-col justify-between bg-white border border-[#3A3A38]/20 border-l-4 ${borderColor} p-6 rounded-[14px] space-y-3 shadow-xs`}
+                className={`h-full flex flex-col justify-between bg-white border border-[#3A3A38]/20 border-l-4 ${borderColor} p-6 sm:p-8 rounded-[14px] space-y-3.5 shadow-xs`}
               >
                 <div className="flex items-center justify-between">
-                  <span className={`font-['JetBrains_Mono'] text-[10px] font-bold uppercase ${badgeColor}`}>
+                  <span className={`font-['JetBrains_Mono'] text-xs sm:text-sm font-bold uppercase ${badgeColor}`}>
                     {badgeText}
                   </span>
-                  <Icon className={`h-5 w-5 ${iconColor}`} />
+                  <Icon className={`h-6 w-6 ${iconColor}`} />
                 </div>
-                <h3 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
+                <h3 className="font-['Space_Grotesk'] text-xl sm:text-2xl font-bold text-[#111827]">
                   {item.title || item.biomarker}
                 </h3>
-                <p className="font-['Public_Sans'] text-xs text-[#3A3A38] leading-relaxed">
+                <p className="font-['Public_Sans'] text-sm sm:text-base text-[#3A3A38] leading-relaxed">
                   {item.description || `${item.biomarker} measured at ${item.value} (Target: ${item.range}).`}
                 </p>
               </div>
@@ -266,19 +266,19 @@ export default function AIAnalysisPage() {
         </div>
 
         {/* Detailed Biomarker Results Table */}
-        <div className="bg-white border border-[#3A3A38]/20 rounded-[12px] p-6 space-y-4 shadow-xs">
-          <h3 className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827]">
+        <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 sm:p-8 space-y-4 shadow-xs">
+          <h3 className="font-['Space_Grotesk'] text-2xl sm:text-3xl font-bold text-[#111827]">
             Complete Biomarker Analysis
           </h3>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left font-['Public_Sans'] text-xs sm:text-sm">
+            <table className="w-full text-left font-['Public_Sans'] text-sm sm:text-base">
               <thead>
-                <tr className="border-b border-[#3A3A38]/20 font-['JetBrains_Mono'] text-[10px] uppercase text-[#3A3A38]">
-                  <th className="py-3 px-4">Biomarker</th>
-                  <th className="py-3 px-4">Measured Value</th>
-                  <th className="py-3 px-4">Reference Range</th>
-                  <th className="py-3 px-4">Clinical Marker</th>
+                <tr className="border-b border-[#3A3A38]/20 font-['JetBrains_Mono'] text-xs uppercase text-[#3A3A38]">
+                  <th className="py-3.5 px-4">Biomarker</th>
+                  <th className="py-3.5 px-4">Measured Value</th>
+                  <th className="py-3.5 px-4">Reference Range</th>
+                  <th className="py-3.5 px-4">Clinical Marker</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#3A3A38]/10">
@@ -294,13 +294,13 @@ export default function AIAnalysisPage() {
 
                   return (
                     <tr key={idx} className="hover:bg-[#F7F7F5] transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-[#111827]">{b.biomarker}</td>
-                      <td className="py-3.5 px-4 font-['JetBrains_Mono'] font-semibold text-[#111827]">
+                      <td className="py-4 px-4 font-bold text-[#111827]">{b.biomarker}</td>
+                      <td className="py-4 px-4 font-['JetBrains_Mono'] font-bold text-[#111827] text-base sm:text-lg">
                         {b.value}
                       </td>
-                      <td className="py-3.5 px-4 font-['JetBrains_Mono'] text-[#3A3A38]">{b.range}</td>
-                      <td className="py-3.5 px-4">
-                        <span className={`inline-block font-['JetBrains_Mono'] font-bold text-xs ${statusColor}`}>
+                      <td className="py-4 px-4 font-['JetBrains_Mono'] text-[#3A3A38]">{b.range}</td>
+                      <td className="py-4 px-4">
+                        <span className={`inline-block font-['JetBrains_Mono'] font-bold text-xs sm:text-sm ${statusColor}`}>
                           {b.status}
                         </span>
                       </td>
@@ -314,14 +314,14 @@ export default function AIAnalysisPage() {
 
         {/* Lifestyle & Precaution Guidelines */}
         {lifestyle && lifestyle.length > 0 && (
-          <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 space-y-4 shadow-xs">
-            <h3 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
+          <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 sm:p-8 space-y-4 shadow-xs">
+            <h3 className="font-['Space_Grotesk'] text-xl sm:text-2xl font-bold text-[#111827]">
               Actionable Health Recommendations
             </h3>
-            <ul className="space-y-2.5 font-['Public_Sans'] text-xs sm:text-sm text-[#111827]">
+            <ul className="space-y-3 font-['Public_Sans'] text-base sm:text-lg text-[#111827]">
               {lifestyle.map((rec, i) => (
-                <li key={i} className="flex items-start gap-2.5">
-                  <span className="mt-0.5 h-4 w-4 rounded-full bg-[#9EFFBF] text-[#1A3C2B] flex items-center justify-center shrink-0 font-bold text-[10px]">
+                <li key={i} className="flex items-start gap-3">
+                  <span className="mt-1 h-5 w-5 rounded-full bg-[#9EFFBF] text-[#1A3C2B] flex items-center justify-center shrink-0 font-bold text-xs">
                     ✓
                   </span>
                   <span>{rec}</span>
@@ -332,30 +332,30 @@ export default function AIAnalysisPage() {
         )}
 
         {/* Specialist Referral Section */}
-        <div className="bg-[#1A3C2B] text-white border border-[#3A3A38]/30 rounded-[14px] p-8 space-y-6 shadow-md">
+        <div className="bg-[#1A3C2B] text-white border border-[#3A3A38]/30 rounded-[14px] p-6 sm:p-8 space-y-6 shadow-md">
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 bg-white/10 text-[#9EFFBF] border border-white/20 font-['JetBrains_Mono'] text-xs uppercase rounded-full">
+            <span className="px-3.5 py-1 bg-white/10 text-[#9EFFBF] border border-white/20 font-['JetBrains_Mono'] text-xs uppercase font-bold rounded-full">
               RECOMMENDED CLINICAL REFERRAL
             </span>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 items-center">
             <div className="md:col-span-2 space-y-3">
-              <h2 className="font-['Space_Grotesk'] text-3xl font-bold text-white">
+              <h2 className="font-['Space_Grotesk'] text-3xl sm:text-4xl font-bold text-white">
                 Consult a {specialist}
               </h2>
-              <p className="font-['Public_Sans'] text-sm text-slate-300 leading-relaxed">
+              <p className="font-['Public_Sans'] text-base sm:text-lg text-slate-200 leading-relaxed">
                 {specialistReason}
               </p>
             </div>
 
             <div className="text-left md:text-right">
               <button
-                onClick={() => navigate('/app/patients')}
-                className="w-full md:w-auto px-6 py-3.5 bg-[#9EFFBF] text-[#1A3C2B] font-['Public_Sans'] font-bold text-sm rounded-[12px] hover:bg-white transition-colors inline-flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                onClick={() => navigate('/app/history')}
+                className="w-full md:w-auto px-6 py-4 bg-[#9EFFBF] text-[#1A3C2B] font-['Public_Sans'] font-bold text-base rounded-[12px] hover:bg-white transition-colors inline-flex items-center justify-center gap-2 cursor-pointer shadow-xs"
               >
                 <span>Find Nearby Specialists</span>
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-5 w-5" />
               </button>
             </div>
           </div>
