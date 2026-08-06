@@ -9,6 +9,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import LandingPage from '@/pages/LandingPage';
 const SignInPage = lazy(() => import('@/pages/SignInPage'));
 const SignUpPage = lazy(() => import('@/pages/SignUpPage'));
+const AuthCallbackPage = lazy(() => import('@/pages/AuthCallbackPage'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const UploadPage = lazy(() => import('@/pages/UploadPage'));
 const AIAnalysisPage = lazy(() => import('@/pages/AIAnalysisPage'));
@@ -39,6 +40,9 @@ export default function App() {
             <Routes>
               {/* Public Landing Page */}
               <Route path="/" element={<LandingPage />} />
+
+              {/* OAuth Callback Handler */}
+              <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
               {/* Authentication Pages */}
               <Route path="/signin" element={<SignInPage />} />
