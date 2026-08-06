@@ -44,6 +44,19 @@ import { supabase, type ReportRecord } from '@/lib/supabase';
 import { apiClient } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
 const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
@@ -300,6 +313,14 @@ export default function UploadPage() {
       setCoordinatorStep(4);
       setCoordinatorProgress(60);
 
+      // Convert file to base64 for Vision AI Vision Processing
+      let imageBase64: string | undefined;
+      try {
+        if (file.type.startsWith('image/')) {
+          imageBase64 = await fileToBase64(file);
+        }
+      } catch {}
+
       // Trigger AI Analysis via Express Backend & Gemini API
       setCoordinatorStep(5);
       setCoordinatorProgress(75);
@@ -311,6 +332,8 @@ export default function UploadPage() {
           reportName: file.name,
           fileUrl: fileUrl,
           reportType: reportType,
+          imageBase64,
+          mimeType: file.type || 'image/jpeg',
         }),
       });
 

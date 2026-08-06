@@ -24,6 +24,8 @@ const ReportAnalysisSchema = z.object({
   reportName: z.string().min(1, 'Report name is required'),
   fileUrl: z.string().optional(),
   reportType: z.string().optional(),
+  imageBase64: z.string().optional(),
+  mimeType: z.string().optional(),
 });
 
 // ── Emergency Triggers & Detection ──────────────────────────────────────────
@@ -532,33 +534,35 @@ function generateCategorySpecificAnalysis(reportName, reportType) {
 }
 
 /**
- * Build the enhanced clinical report analysis prompt (Universal 11-Step Pipeline)
+ * Build the Multi-Agent Specialized Clinical Extraction Prompt (8-Agent Architecture)
  */
 function buildReportAnalysisPrompt(reportName, reportType) {
-  return `You are MEDITRACK AI — a world-class clinical diagnostic parsing engine.
+  return `You are MEDITRACK AI — an 8-Agent Modular Clinical Extraction Engine (Document Classifier, Patient Info Extractor, Diagnosis Extractor, Medication Extractor, Lab Table Extractor, Abnormal Value Detector, Medical Knowledge Engine, Quality Checker).
 
-Analyze this medical document:
+Analyze this medical document or multi-section hospital packet:
 - Document Name: "${reportName}"
 - Reported Type: "${reportType || 'Medical Document'}"
 
-CRITICAL RULES (Universal 11-Step Pipeline):
-1. Auto-detect document_type from: Prescription | Discharge Summary | CBC Report | Blood Report | LFT | KFT | RFT | Urine Report | MRI | CT Scan | X-Ray Report | ECG | Echo | Biopsy | Histopathology | Medical Bill | Insurance Document | Vaccination Certificate | Doctor Note | Operation Notes | ICU Summary | Progress Notes | Discharge Card | Medical Certificate | Referral Letter | Lab Report | Radiology Report | Pharmacy Bill | Medicine Invoice | Health Checkup Report
-2. Extract Patient & Hospital details if present (name, age, gender, UHID, IP/OP number, blood group, doctor, hospital, ward, bed).
-3. Extract Diagnosis (primary, secondary, final, provisional, differential) and Complaints (pain, fever, cough, etc.).
-4. Extract Vitals (BP, HR, RR, Temp, SpO2, BMI, weight, height).
-5. Extract ALL Laboratory & Biomarker values with measured value, unit, normal range, status ("Normal" | "Low" | "High" | "Borderline Low" | "Borderline High" | "Critical Low" | "Critical High"), severity ("optimal" | "warning" | "attention" | "critical"), plain-English explanation, and recommendation.
-6. Calculate 8 Organ Health Scores (0-100 score + status + details for bloodHealth, kidneyHealth, liverHealth, heartHealth, diabetesRisk, vitaminDeficiency, infectionIndicators, hydrationElectrolytes).
-7. NEVER diagnose diseases with certainty. Always recommend consulting a doctor.
+AGENT INSTRUCTIONS:
+1. AGENT 1 (Classifier): Identify primary document_type from: Prescription | Discharge Summary | CBC Report | Blood Report | LFT | KFT | RFT | Urine Report | MRI | CT Scan | X-Ray Report | ECG | Echo | Biopsy | Histopathology | Medical Bill | Insurance Document | Doctor Note | Operation Notes | ICU Summary | Lab Report | Health Checkup Report. Also list secondary document sections if multi-page/multi-type packet.
+2. AGENT 2 (Patient & Hospital Extractor): Extract patient name, age, gender, UHID, IP/OP number, blood group, doctor, hospital, department, admission date, discharge date, ward, bed.
+3. AGENT 3 (Diagnosis & History): Extract primary, secondary, provisional, differential diagnosis, and chief complaints (pain, fever, cough, etc.).
+4. AGENT 4 (Medication Extractor): Extract brand, generic, strength, dose, frequency, duration, morning/afternoon/night, food timing, purpose.
+5. AGENT 5 (Lab & Table Extractor): Parse EVERY lab table without skipping rows. Extract test name, value, numeric_value, unit, reference_range.
+6. AGENT 6 (Abnormal Detector): Flag status as "Normal" | "Low" | "High" | "Borderline Low" | "Borderline High" | "Critical Low" | "Critical High", severity as "optimal" | "warning" | "attention" | "critical".
+7. AGENT 7 (Knowledge Engine): Provide clinical explanation and recommendation for each biomarker.
+8. AGENT 8 (Summary & Organ Scores & Quality Check): Compute overallScore (0-100) and 8 organ health scores (bloodHealth, kidneyHealth, liverHealth, heartHealth, diabetesRisk, vitaminDeficiency, infectionIndicators, hydrationElectrolytes). Check for missing fields and calculate confidence_score.
 
-Return ONLY valid JSON matching this schema (no markdown fences):
+Return ONLY valid JSON matching this schema (no markdown block wrappers):
 {
-  "document_type": "CBC Report",
+  "document_type": "Discharge Summary / Lab Report",
+  "document_sections": ["Discharge Summary", "CBC Report", "Medicine List", "Hospital Bill"],
   "hospital": { "name": null, "department": null, "ward": null, "bed": null },
-  "patient": { "name": null, "age": null, "gender": null, "uhid": null, "blood_group": null },
-  "doctor": { "name": null, "specialty": null },
-  "diagnosis": { "primary": null, "secondary": null, "final": null, "provisional": null },
+  "patient": { "name": null, "age": null, "gender": null, "uhid": null, "ip_number": null, "op_number": null, "blood_group": null, "admission_date": null, "discharge_date": null },
+  "doctor": { "name": null, "specialty": null, "qualification": null },
+  "diagnosis": { "primary": null, "secondary": null, "final": null, "provisional": null, "differential": null },
   "complaints": [],
-  "vitals": { "bp": null, "hr": null, "temp": null, "spo2": null },
+  "vitals": { "bp": null, "hr": null, "temp": null, "spo2": null, "bmi": null, "weight": null },
   "organ_health_scores": {
     "overallScore": 92,
     "bloodHealth": { "status": "Optimal", "score": 94, "details": "RBC and Hemoglobin normal" },
@@ -588,7 +592,18 @@ Return ONLY valid JSON matching this schema (no markdown fences):
       "recommendation": "Discuss iron supplementation and dietary changes with your doctor."
     }
   ],
-  "medications": [],
+  "medications": [
+    {
+      "name": "Metformin",
+      "generic": "Metformin HCl",
+      "strength": "500mg",
+      "dosage": "1 tablet",
+      "frequency": "Twice daily",
+      "duration": "30 days",
+      "timing": "After food",
+      "purpose": "Glycemic control"
+    }
+  ],
   "abnormal_count": 1,
   "normal_count": 6,
   "critical_count": 0,
@@ -598,6 +613,11 @@ Return ONLY valid JSON matching this schema (no markdown fences):
     "Increase iron-rich foods: spinach, lentils, dates",
     "Pair iron intake with Vitamin C to improve absorption"
   ],
+  "quality_check": {
+    "missing_fields": [],
+    "verified_sections": ["Patient Info", "Lab Table", "Medications"],
+    "extraction_quality": "High"
+  },
   "disclaimer": "AI-generated analysis. Not a medical diagnosis. Consult your doctor."
 }`;
 }
@@ -605,8 +625,22 @@ Return ONLY valid JSON matching this schema (no markdown fences):
 /**
  * Perform Gemini API Report Analysis if Key Available
  */
-async function analyzeReportWithGemini(reportName, reportType, fileUrl, geminiApiKey) {
+/**
+ * Perform Gemini API Report Analysis if Key Available (Supports Text + Vision Input)
+ */
+async function analyzeReportWithGemini(reportName, reportType, fileUrl, geminiApiKey, imageBase64, mimeType) {
   const prompt = buildReportAnalysisPrompt(reportName, reportType);
+
+  const parts = [];
+  if (imageBase64) {
+    parts.push({
+      inlineData: {
+        data: imageBase64,
+        mimeType: mimeType || 'image/jpeg',
+      },
+    });
+  }
+  parts.push({ text: prompt });
 
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
@@ -614,7 +648,7 @@ async function analyzeReportWithGemini(reportName, reportType, fileUrl, geminiAp
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
+        contents: [{ parts }],
         generationConfig: { temperature: 0.1, maxOutputTokens: 4096 },
       }),
     });
@@ -661,16 +695,25 @@ async function analyzeReportWithGemini(reportName, reportType, fileUrl, geminiAp
     console.error('[Gemini Report Analysis Error]:', err.message);
   }
 
-  return await analyzeReportWithOpenRouter(reportName, reportType, fileUrl, process.env.OPENROUTER_API_KEY || DEFAULT_OPENROUTER_KEY);
+  return await analyzeReportWithOpenRouter(reportName, reportType, fileUrl, process.env.OPENROUTER_API_KEY || DEFAULT_OPENROUTER_KEY, imageBase64, mimeType);
 }
 
 
 /**
- * Call OpenRouter API for Medical Report Analysis (Automatic Failover)
+ * Call OpenRouter API for Medical Report Analysis (Automatic Failover, Supports Vision AI)
  */
-async function analyzeReportWithOpenRouter(reportName, reportType, fileUrl, openrouterApiKey) {
+async function analyzeReportWithOpenRouter(reportName, reportType, fileUrl, openrouterApiKey, imageBase64, mimeType) {
   const apiKey = openrouterApiKey || process.env.OPENROUTER_API_KEY || DEFAULT_OPENROUTER_KEY;
   const prompt = buildReportAnalysisPrompt(reportName, reportType);
+
+  const messagesContent = [];
+  if (imageBase64) {
+    messagesContent.push({
+      type: 'image_url',
+      image_url: { url: `data:${mimeType || 'image/jpeg'};base64,${imageBase64}` },
+    });
+  }
+  messagesContent.push({ type: 'text', text: prompt });
 
   try {
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -679,13 +722,13 @@ async function analyzeReportWithOpenRouter(reportName, reportType, fileUrl, open
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://meditrack-ai.com',
-        'X-Title': 'MediTrack AI Report Analyzer',
+        'X-Title': 'MediTrack AI Multi-Agent Report Analyzer',
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are an expert clinical medical report analyst. Return ONLY raw valid JSON matching the schema. Never include markdown fences.' },
-          { role: 'user', content: prompt },
+          { role: 'system', content: 'You are an 8-Agent Modular Medical Extraction Engine. Return ONLY raw valid JSON matching the schema. Never include markdown fences.' },
+          { role: 'user', content: imageBase64 ? messagesContent : prompt },
         ],
         temperature: 0.1,
         max_tokens: 4096,
@@ -773,7 +816,7 @@ router.post('/health-assistant', async (req, res) => {
 
 /**
  * @route POST /api/ai/analyze-report
- * @desc AI Medical Report & Prescription Analysis Pipeline — powered by Google Gemini API
+ * @desc AI Medical Report & Multi-Section Packet Extraction Pipeline — 8-Agent Extractor Architecture
  */
 router.post('/analyze-report', async (req, res) => {
   try {
@@ -782,14 +825,14 @@ router.post('/analyze-report', async (req, res) => {
       return res.status(400).json({ error: parseResult.error.errors[0].message });
     }
 
-    const { reportId, userId, reportName, fileUrl, reportType } = parseResult.data;
+    const { reportId, userId, reportName, fileUrl, reportType, imageBase64, mimeType } = parseResult.data;
     const geminiApiKey = process.env.GEMINI_API_KEY;
 
     let analysisPayload;
     if (geminiApiKey && geminiApiKey !== 'your_gemini_api_key_here' && geminiApiKey !== 'your_gemini_api_key_placeholder') {
-      analysisPayload = await analyzeReportWithGemini(reportName, reportType, fileUrl, geminiApiKey);
+      analysisPayload = await analyzeReportWithGemini(reportName, reportType, fileUrl, geminiApiKey, imageBase64, mimeType);
     } else {
-      analysisPayload = generateCategorySpecificAnalysis(reportName, reportType);
+      analysisPayload = await analyzeReportWithOpenRouter(reportName, reportType, fileUrl, process.env.OPENROUTER_API_KEY || DEFAULT_OPENROUTER_KEY, imageBase64, mimeType);
     }
 
     return res.json({
@@ -797,11 +840,11 @@ router.post('/analyze-report', async (req, res) => {
       report_id: reportId || `rep_${Date.now()}`,
       user_id: userId || 'usr-demo',
       report_name: reportName,
-      report_type: reportType || 'Medical Report',
+      report_type: analysisPayload?.document_type || reportType || 'Medical Report',
       analysis: analysisPayload,
       status: 'Analyzed',
       analyzed_at: new Date().toISOString(),
-      provider: geminiApiKey && geminiApiKey !== 'your_gemini_api_key_here' && geminiApiKey !== 'your_gemini_api_key_placeholder' ? 'Google Gemini AI' : 'MEDITRACK AI Prescriptions & Lab Analyzer',
+      provider: geminiApiKey && geminiApiKey !== 'your_gemini_api_key_here' && geminiApiKey !== 'your_gemini_api_key_placeholder' ? 'Google Gemini AI (Vision)' : 'MediTrack AI 8-Agent Extractor',
     });
   } catch (err) {
     console.error('[AI Analysis Route Error]:', err);
