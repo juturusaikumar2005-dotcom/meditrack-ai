@@ -196,6 +196,18 @@ function SidebarContent({
   );
 }
 
+const navTapEffects: Record<string, any> = {
+  '/app/dashboard': { scale: 0.93, y: 1 },
+  '/app/upload': { scale: 0.93, y: -3 },
+  '/app/prescription': { scale: 0.93, rotate: -4 },
+  '/app/ai-analysis': { scale: 0.93, filter: 'brightness(1.2)' },
+  '/app/history': { scale: 0.93, x: -4 },
+  '/app/timeline': { scale: 0.93, x: 4 },
+  '/app/chat': { scale: 0.91, y: -2 },
+  '/app/profile': { scale: 0.94 },
+  '/app/settings': { scale: 0.93, rotate: 12 },
+};
+
 function NavItem({
   to,
   label,
@@ -207,35 +219,39 @@ function NavItem({
   icon: React.ComponentType<{ className?: string }>;
   collapsed: boolean;
 }) {
+  const tapEffect = navTapEffects[to] || { scale: 0.94 };
+
   return (
-    <NavLink
-      to={to}
-      end={to === '/app/dashboard'}
-      className={({ isActive }) =>
-        clsx(
-          'relative flex items-center gap-3.5 px-3.5 py-3 rounded-[12px] text-sm sm:text-base font-semibold transition-colors group select-none',
-          isActive ? 'text-white font-bold' : 'text-[#3A3A38] hover:bg-[#1A3C2B]/10 hover:text-[#1A3C2B]'
-        )
-      }
-    >
-      {({ isActive }) => (
-        <>
-          {isActive && (
-            <motion.div
-              layoutId="active-sidebar-pill"
-              className="absolute inset-0 bg-[#1A3C2B] rounded-[12px] z-0 shadow-xs"
-              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            />
-          )}
-          <Icon className="h-5 w-5 shrink-0 z-10" />
-          {!collapsed && <span className="z-10">{label}</span>}
-          {collapsed && (
-            <span className="absolute left-full ml-3 px-3 py-1.5 rounded-[10px] bg-[#111827] text-white text-xs font-['Public_Sans'] font-semibold opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-md">
-              {label}
-            </span>
-          )}
-        </>
-      )}
-    </NavLink>
+    <motion.div whileTap={tapEffect} whileHover={{ x: 2 }} transition={{ duration: 0.15 }}>
+      <NavLink
+        to={to}
+        end={to === '/app/dashboard'}
+        className={({ isActive }) =>
+          clsx(
+            'relative flex items-center gap-3.5 px-3.5 py-3 rounded-[12px] text-sm sm:text-base font-semibold transition-colors group select-none',
+            isActive ? 'text-white font-bold' : 'text-[#3A3A38] hover:bg-[#1A3C2B]/10 hover:text-[#1A3C2B]'
+          )
+        }
+      >
+        {({ isActive }) => (
+          <>
+            {isActive && (
+              <motion.div
+                layoutId="active-sidebar-pill"
+                className="absolute inset-0 bg-[#1A3C2B] rounded-[12px] z-0 shadow-xs"
+                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              />
+            )}
+            <Icon className="h-5 w-5 shrink-0 z-10" />
+            {!collapsed && <span className="z-10">{label}</span>}
+            {collapsed && (
+              <span className="absolute left-full ml-3 px-3 py-1.5 rounded-[10px] bg-[#111827] text-white text-xs font-['Public_Sans'] font-semibold opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-md">
+                {label}
+              </span>
+            )}
+          </>
+        )}
+      </NavLink>
+    </motion.div>
   );
 }
