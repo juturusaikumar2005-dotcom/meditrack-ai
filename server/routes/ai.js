@@ -47,62 +47,49 @@ const EMERGENCY_KEYWORDS = [
   'coughing blood',
 ];
 
-function detectEmergency(message) {
-  const text = message.toLowerCase();
-  for (const kw of EMERGENCY_KEYWORDS) {
-    if (text.includes(kw)) {
-      return kw;
-    }
-  }
-  return null;
-}
-
-// ── Master Intent Guardrail Classifier ─────────────────────────────────────
-const NON_MEDICAL_PATTERNS = [
-  /\b(python|javascript|typescript|java|c\+\+|golang|html|css|sql|react|vite|node|coding|programmer|program|code|bug|repo|github|git|compile)\b/i,
-  /\b(ipl|cricket|football|soccer|basketball|nba|messi|ronaldo|virat|dhoni|stadium|match|tournament|trophy|world cup)\b/i,
-  /\b(prime minister|president|election|politics|parliament|congress|bjp|government|minister|democrat|republican)\b/i,
-  /\b(movie|cinema|actor|actress|hollywood|bollywood|netflix|film|director|song|box office|celebrity|oscar)\b/i,
-  /\b(joke|funny story|tell me a story|poem|riddle|song|haiku|fairy tale|essay|novel|fanfiction)\b/i,
-  /\b(crypto|bitcoin|ethereum|stock|stock market|trading|investing|finance|mutual fund|wallet|currency)\b/i,
-  /\b(astrology|horoscope|zodiac|zodiac sign|tarot|palmistry|future prediction)\b/i,
-  /\b(homework|assignment|solve this math|math equation|algebra|calculus|geography|history|physics|chemistry exam)\b/i,
+// ── 3-Layer Priority Safety & Intent Classifier ──────────────────────────────
+const CRISIS_PATTERNS = [
+  /\b(want to die|kill myself|end my life|done with life|nobody needs me|want to disappear|don't want to live|life is not worth living)\b/i,
+  /\b(hurt myself|cut myself|suicidal|suicide|self-harm|self harm|hang myself)\b/i,
+  /\b(overdosed|overdose|took too many (tablets|pills|meds|medicines)|drank poison|ingested poison|swallowed poison)\b/i,
 ];
 
-const HEALTH_DOMAIN_KEYWORDS = [
-  'health', 'doctor', 'medicine', 'drug', 'tablet', 'capsule', 'dose', 'dosage', 'syrup', 'injection',
-  'symptom', 'disease', 'condition', 'report', 'lab', 'blood', 'test', 'cbc', 'mri', 'ct', 'scan',
-  'xray', 'x-ray', 'ecg', 'ekg', 'lft', 'kft', 'rft', 'urine', 'thyroid', 'hba1c', 'glucose', 'sugar',
-  'diabetes', 'fever', 'headache', 'pain', 'chest pain', 'cough', 'cold', 'flu', 'infection', 'virus',
-  'anemia', 'ferritin', 'hemoglobin', 'vitamin', 'calcium', 'iron', 'diet', 'nutrition', 'food',
-  'exercise', 'fitness', 'workout', 'sleep', 'mental health', 'anxiety', 'stress', 'depression', 'pregnancy',
-  'pediatric', 'child', 'elderly', 'prescription', 'side effect', 'precaution', 'interaction', 'bp',
-  'blood pressure', 'heart', 'kidney', 'liver', 'lungs', 'brain', 'stomach', 'skin', 'eye', 'dental',
-  'first aid', 'emergency', 'insurance', 'meditrack', 'hospital', 'clinic', 'triage', 'pulse', 'vitals'
+const EMERGENCY_PATTERNS = [
+  /\b(can't breathe|cannot breathe|difficulty breathing|shortness of breath|gasping for air)\b/i,
+  /\b(crushing chest pain|chest pain|heart attack|cardiac arrest|stroke|numbness on one side|slurred speech)\b/i,
+  /\b(fainted|passed out|loss of consciousness|unconscious|seizure|convulsions)\b/i,
+  /\b(blood sugar (is|of)?\s*(3[5-9][0-9]|[4-9][0-9][0-9]|1000)|glucose (is|of)?\s*(3[5-9][0-9]|[4-9][0-9][0-9]|1000))\b/i,
+  /\b(heavy bleeding|coughing blood|vomiting blood|anaphylaxis|severe allergic reaction)\b/i,
 ];
 
-const STANDARD_REFUSAL_MESSAGE = "I'm MediTrack AI, a healthcare-focused assistant. I can only answer questions related to health, medicines, medical reports, diseases, symptoms, nutrition, fitness, and healthcare. Please ask a medical or health-related question.";
+const CRISIS_RESPONSE = "I'm really sorry you're going through this. I'm glad you told me. If you're feeling like you might act on these thoughts or you're in immediate danger, please call your local emergency services (911 / 112 / 988) or go to the nearest emergency department right away. If you can, tell someone you trust—a family member, friend, or another trusted person—what you're experiencing. You can also call or text the Suicide & Crisis Lifeline at 988 anytime. I'm here to listen and help you find the next safe step.";
 
-function isHealthQuestion(message) {
+const EMERGENCY_RESPONSE = "🚨 **ACUTE MEDICAL EMERGENCY ALERT** 🚨\n\nBased on your message regarding acute emergency symptoms, please seek **IMMEDIATE EMERGENCY MEDICAL CARE**.\n\n• Call **911 / 112** or your local emergency service immediately.\n• Go directly to the nearest hospital **Emergency Room (ER)**.\n• Do NOT wait for online medical AI responses during an acute physical crisis.\n\n*MediTrack AI does not provide emergency medical treatment or triage for acute life-threatening conditions.*";
+
+function classifySafetyAndIntent(message) {
   const text = message.toLowerCase().trim();
 
-  // 1. Explicit Non-Medical Rejection Check
-  for (const pattern of NON_MEDICAL_PATTERNS) {
+  // LAYER 1A: Self-harm / Suicide / Crisis (Highest Priority)
+  for (const pattern of CRISIS_PATTERNS) {
     if (pattern.test(text)) {
-      return false;
+      return { layer: 1, type: 'crisis', response: CRISIS_RESPONSE, isEmergency: true };
     }
   }
 
-  // 2. Health Domain Keyword Check (Allow if any health term present or question is short general health query)
-  const isHealth = HEALTH_DOMAIN_KEYWORDS.some(kw => text.includes(kw));
-  if (isHealth) return true;
-
-  // 3. Fallback check for common health query patterns
-  if (/\b(how|what|why|can i|is it|treatment|cause|cure|remedy|feel|hurt|sick|tired|weak|head|throat|chest|back|stomach)\b/i.test(text)) {
-    return true;
+  // LAYER 1B: Acute Medical Emergency (High Priority)
+  for (const pattern of EMERGENCY_PATTERNS) {
+    if (pattern.test(text)) {
+      return { layer: 1, type: 'emergency', response: EMERGENCY_RESPONSE, isEmergency: true };
+    }
   }
 
-  return false;
+  // LAYER 3: Non-Medical Domain Filter Check
+  if (!isHealthQuestion(message)) {
+    return { layer: 3, type: 'refusal', response: STANDARD_REFUSAL_MESSAGE, isEmergency: false };
+  }
+
+  // LAYER 2: Valid Medical Question -> Pass to Medical AI Engine
+  return { layer: 2, type: 'medical', isEmergency: false };
 }
 
 // ── Specialist Mapping ──────────────────────────────────────────────────────
@@ -827,7 +814,7 @@ async function analyzeReportWithOpenRouter(reportName, reportType, fileUrl, open
 
 /**
  * @route POST /api/ai/health-assistant
- * @desc AI Healthcare Assistant Endpoint powered by Google Gemini API with Intent Guardrail Filtering
+ * @desc AI Healthcare Assistant Endpoint with 3-Layer Priority Safety Classifier
  */
 router.post('/health-assistant', async (req, res) => {
   try {
@@ -838,33 +825,27 @@ router.post('/health-assistant', async (req, res) => {
 
     const { userId, message, history, latestReportAnalysis } = parseResult.data;
 
-    // STEP 1 & 2: BACKEND INTENT FILTER GUARDRAIL
-    if (!isHealthQuestion(message)) {
+    // LAYER 1 (Safety/Crisis/Emergency) & LAYER 3 (Non-Medical Refusal) CLASSIFIER
+    const safetyCheck = classifySafetyAndIntent(message);
+    if (safetyCheck.layer === 1 || safetyCheck.layer === 3) {
       return res.json({
-        provider: 'MediTrack AI Guardrail',
+        provider: safetyCheck.layer === 1 ? 'MediTrack Crisis & Emergency Safety Layer' : 'MediTrack Domain Guardrail',
         query: message,
-        isEmergency: false,
-        response: STANDARD_REFUSAL_MESSAGE,
+        isEmergency: safetyCheck.isEmergency,
+        response: safetyCheck.response,
         timestamp: new Date().toISOString(),
       });
     }
 
+    // LAYER 2: Medical AI Processing
     const geminiApiKey = process.env.GEMINI_API_KEY;
 
     let result;
     if (geminiApiKey && geminiApiKey !== 'your_gemini_api_key_here' && geminiApiKey !== 'your_gemini_api_key_placeholder') {
       result = await queryGeminiAssistant(message, history, latestReportAnalysis, geminiApiKey);
     } else {
-      const emergencyKw = detectEmergency(message);
-      if (emergencyKw) {
-        result = {
-          isEmergency: true,
-          response: `🚨 **EMERGENCY MEDICAL WARNING** 🚨\n\nBased on your mention of emergency symptoms ("**${emergencyKw}**"), please seek **IMMEDIATE emergency medical care**.\n\n- Call your local emergency hotline (**911 / 112**) or proceed to the nearest hospital **Emergency Room** immediately.\n- Do NOT wait for online health guidance.\n\n*This assistant cannot evaluate acute life-threatening medical emergencies.*`,
-        };
-      } else {
-        const specialistInfo = inferSpecialist(message, latestReportAnalysis);
-        result = { isEmergency: false, response: generateAssistantFallback(message, latestReportAnalysis, specialistInfo) };
-      }
+      const specialistInfo = inferSpecialist(message, latestReportAnalysis);
+      result = { isEmergency: false, response: generateAssistantFallback(message, latestReportAnalysis, specialistInfo) };
     }
 
     return res.json({
