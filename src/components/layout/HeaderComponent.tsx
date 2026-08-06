@@ -55,7 +55,8 @@ export function HeaderComponent({
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 h-20 lg:h-22 transition-all duration-300 flex items-center px-6 sm:px-10 lg:px-14 select-none bg-[#F7F7F5]/95 backdrop-blur-md border-b border-[#3A3A38]/20 shadow-xs`}
+      style={{ transform: 'none' }}
+      className={`fixed top-0 inset-x-0 z-50 h-20 lg:h-22 transition-colors duration-200 flex items-center px-6 sm:px-10 lg:px-14 select-none bg-[#F7F7F5]/95 backdrop-blur-md border-b border-[#3A3A38]/20 shadow-xs`}
     >
       <div className="max-w-[88rem] mx-auto w-full flex items-center justify-between gap-6">
         {/* Brand Logo & Application Name */}

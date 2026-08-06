@@ -23,13 +23,13 @@ export function DashboardLayout() {
           <div className={`transition-[padding] duration-300 ${collapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
             <Topbar onMenuClick={() => setMobileOpen(true)} />
             <main className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="popLayout">
                 <motion.div
                   key={location.pathname}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.25 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
                 >
                   <Outlet />
                 </motion.div>
