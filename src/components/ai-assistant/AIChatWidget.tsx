@@ -13,6 +13,7 @@ import {
   FileText,
   HelpCircle,
   ShieldCheck,
+  MessageSquare,
 } from 'lucide-react';
 import { useAIAssistant } from '@/context/AIAssistantContext';
 
@@ -58,7 +59,7 @@ export function AIChatWidget() {
 
   return (
     <>
-      {/* FLOATING CHAT BUTTON */}
+      {/* FLOATING CHAT TRIGGER BUTTON */}
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -69,22 +70,20 @@ export function AIChatWidget() {
             whileHover={{ y: -3, scale: 1.03 }}
             whileTap={{ scale: 0.95 }}
             onClick={toggleAssistant}
-            className="fixed bottom-6 right-6 z-50 bg-white text-[#1A3C2B] border border-[#3A3A38]/20 shadow-md rounded-full px-4 py-3 flex items-center gap-2.5 cursor-pointer font-['Public_Sans'] font-semibold text-sm transition-all select-none hover:border-[#1A3C2B]"
-            aria-label="Ask MediTrack AI"
+            className="fixed bottom-6 right-6 z-50 bg-[#1A3C2B] text-white border border-[#9EFFBF]/30 shadow-xl rounded-full px-5 py-3.5 flex items-center gap-2.5 cursor-pointer font-['Public_Sans'] font-semibold text-sm transition-all select-none hover:bg-[#0D2419] hover:border-[#9EFFBF]"
+            aria-label="AI Health Assistant"
           >
             <div className="relative flex items-center justify-center">
-              <div className="h-7 w-7 bg-[#1A3C2B] text-[#9EFFBF] rounded-full flex items-center justify-center shrink-0">
-                <Sparkles className="h-4 w-4" />
-              </div>
+              <MessageSquare className="h-5 w-5 text-[#9EFFBF]" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-[#FF8C69] text-white text-[10px] font-['JetBrains_Mono'] font-bold rounded-full flex items-center justify-center border border-white">
+                <span className="absolute -top-2 -right-2 h-4 w-4 bg-[#FF8C69] text-white text-[10px] font-['JetBrains_Mono'] font-bold rounded-full flex items-center justify-center border border-white">
                   {unreadCount}
                 </span>
               )}
             </div>
 
-            <span className="hidden lg:inline font-['Space_Grotesk'] font-bold text-[#111827]">
-              Ask MediTrack AI
+            <span className="font-['Space_Grotesk'] font-bold text-[#9EFFBF] text-sm">
+              AI Health Assistant
             </span>
           </motion.button>
         )}
