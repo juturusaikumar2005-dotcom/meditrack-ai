@@ -52,8 +52,15 @@ export default function HistoryPage() {
     }
 
     loadReports();
+
+    const handleReportUploaded = () => {
+      loadReports();
+    };
+    window.addEventListener('meditrack_report_uploaded', handleReportUploaded);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('meditrack_report_uploaded', handleReportUploaded);
     };
   }, [userId]);
 

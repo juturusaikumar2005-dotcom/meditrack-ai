@@ -179,18 +179,33 @@ export default function UploadPage() {
     toast.loading(`Ingesting ${file.name}...`, { id: 'upload-toast' });
 
     try {
-      // 3. Ensure fresh authenticated session before storage upload
+      // 3. Ensure fresh authenticated user session before storage upload
       const { data: { session: activeSession } } = await supabase.auth.getSession();
-      const currentUserId = activeSession?.user?.id || userId;
+      const user = activeSession?.user;
 
+      console.log('[Auth State Check]', {
+        sessionExists: !!activeSession,
+        userId: user?.id || 'none',
+        email: user?.email || 'none',
+      });
+
+      if (!user || !user.id) {
+        toast.error('Please sign in again to upload medical reports.', { id: 'upload-toast' });
+        setUploading(false);
+        return;
+      }
+
+      const currentUserId = user.id;
       const sanitizeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const storageFilePath = `${currentUserId}/${Date.now()}_${sanitizeName}`;
 
-      console.log(`[Upload Page] Starting upload for ${file.name}. Validated User ID: ${currentUserId}`);
+      console.log('[Storage Upload Request]', { path: storageFilePath, userId: currentUserId });
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('medical-reports')
         .upload(storageFilePath, file, { upsert: true });
+
+      console.log('[Storage Upload Result]', { uploadData, uploadError });
 
       if (uploadError) {
         throw new Error(uploadError.message || 'Supabase storage upload failed');
@@ -217,8 +232,27 @@ export default function UploadPage() {
         status: 'Analyzed',
       };
 
-      await supabase.from('reports').insert(newReport);
+      const { data: insertResult, error: insertError } = await supabase.from('reports').insert(newReport);
+      console.log('[Database Insert Result]', { insertResult, error: insertError, reportId: newReport.id });
+
+      if (insertError) {
+        console.error('[RLS Error Details]', {
+          code: (insertError as any).code,
+          message: insertError.message,
+          userId: currentUserId,
+          reportId: newReport.id,
+        });
+
+        if (insertError.message.includes('row-level security') || (insertError as any).code === '42501') {
+          toast('Notice: Row-Level Security restricted remote DB insert. Report saved to active local session.', {
+            icon: 'ℹ️',
+            duration: 5000,
+          });
+        }
+      }
+
       setUploads((prev) => [newReport, ...prev]);
+      window.dispatchEvent(new Event('meditrack_report_uploaded'));
 
       // 6. Trigger AI Case Coordinator Visual Multi-Agent Orchestration Workflow
       setCoordinatorOpen(true);
@@ -270,7 +304,7 @@ export default function UploadPage() {
         };
 
         localStorage.setItem('meditrack_latest_analysis', JSON.stringify(finalPayload));
-        await supabase.from('analysis_results').insert({
+        const { error: analysisDbError } = await supabase.from('analysis_results').insert({
           id: finalPayload.id,
           report_id: newReport.id,
           user_id: currentUserId,
@@ -278,7 +312,12 @@ export default function UploadPage() {
           created_at: new Date().toISOString(),
         });
 
+        if (analysisDbError) {
+          console.error('[Analysis RLS Error Details]', analysisDbError);
+        }
+
         setLatestAnalysisData(finalPayload);
+        window.dispatchEvent(new Event('meditrack_report_uploaded'));
       }
 
       setUploading(false);
