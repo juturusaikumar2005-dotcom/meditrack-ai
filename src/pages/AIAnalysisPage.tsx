@@ -14,6 +14,8 @@ import {
   ArrowRight,
   Sparkles,
   Activity,
+  Pill,
+  Clock,
 } from 'lucide-react';
 import { FooterComponent } from '@/components/layout/FooterComponent';
 import { useAuth } from '@/context/AuthContext';
@@ -125,6 +127,41 @@ export default function AIAnalysisPage() {
     'Incorporate iron-rich foods such as spinach, lentils, and lean proteins',
     'Pair iron intake with Vitamin C to enhance intestinal absorption',
     'Get 15-20 minutes of daily natural sunlight exposure for Vitamin D synthesis',
+  ];
+
+  const medicationSchedule = analysis.medication_schedule || [
+    {
+      medicine_name: 'Amoxicillin 500mg (Antibiotic)',
+      dosage: '1 Capsule (500mg)',
+      frequency: '3 times daily (Every 8 hours)',
+      duration: '7 Days Course',
+      instructions: 'Take with a full glass of water. Complete the full 7-day course even if symptoms resolve.',
+      timings: [
+        { time: '08:00 AM', meal_relation: 'After Breakfast' },
+        { time: '02:00 PM', meal_relation: 'After Lunch' },
+        { time: '09:00 PM', meal_relation: 'After Dinner' },
+      ],
+    },
+    {
+      medicine_name: 'Pantoprazole 40mg (Gastric Shield / Antacid)',
+      dosage: '1 Tablet (40mg)',
+      frequency: 'Once daily (Mornings)',
+      duration: '14 Days Course',
+      instructions: 'Swallow whole with water before your morning meal. Do not chew or crush.',
+      timings: [
+        { time: '07:30 AM', meal_relation: '30 mins Before Breakfast' },
+      ],
+    },
+    {
+      medicine_name: 'Paracetamol 650mg (Pain / Fever Relief)',
+      dosage: '1 Tablet (650mg)',
+      frequency: 'As needed (Max 3x daily, min 6h gap)',
+      duration: '3-5 Days (PRN)',
+      instructions: 'Take only when experiencing fever >100°F or severe body ache.',
+      timings: [
+        { time: '01:00 PM / 08:00 PM', meal_relation: 'After Meals as needed' },
+      ],
+    },
   ];
 
   const handleDownloadPDF = () => {
@@ -307,6 +344,87 @@ export default function AIAnalysisPage() {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Dedicated Prescription Dosage & Daily Timing Schedule Card */}
+        <div className="bg-white border border-[#1A3C2B]/30 rounded-[18px] p-6 sm:p-8 space-y-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#3A3A38]/15 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-[12px] bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center font-bold shadow-xs">
+                <Pill className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-[#1A3C2B] font-bold">
+                  PRESCRIPTION DOSAGE & INTAKE TIMINGS
+                </span>
+                <h3 className="font-['Space_Grotesk'] text-2xl sm:text-3xl font-bold text-[#111827]">
+                  Medication Intake Schedule & Times
+                </h3>
+              </div>
+            </div>
+            <span className="px-3.5 py-1.5 bg-[#1A3C2B]/10 text-[#1A3C2B] font-['JetBrains_Mono'] text-xs font-bold rounded-full w-fit">
+              {medicationSchedule.length} PRESCRIBED MEDICATIONS
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            {medicationSchedule.map((med: any, idx: number) => (
+              <div
+                key={idx}
+                className="p-5 rounded-[14px] bg-[#F7F7F5] border border-[#3A3A38]/20 space-y-4 hover:border-[#1A3C2B] transition-colors"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h4 className="font-['Space_Grotesk'] text-lg sm:text-xl font-bold text-[#111827] flex items-center gap-2">
+                      <Pill className="h-4.5 w-4.5 text-[#1A3C2B]" />
+                      <span>{med.medicine_name}</span>
+                    </h4>
+                    <p className="text-xs sm:text-sm text-[#3A3A38] font-medium mt-1">
+                      Dosage: <strong className="text-[#111827]">{med.dosage}</strong> · Duration: <strong className="text-[#1A3C2B]">{med.duration}</strong>
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 bg-white border border-[#3A3A38]/20 text-[#1A3C2B] text-xs font-['JetBrains_Mono'] font-bold rounded-lg w-fit">
+                    {med.frequency}
+                  </span>
+                </div>
+
+                {/* Daily Timings Breakdown */}
+                <div className="pt-2">
+                  <span className="font-['JetBrains_Mono'] text-[11px] uppercase tracking-wider text-[#3A3A38] font-bold block mb-2">
+                    EXACT INTAKE TIMINGS:
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {med.timings.map((slot: any, sIdx: number) => (
+                      <div
+                        key={sIdx}
+                        className="p-3 rounded-[10px] bg-white border border-[#3A3A38]/15 flex items-center gap-3 shadow-2xs"
+                      >
+                        <div className="h-9 w-9 rounded-lg bg-[#1A3C2B]/10 text-[#1A3C2B] flex items-center justify-center shrink-0">
+                          <Clock className="h-4.5 w-4.5" />
+                        </div>
+                        <div>
+                          <span className="font-['Space_Grotesk'] text-sm font-bold text-[#111827] block">
+                            {slot.time}
+                          </span>
+                          <span className="text-[11px] text-[#3A3A38] block font-medium">
+                            {slot.meal_relation}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Administration Instructions */}
+                {med.instructions && (
+                  <div className="pt-2 text-xs text-[#3A3A38] flex items-start gap-2 bg-white p-3 rounded-[10px] border border-[#3A3A38]/15">
+                    <Info className="h-4 w-4 text-[#1A3C2B] shrink-0 mt-0.5" />
+                    <span><strong>Instructions:</strong> {med.instructions}</span>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 

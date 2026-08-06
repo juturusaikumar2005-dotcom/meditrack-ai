@@ -218,6 +218,40 @@ function generateCategorySpecificAnalysis(reportName, reportType) {
         'Store prescription medications in a cool, dry location out of direct sunlight',
         'Consume probiotic yogurt or gut health supplements 2 hours apart from antibiotic doses to support healthy gut flora',
       ],
+      medication_schedule: [
+        {
+          medicine_name: 'Amoxicillin 500mg (Antibiotic)',
+          dosage: '1 Capsule (500mg)',
+          frequency: '3 times daily (Every 8 hours)',
+          duration: '7 Days Course',
+          instructions: 'Take with a full glass of water. Complete the full 7-day course even if symptoms resolve.',
+          timings: [
+            { time: '08:00 AM', meal_relation: 'After Breakfast' },
+            { time: '02:00 PM', meal_relation: 'After Lunch' },
+            { time: '09:00 PM', meal_relation: 'After Dinner' },
+          ],
+        },
+        {
+          medicine_name: 'Pantoprazole 40mg (Gastric Shield / Antacid)',
+          dosage: '1 Tablet (40mg)',
+          frequency: 'Once daily (Mornings)',
+          duration: '14 Days Course',
+          instructions: 'Swallow whole with water before your morning meal. Do not chew or crush.',
+          timings: [
+            { time: '07:30 AM', meal_relation: '30 mins Before Breakfast' },
+          ],
+        },
+        {
+          medicine_name: 'Paracetamol 650mg (Pain / Fever Relief)',
+          dosage: '1 Tablet (650mg)',
+          frequency: 'As needed (Max 3x daily, min 6h gap)',
+          duration: '3-5 Days (PRN)',
+          instructions: 'Take only when experiencing fever >100°F or severe body ache.',
+          timings: [
+            { time: '01:00 PM / 08:00 PM', meal_relation: 'After Meals as needed' },
+          ],
+        },
+      ],
     };
   }
 
