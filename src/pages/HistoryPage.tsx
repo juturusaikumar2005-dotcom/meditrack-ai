@@ -7,10 +7,8 @@ import {
   Search,
   Trash2,
   ExternalLink,
-  CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
-import { HeaderComponent } from '@/components/layout/HeaderComponent';
 import { FooterComponent } from '@/components/layout/FooterComponent';
 import { useAuth } from '@/context/AuthContext';
 import { supabase, type ReportRecord } from '@/lib/supabase';
@@ -78,8 +76,7 @@ export default function HistoryPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none pt-16 font-['Public_Sans']">
-      <HeaderComponent activeItem="/app/history" />
+    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none font-['Public_Sans']">
 
       <main className="py-12 px-4 sm:px-8 max-w-[80rem] mx-auto w-full space-y-8">
         {/* Page Header */}

@@ -12,10 +12,8 @@ import {
   Download,
   Share2,
   ArrowRight,
-  Sparkles,
   Activity,
 } from 'lucide-react';
-import { HeaderComponent } from '@/components/layout/HeaderComponent';
 import { FooterComponent } from '@/components/layout/FooterComponent';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -138,8 +136,7 @@ export default function AIAnalysisPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none pt-16 font-['Public_Sans']">
-      <HeaderComponent activeItem="/app/ai-analysis" />
+    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none font-['Public_Sans']">
 
       <main className="py-12 px-4 sm:px-8 max-w-[80rem] mx-auto w-full space-y-10">
         {/* Report Header */}

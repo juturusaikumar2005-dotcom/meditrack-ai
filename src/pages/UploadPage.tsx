@@ -16,10 +16,8 @@ import {
   AlertTriangle,
   Info,
   Stethoscope,
-  MessageSquare,
   Share2,
 } from 'lucide-react';
-import { HeaderComponent } from '@/components/layout/HeaderComponent';
 import { FooterComponent } from '@/components/layout/FooterComponent';
 import { AICaseCoordinatorModal } from '@/components/ai-assistant/AICaseCoordinatorModal';
 import { useAuth } from '@/context/AuthContext';
@@ -417,8 +415,7 @@ export default function UploadPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none pt-16">
-      <HeaderComponent activeItem="/app/upload" />
+    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none">
 
       <main className="py-12 px-4 sm:px-8 max-w-[80rem] mx-auto w-full space-y-12">
         {/* Page Header */}
