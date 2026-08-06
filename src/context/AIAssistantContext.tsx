@@ -1,3 +1,4 @@
+// @refresh reset
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { INITIAL_WELCOME_MESSAGE, type ChatMessageItem } from '@/data/sampleConversations';
 import { apiClient } from '@/lib/apiClient';
