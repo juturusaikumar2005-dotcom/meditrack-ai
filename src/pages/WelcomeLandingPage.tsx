@@ -32,14 +32,21 @@ export default function WelcomeLandingPage() {
     window.location.href = '/';
   };
 
-  // User details fallback
-  const fullName =
+  // Dynamic User Details Resolution from Active Authentication Session
+  const userEmail = session?.user?.email || profile?.email || 'patient@meditrack.ai';
+
+  const rawName =
     profile?.full_name ||
     session?.user?.user_metadata?.full_name ||
-    session?.user?.email?.split('@')[0] ||
-    'Alex Morgan';
+    session?.user?.user_metadata?.name ||
+    (userEmail ? userEmail.split('@')[0].replace(/[._-]/g, ' ') : 'Patient Account');
 
-  const userEmail = session?.user?.email || profile?.email || 'patient@meditrack.ai';
+  // Format name with clean title case
+  const fullName = rawName
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 
   const avatarUrl =
     profile?.avatar_url ||

@@ -477,17 +477,16 @@ export const supabase = {
         const userId = `usr-google-${Date.now()}`;
         const mockUser: User = {
           id: userId,
-          email: 'alex.morgan@gmail.com',
+          email: 'patient@meditrack.ai',
           user_metadata: {
-            full_name: 'Alex Morgan',
-            avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+            full_name: 'Patient Account',
             role: 'patient',
           },
           created_at: new Date().toISOString(),
         };
 
         const mockSession: Session = {
-          access_token: createMockJwtToken(userId, 'alex.morgan@gmail.com'),
+          access_token: createMockJwtToken(userId, 'patient@meditrack.ai'),
           expires_at: Math.floor(Date.now() / 1000) + 7200,
           user: mockUser,
         };
