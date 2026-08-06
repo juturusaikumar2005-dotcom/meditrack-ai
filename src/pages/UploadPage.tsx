@@ -36,6 +36,7 @@ import {
   Stethoscope,
   MessageSquare,
   Share2,
+  Scan,
 } from 'lucide-react';
 import { FooterComponent } from '@/components/layout/FooterComponent';
 import { AICaseCoordinatorModal } from '@/components/ai-assistant/AICaseCoordinatorModal';
@@ -68,6 +69,7 @@ const fileTypeGrid = [
   { title: 'X-Ray Image', desc: 'Skeletal & Chest X-Rays', icon: Eye, ext: 'PNG, JPG, PDF' },
   { title: 'Physician Prescription', desc: 'Medication & Dosage Notes', icon: Sparkles, ext: 'PDF, JPG' },
   { title: 'Medical Summary', desc: 'Discharge Summaries & Labs', icon: FileText, ext: 'PDF, PNG' },
+  { title: 'Full Body Scan', desc: 'Whole Body PET-CT & Total Imaging', icon: Scan, ext: 'PDF, PNG, JPG' },
 ];
 
 interface KeyFinding {
@@ -82,6 +84,15 @@ interface KeyFinding {
 
 function inferReportType(fileName: string): string {
   const name = fileName.toLowerCase();
+  if (
+    name.includes('full body') ||
+    name.includes('whole body') ||
+    name.includes('pet') ||
+    name.includes('pet-ct') ||
+    name.includes('total body')
+  ) {
+    return 'Full Body Scan';
+  }
   if (
     name.includes('prescription') ||
     name.includes('rx') ||
