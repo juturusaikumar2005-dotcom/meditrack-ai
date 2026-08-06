@@ -22,9 +22,12 @@ export type Patient = {
   age: number;
   gender: 'Male' | 'Female' | 'Other';
   bloodGroup: string;
+  bloodType?: string;
   riskScore: number;
-  status: 'Stable' | 'Critical' | 'Recovering' | 'Observation';
+  status: 'Stable' | 'Critical' | 'Recovering' | 'Observation' | 'Attention Needed';
   lastVisit: string;
+  lastReportDate?: string;
+  primaryDoctor?: string;
   avatar: string;
   conditions: string[];
   vitals: {

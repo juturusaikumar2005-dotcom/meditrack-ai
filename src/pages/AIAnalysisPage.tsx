@@ -1,7 +1,7 @@
 // @refresh reset
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
   FileText, CheckCircle2, AlertTriangle, Stethoscope, MessageSquare,
   Upload, ArrowRight, Sparkles, Activity, TrendingUp, TrendingDown,
@@ -15,9 +15,9 @@ import { ReportSummaryBanner } from '@/components/medical-report/ReportSummaryBa
 import toast from 'react-hot-toast';
 
 /* ─────────────────────────── Animation Variants ─────────────────────────── */
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
-  visible: (i = 0) => ({
+  visible: (i: number = 0) => ({
     opacity: 1, y: 0,
     transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 },
   }),
@@ -87,7 +87,7 @@ export default function AIAnalysisPage() {
     async function loadLatestResult() {
       if (!userId) return;
       try {
-        const { data } = await supabase
+        const { data } = await (supabase as any)
           .from('analysis_results')
           .select('*')
           .eq('user_id', userId)

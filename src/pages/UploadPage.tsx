@@ -1,21 +1,21 @@
 import { useState, useEffect, useRef, type ChangeEvent, type DragEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 /* ─────────────── Entrance Animation Variants ─────────────── */
-const pageVariants = {
+const pageVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.6 } },
 };
-const slideUp = {
+const slideUp: Variants = {
   hidden: { opacity: 0, y: 40 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
 };
-const slideLeft = {
+const slideLeft: Variants = {
   hidden: { opacity: 0, x: -30 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
 };
-const popIn = {
+const popIn: Variants = {
   hidden: { opacity: 0, scale: 0.88 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
 };
@@ -555,7 +555,7 @@ export default function UploadPage() {
           </h3>
 
           <motion.div
-            variants={{ visible: { transition: { staggerChildren: 0.07 } } }}
+            variants={{ visible: { transition: { staggerChildren: 0.07 } } } as Variants}
             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
           >
             {fileTypeGrid.map((item, idx) => {

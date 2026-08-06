@@ -8,6 +8,7 @@ import {
   Trash2,
   ExternalLink,
   AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { FooterComponent } from '@/components/layout/FooterComponent';
 import { useAuth } from '@/context/AuthContext';

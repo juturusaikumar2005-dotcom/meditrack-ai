@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
   Stethoscope,
   Star,
@@ -17,7 +17,7 @@ import { FooterComponent } from '@/components/layout/FooterComponent';
 import toast from 'react-hot-toast';
 
 /* ─────────────────────────── Animation Variants ─────────────────────────── */
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 32 },
   visible: (i: number = 0) => ({
     opacity: 1,
@@ -26,7 +26,7 @@ const fadeUp = {
   }),
 };
 
-const fadeLeft = {
+const fadeLeft: Variants = {
   hidden: { opacity: 0, x: -24 },
   visible: (i: number = 0) => ({
     opacity: 1,
@@ -35,16 +35,16 @@ const fadeLeft = {
   }),
 };
 
-const scalePop = {
+const scalePop: Variants = {
   hidden: { opacity: 0, scale: 0.93 },
   visible: (i: number = 0) => ({
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: i * 0.1 },
+    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 },
   }),
 };
 
-const staggerContainer = {
+const staggerContainer: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
 };

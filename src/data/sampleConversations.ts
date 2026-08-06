@@ -1,9 +1,11 @@
 export interface ChatMessageItem {
   id: string;
-  role: 'user' | 'ai';
+  role: 'user' | 'ai' | 'assistant';
   text: string;
   timestamp: string;
+  time?: string;
   isEmergency?: boolean;
+  specialistReferral?: string;
   specialistSuggestion?: {
     specialty: string;
     description: string;

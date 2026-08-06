@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
   Upload,
   FileImage,
@@ -29,9 +29,9 @@ import { ConfidenceIndicator } from '@/components/prescription/ConfidenceIndicat
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 /* ─────────────────────────── Animation Variants ─────────────────────────── */
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
-  visible: (i = 0) => ({
+  visible: (i: number = 0) => ({
     opacity: 1,
     y: 0,
     transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 },

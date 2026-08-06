@@ -14,6 +14,7 @@ import {
   RotateCcw,
   Copy,
   Check,
+  AlertTriangle,
 } from 'lucide-react';
 import { FooterComponent } from '@/components/layout/FooterComponent';
 import { useAIAssistant } from '@/context/AIAssistantContext';
