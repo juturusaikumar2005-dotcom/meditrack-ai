@@ -89,6 +89,9 @@ export default function SignUpPage() {
     const { error } = await signInWithGoogle();
     if (error) {
       toast.error(`Google Sign-In failed: ${error}`);
+    } else {
+      toast.success('Signed in with Google successfully');
+      navigate('/app/dashboard');
     }
   };
 

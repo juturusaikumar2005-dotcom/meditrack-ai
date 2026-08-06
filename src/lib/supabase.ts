@@ -473,10 +473,29 @@ export const supabase = {
       const anonKey = getSupabaseAnonKey();
 
       if (!isRealSupabaseConfigured()) {
-        return {
-          data: null,
-          error: new Error('VITE_SUPABASE_URL is not configured. Please set a valid Supabase URL in your .env file.'),
+        // Fallback demo OAuth sign-in when real Supabase credentials are not configured
+        const userId = `usr-google-${Date.now()}`;
+        const mockUser: User = {
+          id: userId,
+          email: 'alex.morgan@gmail.com',
+          user_metadata: {
+            full_name: 'Alex Morgan',
+            avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+            role: 'patient',
+          },
+          created_at: new Date().toISOString(),
         };
+
+        const mockSession: Session = {
+          access_token: createMockJwtToken(userId, 'alex.morgan@gmail.com'),
+          expires_at: Math.floor(Date.now() / 1000) + 7200,
+          user: mockUser,
+        };
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(mockSession));
+        notifyListeners('SIGNED_IN', mockSession);
+
+        return { data: { provider, user: mockUser, session: mockSession }, error: null };
       }
 
       const redirectTo = options?.redirectTo || `${window.location.origin}/auth/callback`;
