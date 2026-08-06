@@ -327,16 +327,6 @@ export default function SignInPage() {
                   <GoogleIcon />
                   <span>Continue with Google</span>
                 </motion.button>
-
-                {/* Quick 1-Click Demo Sign-In Button */}
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  type="button"
-                  onClick={handleQuickDemoSignIn}
-                  className="w-full h-11 rounded-[12px] bg-[#1A3C2B]/10 border border-[#1A3C2B]/30 text-xs sm:text-sm font-semibold text-[#1A3C2B] hover:bg-[#1A3C2B]/20 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>⚡ Quick Demo Sign In (1-Click)</span>
-                </motion.button>
               </form>
 
               {/* Footer Link */}
