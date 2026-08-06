@@ -19,12 +19,13 @@ type AuthContextValue = {
   loading: boolean;
   /** Supabase Email + Password Sign In */
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  /** Supabase Email + Password Sign Up (Auto-inserts record into profiles table) */
+  /** Supabase Email + Password Sign Up */
   signUp: (email: string, password: string, fullName: string, role?: Profile['role']) => Promise<{ error: string | null }>;
-  /** Supabase Google OAuth Sign In */
+  /** Supabase Google OAuth Sign In with prompt: "select_account" */
   signInWithGoogle: () => Promise<{ error: string | null }>;
-  /** Supabase Logout */
+  /** Supabase Global Logout with session & storage purge */
   signOut: () => Promise<void>;
+  /** Refresh Profile directly from Supabase auth.getUser() */
   refreshProfile: () => Promise<void>;
 };
 
@@ -35,24 +36,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ── Session Restoration & State Listener ──────────────────────────────────
+  // ── Session Restoration & Official Auth State Listener ────────────────────
   useEffect(() => {
     let mounted = true;
 
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (mounted) {
-        setSupabaseSession(session);
-        setSupabaseUser(session?.user ?? null);
-        setLoading(false);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (mounted) {
+          setSupabaseSession(session);
+          setSupabaseUser(user ?? session?.user ?? null);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('[Auth Init Error]:', err);
+        if (mounted) setLoading(false);
       }
     };
 
     initAuth();
 
-    // Listen to real-time auth changes (sign-in, sign-out, token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Official Supabase Auth Listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (mounted) {
+        if (session?.user) {
+          console.log('[Supabase Auth Listener] User Email:', session.user.email);
+        }
         setSupabaseSession(session);
         setSupabaseUser(session?.user ?? null);
         setLoading(false);
@@ -65,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // ── User Profile Construction ──────────────────────────────────────────────
+  // ── User Profile Construction from Authenticated Supabase User ────────────
   const profile: Profile | null = supabaseUser
     ? {
         id: supabaseUser.id,
@@ -122,33 +132,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null };
   };
 
-  // ── Supabase Google OAuth Sign In ──────────────────────────────────────────
+  // ── Supabase Google OAuth Sign In (Fix 1: prompt: "select_account") ─────────
   const signInWithGoogle: AuthContextValue['signInWithGoogle'] = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          prompt: 'select_account',
+          access_type: 'offline',
+        },
       },
     });
 
     if (error) {
+      console.error('[Google OAuth Error]:', error);
       return { error: error.message };
     }
     return { error: null };
   };
 
-  // ── Supabase Logout ────────────────────────────────────────────────────────
+  // ── Supabase Global Logout (Fix 2: scope: "global" & storage purge) ─────────
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut({ scope: 'global' });
+    } catch (err) {
+      console.error('[SignOut Error]:', err);
+    }
+    localStorage.clear();
+    sessionStorage.clear();
     setSupabaseSession(null);
     setSupabaseUser(null);
+    window.location.href = '/';
   };
 
+  // ── Refresh Profile (Fix 3: Always obtain authenticated user from getUser) ──
   const refreshProfile = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      setSupabaseSession(session);
-      setSupabaseUser(session.user);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && user) {
+        setSupabaseSession(session);
+        setSupabaseUser(user);
+      }
+    } catch (err) {
+      console.error('[Refresh Profile Error]:', err);
     }
   };
 

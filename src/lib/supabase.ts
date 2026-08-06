@@ -498,14 +498,38 @@ export const supabase = {
       }
 
       const redirectTo = options?.redirectTo || `${window.location.origin}/auth/callback`;
-      const authUrl = `${supabaseUrl.replace(/\/$/, '')}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectTo)}&apikey=${encodeURIComponent(anonKey)}`;
+      const queryParams = options?.queryParams || {
+        prompt: 'select_account',
+        access_type: 'offline',
+      };
+      const queryStr = new URLSearchParams(queryParams).toString();
+      const authUrl = `${supabaseUrl.replace(/\/$/, '')}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectTo)}&apikey=${encodeURIComponent(anonKey)}&${queryStr}`;
 
       window.location.href = authUrl;
       return { data: { provider, url: authUrl }, error: null };
     },
 
-    async signOut(): Promise<{ error: Error | null }> {
-      localStorage.removeItem(STORAGE_KEY);
+    async signOut(options?: { scope?: 'global' | 'local' | 'others' }): Promise<{ error: Error | null }> {
+      const supabaseUrl = getSupabaseUrl();
+      const anonKey = getSupabaseAnonKey();
+      const activeSession = await getOrRefreshSession();
+
+      if (isRealSupabaseConfigured() && activeSession?.access_token) {
+        try {
+          await fetch(`${supabaseUrl.replace(/\/$/, '')}/auth/v1/logout?scope=${options?.scope || 'global'}`, {
+            method: 'POST',
+            headers: {
+              apikey: anonKey,
+              Authorization: `Bearer ${activeSession.access_token}`,
+            },
+          }).catch(() => null);
+        } catch (err) {
+          console.error('[Supabase Auth Logout Error]:', err);
+        }
+      }
+
+      localStorage.clear();
+      sessionStorage.clear();
       cleanupLegacyTokens();
       notifyListeners('SIGNED_OUT', null);
       return { error: null };
