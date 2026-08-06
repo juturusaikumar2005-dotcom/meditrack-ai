@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   Info,
   Stethoscope,
+  MessageSquare,
   Share2,
 } from 'lucide-react';
 import { FooterComponent } from '@/components/layout/FooterComponent';
