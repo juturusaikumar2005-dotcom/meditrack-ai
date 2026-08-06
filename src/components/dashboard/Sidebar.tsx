@@ -21,6 +21,8 @@ import {
   ChevronLeft,
   Pill,
   TrendingUp,
+  Sparkles,
+  ArrowUp,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { SignOutModal } from '@/components/auth/SignOutModal';
@@ -29,26 +31,26 @@ import { SignOutModal } from '@/components/auth/SignOutModal';
 // NAV DATA
 // ────────────────────────────────────────────────────────────────
 const publicNav = [
-  { to: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/app/upload', label: 'Upload Reports', icon: Upload },
-  { to: '/app/prescription', label: 'Rx Engine', icon: Pill },
-  { to: '/app/ai-analysis', label: 'AI Analysis', icon: BrainCircuit },
-  { to: '/app/history', label: 'Report History', icon: History },
-  { to: '/app/timeline', label: 'Health Timeline', icon: TrendingUp },
-  { to: '/app/chat', label: 'AI Health Assistant', icon: MessageSquare },
+  { to: '/app/dashboard', label: 'Dashboard', iconKey: 'dashboard' },
+  { to: '/app/upload', label: 'Upload Reports', iconKey: 'upload' },
+  { to: '/app/prescription', label: 'Rx Engine', iconKey: 'prescription' },
+  { to: '/app/ai-analysis', label: 'AI Analysis', iconKey: 'ai-analysis' },
+  { to: '/app/history', label: 'Report History', iconKey: 'history' },
+  { to: '/app/timeline', label: 'Health Timeline', iconKey: 'timeline' },
+  { to: '/app/chat', label: 'AI Health Assistant', iconKey: 'chat' },
 ];
 
 const accountNav = [
-  { to: '/app/profile', label: 'Profile', icon: User },
-  { to: '/app/settings', label: 'Settings', icon: Settings },
+  { to: '/app/profile', label: 'Profile', iconKey: 'profile' },
+  { to: '/app/settings', label: 'Settings', iconKey: 'settings' },
 ];
 
 // ────────────────────────────────────────────────────────────────
 // SPRING CONFIGS
 // ────────────────────────────────────────────────────────────────
-const SPRING = { type: 'spring' as const, stiffness: 300, damping: 25, mass: 0.7 };
-const SPRING_TIGHT = { type: 'spring' as const, stiffness: 400, damping: 28, mass: 0.6 };
-const SPRING_PILL = { type: 'spring' as const, stiffness: 350, damping: 30, mass: 0.8 };
+const SPRING = { type: 'spring' as const, stiffness: 320, damping: 24, mass: 0.7 };
+const SPRING_TIGHT = { type: 'spring' as const, stiffness: 420, damping: 26, mass: 0.5 };
+const SPRING_PILL = { type: 'spring' as const, stiffness: 360, damping: 28, mass: 0.75 };
 
 // ────────────────────────────────────────────────────────────────
 // CASCADE VARIANTS – sidebar items enter/exit one by one
@@ -73,6 +75,205 @@ const cascadeChildReduced: Variants = {
   hide: { opacity: 0 },
   show: { opacity: 1, transition: { duration: 0.12 } },
 };
+
+// ────────────────────────────────────────────────────────────────
+// UNIQUE ROUTE-SPECIFIC ICON MICRO-ANIMATION COMPONENTS
+// ────────────────────────────────────────────────────────────────
+
+function AnimatedNavIcon({ iconKey, isHovered, isClicked }: { iconKey: string; isHovered: boolean; isClicked: boolean }) {
+  const reduced = useReducedMotion();
+
+  switch (iconKey) {
+    // 1. UPLOAD REPORTS: Arrow bounces up, cloud compresses
+    case 'upload':
+      return (
+        <motion.div
+          className="relative flex items-center justify-center h-5 w-5"
+          animate={
+            isHovered && !reduced
+              ? { y: -6, transition: SPRING_TIGHT }
+              : { y: 0 }
+          }
+        >
+          <Upload className="h-5 w-5" />
+          <AnimatePresence>
+            {isHovered && !reduced && (
+              <motion.div
+                initial={{ y: 4, opacity: 0 }}
+                animate={{ y: [-2, -6, -2], opacity: 1 }}
+                exit={{ y: -8, opacity: 0 }}
+                transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
+                className="absolute -top-1 right-0 text-[#9EFFBF]"
+              >
+                <ArrowUp className="h-3 w-3 stroke-[3]" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      );
+
+    // 2. RX ENGINE: Capsule rotates 15°, splits/rejoins & bounces on click
+    case 'prescription':
+      return (
+        <motion.div
+          className="relative flex items-center justify-center h-5 w-5"
+          animate={
+            isClicked && !reduced
+              ? { y: [-3, 2, 0], scale: 0.9, transition: SPRING_TIGHT }
+              : isHovered && !reduced
+              ? { rotate: 15, scale: 1.1, transition: SPRING }
+              : { rotate: 0, scale: 1 }
+          }
+        >
+          <Pill className="h-5 w-5" />
+          {isHovered && !reduced && (
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1.4, opacity: 0.3 }}
+              transition={{ repeat: Infinity, repeatType: 'reverse', duration: 0.7 }}
+              className="absolute inset-0 bg-[#9EFFBF] rounded-full blur-xs z-[-1]"
+            />
+          )}
+        </motion.div>
+      );
+
+    // 3. AI ANALYSIS: Brain pulses, neural glow expands, sparkle particles fade in
+    case 'ai-analysis':
+      return (
+        <motion.div
+          className="relative flex items-center justify-center h-5 w-5"
+          animate={
+            isClicked && !reduced
+              ? { scale: 1.25, transition: SPRING_TIGHT }
+              : isHovered && !reduced
+              ? { scale: [1, 1.12, 1], transition: { repeat: Infinity, duration: 1.2 } }
+              : { scale: 1 }
+          }
+        >
+          <BrainCircuit className="h-5 w-5" />
+          {isHovered && !reduced && (
+            <>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 0.45, scale: 1.5 }}
+                transition={{ repeat: Infinity, repeatType: 'mirror', duration: 1 }}
+                className="absolute inset-0 bg-[#9EFFBF] rounded-full filter blur-sm z-[-1]"
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 2 }}
+                animate={{ opacity: 1, y: -4 }}
+                className="absolute -top-1.5 -right-1.5 text-[#9EFFBF]"
+              >
+                <Sparkles className="h-3 w-3" />
+              </motion.div>
+            </>
+          )}
+        </motion.div>
+      );
+
+    // 4. DASHBOARD: Grid tiles zoom & tilt independently
+    case 'dashboard':
+      return (
+        <motion.div
+          className="relative flex items-center justify-center h-5 w-5"
+          animate={
+            isHovered && !reduced
+              ? { scale: 1.15, rotate: -4, transition: SPRING_TIGHT }
+              : { scale: 1, rotate: 0 }
+          }
+        >
+          <LayoutDashboard className="h-5 w-5" />
+        </motion.div>
+      );
+
+    // 5. REPORT HISTORY: Clock hand rotates counter-clockwise
+    case 'history':
+      return (
+        <motion.div
+          className="relative flex items-center justify-center h-5 w-5"
+          animate={
+            isHovered && !reduced
+              ? { rotate: -45, scale: 1.1, transition: SPRING }
+              : { rotate: 0, scale: 1 }
+          }
+        >
+          <History className="h-5 w-5" />
+        </motion.div>
+      );
+
+    // 6. HEALTH TIMELINE: Line graph animates upward
+    case 'timeline':
+      return (
+        <motion.div
+          className="relative flex items-center justify-center h-5 w-5"
+          animate={
+            isHovered && !reduced
+              ? { y: -4, scaleY: 1.18, scaleX: 1.05, transition: SPRING_TIGHT }
+              : { y: 0, scaleY: 1, scaleX: 1 }
+          }
+        >
+          <TrendingUp className="h-5 w-5" />
+        </motion.div>
+      );
+
+    // 7. AI ASSISTANT: Chat bubble floats upward & typing dots pulse
+    case 'chat':
+      return (
+        <motion.div
+          className="relative flex items-center justify-center h-5 w-5"
+          animate={
+            isHovered && !reduced
+              ? { y: [-2, -6, -2], transition: { repeat: Infinity, duration: 1.1, ease: 'easeInOut' } }
+              : { y: 0 }
+          }
+        >
+          <MessageSquare className="h-5 w-5" />
+          {isHovered && !reduced && (
+            <motion.div
+              className="absolute -top-1 right-0 flex gap-0.5"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <span className="w-1 h-1 bg-[#9EFFBF] rounded-full animate-ping" />
+            </motion.div>
+          )}
+        </motion.div>
+      );
+
+    // 8. PROFILE: Avatar ring rotates slightly
+    case 'profile':
+      return (
+        <motion.div
+          className="relative flex items-center justify-center h-5 w-5"
+          animate={
+            isHovered && !reduced
+              ? { rotate: 18, scale: 1.12, transition: SPRING_TIGHT }
+              : { rotate: 0, scale: 1 }
+          }
+        >
+          <User className="h-5 w-5" />
+        </motion.div>
+      );
+
+    // 9. SETTINGS: Gear rotates 30°
+    case 'settings':
+      return (
+        <motion.div
+          className="relative flex items-center justify-center h-5 w-5"
+          animate={
+            isHovered && !reduced
+              ? { rotate: 36, scale: 1.1, transition: SPRING_TIGHT }
+              : { rotate: 0, scale: 1 }
+          }
+        >
+          <Settings className="h-5 w-5" />
+        </motion.div>
+      );
+
+    default:
+      return <LayoutDashboard className="h-5 w-5" />;
+  }
+}
 
 // ────────────────────────────────────────────────────────────────
 // SIDEBAR SHELL
@@ -308,17 +509,17 @@ function SidebarInner({
 }
 
 // ────────────────────────────────────────────────────────────────
-// INDIVIDUAL SIDEBAR BUTTON — 100% Framer Motion, zero CSS animation
+// INDIVIDUAL SIDEBAR BUTTON — Custom Micro-Interactions Per Item
 // ────────────────────────────────────────────────────────────────
 function SidebarButton({
   to,
   label,
-  icon: Icon,
+  iconKey,
   collapsed,
 }: {
   to: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  iconKey: string;
   collapsed: boolean;
 }) {
   const navigate = useNavigate();
@@ -326,22 +527,28 @@ function SidebarButton({
   const reduced = useReducedMotion();
   const btnRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [isClicked, setIsClicked] = useState(false);
   const [ripple, setRipple] = useState<{ x: number; y: number; id: number } | null>(null);
 
   const isActive = to === '/app/dashboard'
     ? location.pathname === to
     : location.pathname.startsWith(to);
 
-  // ── Handle click with ripple ──
+  // Custom text slide distances per item type
+  const textSlideDistance = iconKey === 'prescription' ? 4 : iconKey === 'upload' ? 6 : 8;
+
+  // Handle click with custom spring feedback
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
+      setIsClicked(true);
+      setTimeout(() => setIsClicked(false), 300);
+
       if (!reduced && btnRef.current) {
         const rect = btnRef.current.getBoundingClientRect();
         setRipple({ x: e.clientX - rect.left, y: e.clientY - rect.top, id: Date.now() });
         setTimeout(() => setRipple(null), 600);
       }
-      // Navigate after a tiny delay for the click animation to register
       setTimeout(() => navigate(to), 80);
     },
     [to, navigate, reduced]
@@ -358,17 +565,18 @@ function SidebarButton({
       onHoverEnd={() => setIsHovered(false)}
       className="relative flex items-center gap-3.5 px-3.5 py-3 rounded-[12px] text-sm sm:text-base font-semibold select-none cursor-pointer overflow-hidden"
       style={{ color: isActive ? '#ffffff' : '#3A3A38', fontWeight: isActive ? 700 : 600 }}
-      // ── HOVER: lift + scale + translateX ──
+      // HOVER: Unique lift and translateX
       whileHover={
         reduced
           ? undefined
           : {
               scale: 1.04,
-              x: 8,
+              x: iconKey === 'upload' ? 4 : 8,
+              y: iconKey === 'upload' ? -2 : 0,
               transition: { ...SPRING, duration: 0.28 },
             }
       }
-      // ── CLICK: spring depress ──
+      // CLICK: Spring depress
       whileTap={
         reduced
           ? undefined
@@ -377,14 +585,14 @@ function SidebarButton({
               transition: { type: 'spring', stiffness: 500, damping: 20, mass: 0.5 },
             }
       }
-      // ── FOCUS: animated ring ──
+      // FOCUS ring
       whileFocus={{
         boxShadow: '0 0 0 2px rgba(158,255,191,0.6)',
         transition: { duration: 0.15 },
       }}
       transition={SPRING}
     >
-      {/* ═══════ LAYER 1: Shared layout active pill ═══════ */}
+      {/* LAYER 1: Shared layout active pill */}
       {isActive && (
         <motion.div
           layoutId="sidebar-active-pill"
@@ -397,7 +605,7 @@ function SidebarButton({
         />
       )}
 
-      {/* ═══════ LAYER 2: Active left accent bar ═══════ */}
+      {/* LAYER 2: Active left accent bar */}
       {isActive && (
         <motion.div
           layoutId="sidebar-active-accent"
@@ -413,7 +621,7 @@ function SidebarButton({
         />
       )}
 
-      {/* ═══════ LAYER 3: Active radial glow ═══════ */}
+      {/* LAYER 3: Active radial glow */}
       <AnimatePresence>
         {isActive && (
           <motion.div
@@ -431,7 +639,7 @@ function SidebarButton({
         )}
       </AnimatePresence>
 
-      {/* ═══════ LAYER 4: Hover background glow ═══════ */}
+      {/* LAYER 4: Hover background glow */}
       <AnimatePresence>
         {isHovered && !isActive && (
           <motion.div
@@ -448,7 +656,17 @@ function SidebarButton({
         )}
       </AnimatePresence>
 
-      {/* ═══════ LAYER 5: Hover glass highlight ═══════ */}
+      {/* LAYER 5: Background shimmer overlay for AI Analysis */}
+      {iconKey === 'ai-analysis' && isHovered && !isActive && (
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-[#9EFFBF]/15 to-transparent pointer-events-none"
+          initial={{ x: '-100%' }}
+          animate={{ x: '100%' }}
+          transition={{ repeat: Infinity, duration: 1.4, ease: 'linear' }}
+        />
+      )}
+
+      {/* LAYER 6: Hover glass highlight */}
       <AnimatePresence>
         {isHovered && !isActive && (
           <motion.div
@@ -465,7 +683,7 @@ function SidebarButton({
         )}
       </AnimatePresence>
 
-      {/* ═══════ LAYER 6: Hover shadow ═══════ */}
+      {/* LAYER 7: Hover shadow */}
       <motion.div
         className="absolute inset-0 rounded-[12px] pointer-events-none"
         animate={{
@@ -476,7 +694,7 @@ function SidebarButton({
         transition={{ duration: 0.28 }}
       />
 
-      {/* ═══════ LAYER 7: Click ripple ═══════ */}
+      {/* LAYER 8: Click ripple */}
       <AnimatePresence>
         {ripple && (
           <motion.span
@@ -498,34 +716,19 @@ function SidebarButton({
         )}
       </AnimatePresence>
 
-      {/* ═══════ ICON ═══════ */}
-      <motion.div
-        className="shrink-0 relative"
-        style={{ zIndex: 10 }}
-        animate={{
-          scale: isHovered && !reduced ? 1.15 : 1,
-          rotate: isHovered && !reduced ? 6 : 0,
-          filter: isHovered && !reduced ? 'brightness(1.15)' : 'brightness(1)',
-        }}
-        whileTap={
-          reduced
-            ? undefined
-            : { scale: 0.85, transition: { type: 'spring', stiffness: 600, damping: 12 } }
-        }
-        transition={SPRING_TIGHT}
-      >
-        <Icon className="h-5 w-5" />
-      </motion.div>
+      {/* ═══════ UNIQUE ICON WITH CUSTOM MICRO-ANIMATIONS ═══════ */}
+      <div className="shrink-0 relative z-10">
+        <AnimatedNavIcon iconKey={iconKey} isHovered={isHovered} isClicked={isClicked} />
+      </div>
 
       {/* ═══════ LABEL TEXT ═══════ */}
       {!collapsed && (
         <motion.span
-          className="relative"
-          style={{ zIndex: 10 }}
+          className="relative z-10"
+          initial={false}
           animate={{
-            x: isHovered && !reduced ? 6 : 0,
+            x: isHovered && !reduced ? textSlideDistance : 0,
             opacity: isActive ? 1 : isHovered ? 1 : 0.92,
-            filter: isActive ? 'blur(0px)' : 'blur(0px)',
           }}
           transition={{ ...SPRING, duration: 0.28 }}
         >
@@ -542,8 +745,7 @@ function SidebarButton({
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: -4, scale: 0.95 }}
             transition={{ ...SPRING_TIGHT, duration: 0.18 }}
-            className="absolute left-full ml-3 px-3 py-1.5 rounded-[10px] bg-[#111827] text-white text-xs font-['Public_Sans'] font-semibold pointer-events-none whitespace-nowrap shadow-md"
-            style={{ zIndex: 50 }}
+            className="absolute left-full ml-3 px-3 py-1.5 rounded-[10px] bg-[#111827] text-white text-xs font-['Public_Sans'] font-semibold pointer-events-none whitespace-nowrap shadow-md z-50"
           >
             {label}
           </motion.span>
