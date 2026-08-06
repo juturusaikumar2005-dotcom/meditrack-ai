@@ -5,6 +5,8 @@ import { apiClient } from '@/lib/apiClient';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
+import { classifyMedicalIntent, REJECTION_MESSAGE, MENTAL_HEALTH_CRISIS_RESPONSE } from '@/lib/medicalGuardrail';
+
 interface AIAssistantContextType {
   isOpen: boolean;
   toggleAssistant: () => void;
@@ -115,6 +117,35 @@ export function AIAssistantProvider({ children }: { children: ReactNode }) {
 
       setMessages((prev) => [...prev, userMsg]);
       setTyping(true);
+
+      // ── PRE-LLM SAFETY & MEDICAL INTENT CLASSIFIER ──────────────────────
+      const intent = classifyMedicalIntent(trimmed);
+
+      if (intent.isSelfHarm) {
+        setTyping(false);
+        const crisisMsg: ChatMessageItem = {
+          id: `msg-ai-${Date.now()}`,
+          role: 'assistant',
+          text: intent.reply || MENTAL_HEALTH_CRISIS_RESPONSE,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isEmergency: true,
+        };
+        setMessages((prev) => [...prev, crisisMsg]);
+        return;
+      }
+
+      if (!intent.isMedical) {
+        setTyping(false);
+        const rejectionMsg: ChatMessageItem = {
+          id: `msg-ai-${Date.now()}`,
+          role: 'assistant',
+          text: intent.reply || REJECTION_MESSAGE,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isEmergency: false,
+        };
+        setMessages((prev) => [...prev, rejectionMsg]);
+        return;
+      }
 
       // Get stored report analysis context
       let latestReportAnalysis = null;

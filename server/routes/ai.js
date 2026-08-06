@@ -50,7 +50,7 @@ const EMERGENCY_KEYWORDS = [
 // ── 10-Category Health Intent Classifier & Safety Guardrail ─────────────────
 const STANDARD_REFUSAL_MESSAGE = `I'm MediTrack AI.
 
-I can only answer healthcare-related questions including diseases, symptoms, medicines, prescriptions, laboratory reports, nutrition, fitness and general health.
+I only answer healthcare-related questions such as diseases, medicines, prescriptions, medical reports, laboratory tests, nutrition, fitness, and general health.
 
 Please ask a healthcare-related question.`;
 
