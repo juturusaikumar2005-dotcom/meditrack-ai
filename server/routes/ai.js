@@ -57,6 +57,54 @@ function detectEmergency(message) {
   return null;
 }
 
+// ── Master Intent Guardrail Classifier ─────────────────────────────────────
+const NON_MEDICAL_PATTERNS = [
+  /\b(python|javascript|typescript|java|c\+\+|golang|html|css|sql|react|vite|node|coding|programmer|program|code|bug|repo|github|git|compile)\b/i,
+  /\b(ipl|cricket|football|soccer|basketball|nba|messi|ronaldo|virat|dhoni|stadium|match|tournament|trophy|world cup)\b/i,
+  /\b(prime minister|president|election|politics|parliament|congress|bjp|government|minister|democrat|republican)\b/i,
+  /\b(movie|cinema|actor|actress|hollywood|bollywood|netflix|film|director|song|box office|celebrity|oscar)\b/i,
+  /\b(joke|funny story|tell me a story|poem|riddle|song|haiku|fairy tale|essay|novel|fanfiction)\b/i,
+  /\b(crypto|bitcoin|ethereum|stock|stock market|trading|investing|finance|mutual fund|wallet|currency)\b/i,
+  /\b(astrology|horoscope|zodiac|zodiac sign|tarot|palmistry|future prediction)\b/i,
+  /\b(homework|assignment|solve this math|math equation|algebra|calculus|geography|history|physics|chemistry exam)\b/i,
+];
+
+const HEALTH_DOMAIN_KEYWORDS = [
+  'health', 'doctor', 'medicine', 'drug', 'tablet', 'capsule', 'dose', 'dosage', 'syrup', 'injection',
+  'symptom', 'disease', 'condition', 'report', 'lab', 'blood', 'test', 'cbc', 'mri', 'ct', 'scan',
+  'xray', 'x-ray', 'ecg', 'ekg', 'lft', 'kft', 'rft', 'urine', 'thyroid', 'hba1c', 'glucose', 'sugar',
+  'diabetes', 'fever', 'headache', 'pain', 'chest pain', 'cough', 'cold', 'flu', 'infection', 'virus',
+  'anemia', 'ferritin', 'hemoglobin', 'vitamin', 'calcium', 'iron', 'diet', 'nutrition', 'food',
+  'exercise', 'fitness', 'workout', 'sleep', 'mental health', 'anxiety', 'stress', 'depression', 'pregnancy',
+  'pediatric', 'child', 'elderly', 'prescription', 'side effect', 'precaution', 'interaction', 'bp',
+  'blood pressure', 'heart', 'kidney', 'liver', 'lungs', 'brain', 'stomach', 'skin', 'eye', 'dental',
+  'first aid', 'emergency', 'insurance', 'meditrack', 'hospital', 'clinic', 'triage', 'pulse', 'vitals'
+];
+
+const STANDARD_REFUSAL_MESSAGE = "I'm MediTrack AI, a healthcare-focused assistant. I can only answer questions related to health, medicines, medical reports, diseases, symptoms, nutrition, fitness, and healthcare. Please ask a medical or health-related question.";
+
+function isHealthQuestion(message) {
+  const text = message.toLowerCase().trim();
+
+  // 1. Explicit Non-Medical Rejection Check
+  for (const pattern of NON_MEDICAL_PATTERNS) {
+    if (pattern.test(text)) {
+      return false;
+    }
+  }
+
+  // 2. Health Domain Keyword Check (Allow if any health term present or question is short general health query)
+  const isHealth = HEALTH_DOMAIN_KEYWORDS.some(kw => text.includes(kw));
+  if (isHealth) return true;
+
+  // 3. Fallback check for common health query patterns
+  if (/\b(how|what|why|can i|is it|treatment|cause|cure|remedy|feel|hurt|sick|tired|weak|head|throat|chest|back|stomach)\b/i.test(text)) {
+    return true;
+  }
+
+  return false;
+}
+
 // ── Specialist Mapping ──────────────────────────────────────────────────────
 const SPECIALIST_MAPPINGS = [
   { keywords: ['chest', 'heart', 'cardio', 'palpitation', 'blood pressure'], specialist: 'Cardiologist', reason: 'Evaluates cardiovascular health, heart rhythm, and arterial circulation.' },
@@ -100,21 +148,27 @@ async function queryGeminiAssistant(message, history, latestReportAnalysis, gemi
 
   const specialistInfo = inferSpecialist(message, latestReportAnalysis);
 
-  const contextPrompt = `You are MEDITRACK AI Health Assistant — an intelligent, empathetic, clinical healthcare assistant.
+  const contextPrompt = `You are MediTrack AI — an intelligent, empathetic, clinical Medical AI Assistant.
 
-CRITICAL INSTRUCTIONS:
-1. Provide educational health guidance, short summaries, bullet points, and healthy next steps.
-2. If the user asks about their uploaded report, use the following stored report analysis:
-   - Summary: "${latestReportAnalysis?.summary || 'No recent report analysis available.'}"
-   - Recommended Specialist: "${latestReportAnalysis?.recommended_specialist || specialistInfo.specialist}"
-   - Key Findings: ${JSON.stringify(latestReportAnalysis?.key_findings || [])}
-3. Always include a short section recommending an appropriate specialist when relevant:
-   - Recommended Specialist: **${specialistInfo.specialist}**
-   - Reason: ${specialistInfo.reason}
-4. For medicine inquiries (e.g. Paracetamol, Vitamin D, Metformin), provide general educational info only. NEVER prescribe drugs or state exact dosages.
-5. End with a polite educational disclaimer: *"MEDITRACK AI provides educational health insights and does not replace formal medical diagnosis by a licensed doctor."*
+YOUR ONLY PURPOSE is to assist users with health-related information:
+- General Health, Human Anatomy, Diseases, Symptoms, Medicines, Drug Info, Dosage, Side Effects, Interactions, First Aid, Nutrition, Fitness, Mental Health, Sleep, Medical Reports (CBC, LFT, KFT, Thyroid, MRI, CT, ECG, Discharge Summaries), Prescriptions, Pregnancy, Emergency Guidance.
 
-User Query: "${message}"`;
+MEDICINE RULES: Explain uses, dosage guidelines, how to take (before/after food), side effects, missed dose guidance, precautions, interactions. Never state exact prescription changes.
+SYMPTOM RULES: Provide possible causes, general info, when to seek medical care, home care measures. Never state a definitive diagnosis.
+
+SAFETY & DOMAIN RULES:
+- Never answer non-medical questions (politics, coding, sports, movies, jokes, stories, finance).
+- If question is unrelated to health, respond EXACTLY: "${STANDARD_REFUSAL_MESSAGE}"
+- Never tell users to ignore their doctor.
+
+Stored User Report Context:
+- Summary: "${latestReportAnalysis?.summary || 'No recent report analysis available.'}"
+- Recommended Specialist: "${latestReportAnalysis?.recommended_specialist || specialistInfo.specialist}"
+- Key Findings: ${JSON.stringify(latestReportAnalysis?.key_findings || [])}
+
+Specialist Referral: **${specialistInfo.specialist}** (${specialistInfo.reason})
+
+End with: *"MediTrack AI provides educational health insights and does not replace formal medical diagnosis by a licensed doctor."*`;
 
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
@@ -127,7 +181,7 @@ User Query: "${message}"`;
             role: h.role === 'user' ? 'user' : 'model',
             parts: [{ text: h.text }],
           })),
-          { parts: [{ text: contextPrompt }] },
+          { parts: [{ text: contextPrompt + `\n\nUser Query: "${message}"` }] },
         ],
       }),
     });
@@ -773,7 +827,7 @@ async function analyzeReportWithOpenRouter(reportName, reportType, fileUrl, open
 
 /**
  * @route POST /api/ai/health-assistant
- * @desc AI Healthcare Assistant Endpoint powered by Google Gemini API
+ * @desc AI Healthcare Assistant Endpoint powered by Google Gemini API with Intent Guardrail Filtering
  */
 router.post('/health-assistant', async (req, res) => {
   try {
@@ -783,6 +837,18 @@ router.post('/health-assistant', async (req, res) => {
     }
 
     const { userId, message, history, latestReportAnalysis } = parseResult.data;
+
+    // STEP 1 & 2: BACKEND INTENT FILTER GUARDRAIL
+    if (!isHealthQuestion(message)) {
+      return res.json({
+        provider: 'MediTrack AI Guardrail',
+        query: message,
+        isEmergency: false,
+        response: STANDARD_REFUSAL_MESSAGE,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     const geminiApiKey = process.env.GEMINI_API_KEY;
 
     let result;
