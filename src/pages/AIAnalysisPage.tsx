@@ -12,6 +12,7 @@ import {
   Download,
   Share2,
   ArrowRight,
+  Sparkles,
   Activity,
 } from 'lucide-react';
 import { FooterComponent } from '@/components/layout/FooterComponent';
