@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import aiRoutes from './routes/ai.js';
+import prescriptionRoutes from './routes/prescription.js';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/ai', prescriptionRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

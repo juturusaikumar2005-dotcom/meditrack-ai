@@ -17,6 +17,7 @@ const ChatPage = lazy(() => import('@/pages/ChatPage'));
 const HistoryPage = lazy(() => import('@/pages/HistoryPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
+const PrescriptionPage = lazy(() => import('@/pages/PrescriptionPage'));
 
 function ProtectedRoutes() {
   const { session, loading } = useAuth();
@@ -53,6 +54,7 @@ export default function App() {
                 <Route index element={<Navigate to="/app/dashboard" replace />} />
                 <Route path="dashboard" element={<DashboardPage />} />
                 <Route path="upload" element={<UploadPage />} />
+                <Route path="prescription" element={<PrescriptionPage />} />
                 <Route path="ai-analysis" element={<AIAnalysisPage />} />
                 <Route path="history" element={<HistoryPage />} />
                 <Route path="chat" element={<ChatPage />} />

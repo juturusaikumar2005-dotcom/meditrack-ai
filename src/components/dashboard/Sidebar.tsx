@@ -13,6 +13,7 @@ import {
   LogOut,
   X,
   ChevronLeft,
+  Pill,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '@/context/AuthContext';
@@ -21,6 +22,7 @@ import { SignOutModal } from '@/components/auth/SignOutModal';
 const publicNav = [
   { to: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/app/upload', label: 'Upload Reports', icon: Upload },
+  { to: '/app/prescription', label: 'Rx Engine', icon: Pill },
   { to: '/app/ai-analysis', label: 'AI Analysis', icon: BrainCircuit },
   { to: '/app/history', label: 'Report History', icon: History },
   { to: '/app/chat', label: 'AI Health Assistant', icon: MessageSquare },
