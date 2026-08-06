@@ -1,0 +1,93 @@
+@import 'tailwindcss';
+
+:root {
+  --paper-bg: #F7F7F5;
+  --forest-green: #1A3C2B;
+  --grid-lines: rgba(58, 58, 56, 0.15);
+  --coral: #FF8C69;
+  --mint: #9EFFBF;
+  --gold: #F4D35E;
+  --white: #FFFFFF;
+}
+
+@theme {
+  --color-paper-bg: #F7F7F5;
+  --color-forest-green: #1A3C2B;
+  --color-grid-lines: rgba(58, 58, 56, 0.15);
+  --color-coral: #FF8C69;
+  --color-mint: #9EFFBF;
+  --color-gold: #F4D35E;
+  --color-white: #FFFFFF;
+
+  --font-heading: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Public Sans', system-ui, sans-serif;
+  --font-label: 'JetBrains Mono', monospace;
+}
+
+@layer base {
+  * {
+    border-color: rgba(58, 58, 56, 0.15);
+    box-shadow: none !important;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    background-color: #F7F7F5;
+    color: #111827;
+  }
+
+  body {
+    font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
+    background: #F7F7F5;
+    color: #111827;
+    margin: 0;
+  }
+
+  h1, h2, h3, h4, .font-heading {
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -0.03em;
+  }
+
+  .font-mono, .font-label {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  ::selection {
+    background: rgba(26, 60, 43, 0.2);
+    color: #111827;
+  }
+}
+
+/* Mosaic Background Grid Pattern (160x100px) */
+.mosaic-bg {
+  background-color: #F7F7F5;
+  background-image:
+    linear-gradient(rgba(58, 58, 56, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(58, 58, 56, 0.08) 1px, transparent 1px);
+  background-size: 160px 100px;
+  background-position: center top;
+  background-repeat: repeat;
+}
+
+/* Border Radius Design System Utilities */
+.rounded-card { border-radius: 14px; }
+.rounded-btn { border-radius: 12px; }
+.rounded-input { border-radius: 12px; }
+.rounded-modal { border-radius: 16px; }
+.rounded-icon { border-radius: 10px; }
+.rounded-dropdown { border-radius: 10px; }
+
+/* Flat Hairline Border */
+.border-hairline {
+  border: 1px solid rgba(58, 58, 56, 0.18);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(58, 58, 56, 0.25); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(58, 58, 56, 0.4); }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
