@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
   Upload,
@@ -24,6 +24,7 @@ import { MedicineCard } from '@/components/prescription/MedicineCard';
 import { MedicationTimeline } from '@/components/prescription/MedicationTimeline';
 import { DrugInteractionAlert } from '@/components/prescription/DrugInteractionAlert';
 import { PrecautionGrid } from '@/components/prescription/PrecautionCard';
+import { ConfidenceIndicator } from '@/components/prescription/ConfidenceIndicator';
 import { parsePrescriptionClientSide } from '@/lib/prescriptionClientAnalyzer';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
