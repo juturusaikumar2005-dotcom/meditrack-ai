@@ -1,7 +1,7 @@
 {
   "name": "meditrack-backend",
   "version": "1.0.0",
-  "description": "MEDITRACK AI — Express.js + Node.js backend with JWT Authentication, bcrypt, Zod validation, and Google Gemini AI integration",
+  "description": "MEDITRACK AI — Express.js + Node.js backend with JWT Authentication, bcrypt, Zod validation, Supabase SDK, and Google Gemini AI integration",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -9,6 +9,8 @@
     "dev": "node --watch index.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "@supabase/supabase-js": "^2.49.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
