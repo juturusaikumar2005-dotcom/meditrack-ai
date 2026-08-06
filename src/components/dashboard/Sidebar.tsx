@@ -216,18 +216,42 @@ function AnimatedNavIcon({ iconKey, isHovered, isClicked }: { iconKey: string; i
         </motion.div>
       );
 
-    // 6. HEALTH TIMELINE: Line graph animates upward
+    // 6. HEALTH TIMELINE: ECG Heartbeat Surge & Ascending Growth Vector Animation
     case 'timeline':
       return (
         <motion.div
           className="relative flex items-center justify-center h-5 w-5"
           animate={
-            isHovered && !reduced
-              ? { y: -4, scaleY: 1.18, scaleX: 1.05, transition: SPRING_TIGHT }
-              : { y: 0, scaleY: 1, scaleX: 1 }
+            isClicked && !reduced
+              ? { y: [-10, 2, 0], scale: [1, 1.35, 1], rotate: -15, transition: SPRING_TIGHT }
+              : isHovered && !reduced
+              ? {
+                  y: [-2, -6, -2],
+                  scaleY: [1, 1.25, 1],
+                  scaleX: [1, 1.1, 1],
+                  transition: { repeat: Infinity, duration: 0.9, ease: 'easeInOut' },
+                }
+              : { y: 0, scaleY: 1, scaleX: 1, rotate: 0 }
           }
         >
-          <TrendingUp className="h-5 w-5" />
+          <TrendingUp className="h-5 w-5 text-[#1A3C2B] drop-shadow-xs" />
+          {isHovered && !reduced && (
+            <>
+              {/* Ascending trend line pulse point */}
+              <motion.span
+                initial={{ opacity: 0, x: -6, y: 6 }}
+                animate={{ opacity: [0, 1, 0], x: 8, y: -8 }}
+                transition={{ repeat: Infinity, duration: 0.75, ease: 'linear' }}
+                className="absolute w-2 h-2 bg-[#5AE68E] rounded-full shadow-[0_0_8px_#5AE68E]"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 0.35, scale: 1.4 }}
+                transition={{ repeat: Infinity, repeatType: 'reverse', duration: 0.6 }}
+                className="absolute inset-0 bg-[#9EFFBF] rounded-full filter blur-xs z-[-1]"
+              />
+            </>
+          )}
         </motion.div>
       );
 
