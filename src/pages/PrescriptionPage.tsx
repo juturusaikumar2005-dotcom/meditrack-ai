@@ -211,46 +211,10 @@ export default function PrescriptionPage() {
 
   return (
     <div className="relative min-h-screen bg-[#F7F7F5]">
-      {/* ── Curtain Entrance Animation ─────────────────── */}
-      <AnimatePresence>
-        {!curtainDone && (
-          <motion.div
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0D2419] pointer-events-none"
-            initial={{ y: 0 }}
-            animate={{ y: '-100%' }}
-            exit={{ y: '-100%' }}
-            transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1], delay: 0.5 }}
-            onAnimationComplete={() => setCurtainDone(true)}
-          >
-            {/* Scan line sweep */}
-            <motion.div
-              className="absolute inset-x-0 h-px bg-[#9EFFBF] shadow-[0_0_16px_4px_rgba(158,255,191,0.7)]"
-              initial={{ top: '0%' }}
-              animate={{ top: '100%' }}
-              transition={{ duration: 0.7, ease: 'linear', delay: 0.1 }}
-            />
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.4 }}
-              className="flex flex-col items-center gap-4"
-            >
-              <div className="h-14 w-14 bg-[#9EFFBF]/20 rounded-[16px] border border-[#9EFFBF]/40 flex items-center justify-center">
-                <Pill className="h-7 w-7 text-[#9EFFBF]" />
-              </div>
-              <div className="text-center">
-                <p className="font-['JetBrains_Mono'] text-[#9EFFBF] text-xs tracking-[0.3em] uppercase">MEDITRACK AI</p>
-                <p className="font-['Space_Grotesk'] text-white text-lg font-bold mt-1">Rx Engine Initialising</p>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* ── Page Header ─────────────────────────────── */}
         <motion.div
-          variants={fadeUp} custom={0} initial="hidden" animate={curtainDone ? 'visible' : 'hidden'}
+          variants={fadeUp} custom={0} initial="hidden" animate="visible"
           className="space-y-2"
         >
           <div className="flex items-center gap-2 mb-1">
@@ -270,7 +234,7 @@ export default function PrescriptionPage() {
         {/* ── Upload Zone ──────────────────────────────── */}
         {!result && (
           <motion.div
-            variants={fadeUp} custom={1} initial="hidden" animate={curtainDone ? 'visible' : 'hidden'}
+            variants={fadeUp} custom={1} initial="hidden" animate="visible"
             className="space-y-4"
           >
             {/* Drop zone */}
