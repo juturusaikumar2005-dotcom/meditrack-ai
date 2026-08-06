@@ -60,11 +60,11 @@ export default function WelcomeLandingPage() {
 
       {/* Top Header */}
       <header className="px-6 sm:px-12 py-6 flex items-center justify-between z-20 max-w-7xl mx-auto w-full">
-        <div className="flex items-center gap-3">
-          <div className="h-11 w-11 bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center rounded-[12px] border border-[#1A3C2B] shadow-xs">
+        <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
+          <div className="h-11 w-11 bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center rounded-[12px] border border-[#1A3C2B] shadow-xs group-hover:scale-105 transition-transform">
             <HeartHandshake className="h-6 w-6" />
           </div>
-          <span className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827] tracking-tight">
+          <span className="font-[#111827] font-['Space_Grotesk'] text-2xl font-bold tracking-tight group-hover:text-[#1A3C2B] transition-colors">
             MEDITRACK<span className="text-[#1A3C2B]"> AI</span>
           </span>
         </div>

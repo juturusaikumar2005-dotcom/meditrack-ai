@@ -413,7 +413,7 @@ function SidebarInner({
       >
         {collapsed && !mobile ? (
           <motion.a
-            href="/app/dashboard"
+            href="/"
             className="h-10 w-10 bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center rounded-[10px] border border-[#1A3C2B] cursor-pointer"
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.94 }}
@@ -424,7 +424,7 @@ function SidebarInner({
         ) : (
           <div className="flex items-center justify-between flex-1">
             <motion.a
-              href="/app/dashboard"
+              href="/"
               className="flex items-center gap-3 cursor-pointer"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
