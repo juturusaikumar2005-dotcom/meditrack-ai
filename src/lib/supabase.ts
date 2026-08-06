@@ -694,6 +694,49 @@ export const supabase = {
           },
         };
       },
+
+      delete() {
+        return {
+          eq(column: string, value: string) {
+            return (async (): Promise<{ error: Error | null }> => {
+              const supabaseUrl = getSupabaseUrl();
+              const anonKey = getSupabaseAnonKey();
+              const activeSession = await getOrRefreshSession();
+              const tokenToUse = activeSession?.access_token || anonKey;
+
+              if (isRealSupabaseConfigured()) {
+                try {
+                  await fetch(
+                    `${supabaseUrl.replace(/\/$/, '')}/rest/v1/${table}?${column}=eq.${encodeURIComponent(value)}`,
+                    {
+                      method: 'DELETE',
+                      headers: {
+                        apikey: anonKey,
+                        Authorization: `Bearer ${tokenToUse}`,
+                        Prefer: 'return=minimal',
+                      },
+                    }
+                  );
+                } catch (err) {
+                  console.error(`[Supabase DB] Delete ${table} error:`, err);
+                  return { error: err as Error };
+                }
+              }
+
+              // Local storage fallback
+              if (table === 'reports') {
+                const raw = localStorage.getItem(LOCAL_REPORTS_KEY);
+                if (raw) {
+                  const current: ReportRecord[] = JSON.parse(raw);
+                  localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(current.filter((r) => (r as any)[column] !== value)));
+                }
+              }
+
+              return { error: null };
+            })();
+          },
+        };
+      },
     };
   },
 };

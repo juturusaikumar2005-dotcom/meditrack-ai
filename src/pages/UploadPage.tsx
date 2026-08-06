@@ -303,6 +303,14 @@ export default function UploadPage() {
         }
       }
 
+      // Save to local storage history for 100% persistent history
+      try {
+        const stored = localStorage.getItem('meditrack_reports_history');
+        const existing: ReportRecord[] = stored ? JSON.parse(stored) : [];
+        const updated = [newReport, ...existing.filter((r) => r.id !== newReport.id)];
+        localStorage.setItem('meditrack_reports_history', JSON.stringify(updated));
+      } catch {}
+
       setUploads((prev) => [newReport, ...prev]);
       window.dispatchEvent(new Event('meditrack_report_uploaded'));
 

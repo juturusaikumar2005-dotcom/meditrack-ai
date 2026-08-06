@@ -25,6 +25,8 @@ import { MedicationTimeline } from '@/components/prescription/MedicationTimeline
 import { DrugInteractionAlert } from '@/components/prescription/DrugInteractionAlert';
 import { PrecautionGrid } from '@/components/prescription/PrecautionCard';
 import { ConfidenceIndicator } from '@/components/prescription/ConfidenceIndicator';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -64,6 +66,7 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export default function PrescriptionPage() {
+  const { profile, session } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -142,6 +145,31 @@ export default function PrescriptionPage() {
       const data = await response.json();
       setStep(4);
       await delay(600);
+
+      // Save prescription record to History
+      const rxReportRecord = {
+        id: `rx_${Date.now()}`,
+        user_id: profile?.id || session?.user?.id || 'usr-demo',
+        report_name: file.name,
+        report_type: 'Prescriptions',
+        file_url: preview || '',
+        upload_date: new Date().toISOString().split('T')[0],
+        status: 'Analyzed',
+        file_size: `${(file.size / 1024).toFixed(1)} KB`,
+      };
+
+      try {
+        await supabase.from('reports').insert(rxReportRecord);
+      } catch {}
+
+      try {
+        const stored = localStorage.getItem('meditrack_reports_history');
+        const existing = stored ? JSON.parse(stored) : [];
+        const updated = [rxReportRecord, ...existing.filter((r: any) => r.id !== rxReportRecord.id)];
+        localStorage.setItem('meditrack_reports_history', JSON.stringify(updated));
+      } catch {}
+
+      window.dispatchEvent(new Event('meditrack_report_uploaded'));
 
       setStep(5);
       setResult(data);

@@ -28,24 +28,49 @@ export default function HistoryPage() {
 
   const userId = profile?.id || session?.user?.id || 'usr-demo';
 
-  // ── Load Real Ingested Reports ──────────────────────────────────────────────
+  // ── Load Real Ingested Reports (Supabase + LocalStorage Fallback) ─────────────
   useEffect(() => {
     let isMounted = true;
 
     async function loadReports() {
-      if (!userId) return;
       setLoading(true);
 
-      const { data, error } = await supabase
-        .from('reports')
-        .select('*')
-        .eq('user_id', userId)
-        .order('upload_date', { ascending: false });
+      let localReports: ReportRecord[] = [];
+      try {
+        const stored = localStorage.getItem('meditrack_reports_history');
+        if (stored) localReports = JSON.parse(stored);
+      } catch {}
+
+      let remoteReports: ReportRecord[] = [];
+      if (userId) {
+        try {
+          const { data, error } = await supabase
+            .from('reports')
+            .select('*')
+            .eq('user_id', userId)
+            .order('upload_date', { ascending: false });
+
+          if (!error && data && data.length > 0) {
+            remoteReports = data as ReportRecord[];
+          }
+        } catch {}
+      }
+
+      // Merge remote & local, deduplicate by ID / report_name
+      const mergedMap = new Map<string, ReportRecord>();
+      [...remoteReports, ...localReports].forEach((rep) => {
+        const key = rep.id || `${rep.report_name}_${rep.upload_date}`;
+        if (!mergedMap.has(key)) {
+          mergedMap.set(key, rep);
+        }
+      });
+
+      const finalReports = Array.from(mergedMap.values()).sort((a, b) => {
+        return new Date(b.upload_date || 0).getTime() - new Date(a.upload_date || 0).getTime();
+      });
 
       if (isMounted) {
-        if (!error && data && data.length > 0) {
-          setReports(data as ReportRecord[]);
-        }
+        setReports(finalReports);
         setLoading(false);
       }
     }
@@ -65,7 +90,14 @@ export default function HistoryPage() {
 
   // Delete Report Handler
   const handleDeleteReport = async (reportId: string, reportName: string) => {
-    setReports((prev) => prev.filter((r) => r.id !== reportId));
+    setReports((prev) => {
+      const updated = prev.filter((r) => r.id !== reportId);
+      localStorage.setItem('meditrack_reports_history', JSON.stringify(updated));
+      return updated;
+    });
+    try {
+      await supabase.from('reports').delete().eq('id', reportId);
+    } catch {}
     toast.success(`Removed "${reportName}" from history.`);
   };
 
