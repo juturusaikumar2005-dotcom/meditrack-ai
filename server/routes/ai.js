@@ -635,14 +635,18 @@ EXHAUSTIVE EXTRACTION STEPS:
 
 Return ONLY valid JSON matching this schema (no markdown block wrappers):
 {
+  "documentType": ["Discharge Summary", "Laboratory Report"],
   "document_type": "Discharge Summary / Lab Report",
   "document_sections": ["Patient Info", "Diagnosis", "Vitals", "Laboratory", "Medications", "Billing"],
   "hospital": { "name": null, "department": null, "ward": null, "bed": null, "address": null },
   "patient": { "name": null, "age": null, "gender": null, "uhid": null, "ip_number": null, "op_number": null, "blood_group": null, "mobile": null },
   "doctor": { "name": null, "specialty": null, "qualification": null },
-  "diagnosis": { "primary": null, "secondary": null, "final": null, "provisional": null, "differential": null },
+  "admission": { "date": null, "time": null },
+  "discharge": { "date": null, "time": null, "type": null },
+  "diagnosis": { "primary": null, "secondary": [], "final": null, "provisional": null, "differential": null },
+  "complaints": [],
   "history": { "chief_complaints": [], "present_illness": null, "medical_history": null, "allergies": [] },
-  "vitals": { "bp": null, "hr": null, "rr": null, "temp": null, "spo2": null, "bmi": null, "weight": null, "height": null, "pain_score": null },
+  "vitals": { "bp": null, "pulse": null, "hr": null, "rr": null, "temp": null, "spo2": null, "bmi": null, "weight": null, "height": null, "gcs": null, "avpu": null, "pain_score": null },
   "organ_health_scores": {
     "overallScore": 92,
     "bloodHealth": { "status": "Optimal", "score": 94, "details": "All blood parameters evaluated" },
@@ -654,10 +658,22 @@ Return ONLY valid JSON matching this schema (no markdown block wrappers):
     "infectionIndicators": { "status": "Normal", "score": 95, "details": "WBC & inflammatory markers clear" },
     "hydrationElectrolytes": { "status": "Optimal", "score": 92, "details": "Electrolytes balanced" }
   },
-  "summary": "Full clinical summary of the document.",
-  "overall_status": "Normal | Borderline | Attention Needed | Critical",
-  "confidence_score": 97.5,
-  "risk_level": "Low | Moderate | Attention Needed",
+  "laboratory": [
+    {
+      "test_name": "Hemoglobin",
+      "name": "Hemoglobin",
+      "value": "13.8",
+      "numeric_value": 13.8,
+      "unit": "g/dL",
+      "reference_range": "12.0 - 15.5",
+      "normal_range": "12.0 - 15.5",
+      "status": "Normal",
+      "severity": "optimal",
+      "category": "CBC",
+      "confidence": 98.0,
+      "interpretation": "Normal oxygen-carrying protein capacity."
+    }
+  ],
   "biomarkers": [
     {
       "name": "Hemoglobin",
@@ -673,17 +689,21 @@ Return ONLY valid JSON matching this schema (no markdown block wrappers):
     }
   ],
   "radiology": [],
+  "imaging": [],
   "medications": [],
   "procedures": [],
   "instructions": [],
-  "billing": { "total_amount": null, "paid": null, "currency": null },
+  "followup": { "date": null, "doctor": null, "symptoms_to_watch": [] },
+  "billing": { "bill_number": null, "hospital_name": null, "items": [], "total_amount": null, "paid": null, "balance": null, "payment_mode": null },
   "insurance": { "provider": null, "policy_number": null, "claim_status": null },
+  "summary": { "patient_summary": "Summary for patient", "clinical_summary": "Clinical summary", "abnormal_findings": [], "normal_findings": [], "critical_findings": [], "lifestyle_advice": [], "questions_for_doctor": [] },
   "abnormal_count": 0,
   "normal_count": 1,
   "critical_count": 0,
   "recommended_specialist": "General Physician",
   "recommended_specialist_reason": "For routine clinical evaluation.",
   "lifestyle_recommendations": [],
+  "confidence": { "overall": 97.5, "ocr_confidence": 98.0, "quality_status": "High" },
   "quality_check": {
     "missing_fields": [],
     "verified_sections": ["Patient Info", "Lab Table"],
