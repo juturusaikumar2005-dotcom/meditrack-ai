@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/apiClient';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
-import { classifyMedicalIntent, REJECTION_MESSAGE, MENTAL_HEALTH_CRISIS_RESPONSE } from '@/lib/medicalGuardrail';
+import { classifyMedicalIntent, isMedicalQuery, REJECTION_MESSAGE, MENTAL_HEALTH_CRISIS_RESPONSE } from '@/lib/medicalGuardrail';
 
 interface AIAssistantContextType {
   isOpen: boolean;
@@ -118,7 +118,7 @@ export function AIAssistantProvider({ children }: { children: ReactNode }) {
       setMessages((prev) => [...prev, userMsg]);
       setTyping(true);
 
-      // ── PRE-LLM SAFETY & MEDICAL INTENT CLASSIFIER ──────────────────────
+      // ── PRE-LLM SAFETY & MEDICAL INTENT GUARDRAIL CHECK ─────────────────────
       const intent = classifyMedicalIntent(trimmed);
 
       if (intent.isSelfHarm) {
@@ -134,12 +134,12 @@ export function AIAssistantProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (!intent.isMedical) {
+      if (!isMedicalQuery(trimmed)) {
         setTyping(false);
         const rejectionMsg: ChatMessageItem = {
           id: `msg-ai-${Date.now()}`,
           role: 'assistant',
-          text: intent.reply || REJECTION_MESSAGE,
+          text: REJECTION_MESSAGE,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isEmergency: false,
         };

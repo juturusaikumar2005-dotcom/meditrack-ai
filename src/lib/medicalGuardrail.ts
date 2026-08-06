@@ -9,7 +9,7 @@ export interface IntentResult {
 
 export const REJECTION_MESSAGE = `I'm MediTrack AI.
 
-I only answer healthcare-related questions such as diseases, medicines, prescriptions, medical reports, laboratory tests, nutrition, fitness, and general health.
+I only answer healthcare-related questions including diseases, medicines, prescriptions, laboratory reports, medical imaging, nutrition, fitness, and general health.
 
 Please ask a healthcare-related question.`;
 
@@ -142,4 +142,12 @@ export function classifyMedicalIntent(userMessage: string): IntentResult {
     reply: REJECTION_MESSAGE,
     category: 'non_medical',
   };
+}
+
+/**
+ * Primary Guardrail Function: returns true ONLY if query is genuinely healthcare related.
+ */
+export function isMedicalQuery(message: string): boolean {
+  const intent = classifyMedicalIntent(message);
+  return intent.isMedical;
 }
