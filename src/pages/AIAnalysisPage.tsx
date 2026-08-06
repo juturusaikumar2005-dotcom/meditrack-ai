@@ -28,19 +28,19 @@ const fadeUp: Variants = {
 
 /* ─────────────────────────── Helpers ─────────────────────────────────────── */
 function normalizeBiomarkers(analysis: any) {
-  // Support biomarkers[], laboratory[], and legacy key_findings[]
   if (analysis?.biomarkers?.length) return analysis.biomarkers;
-  if (analysis?.laboratory?.length) {
-    return analysis.laboratory.map((lab: any) => ({
-      name: lab.test_name || lab.name || 'Laboratory Test',
+  const labArray = analysis?.laboratory || analysis?.labTests || analysis?.lab_tests || analysis?.tests || analysis?.results;
+  if (labArray?.length) {
+    return labArray.map((lab: any) => ({
+      name: lab.test_name || lab.biomarker || lab.name || lab.title || 'Laboratory Test',
       value: lab.value || '',
       numeric_value: parseFloat(lab.value) || null,
       unit: lab.unit || '',
-      normal_range: lab.reference_range || lab.normal_range || '',
+      normal_range: lab.reference_range || lab.normal_range || lab.range || '',
       status: lab.status || 'Normal',
       severity: lab.severity || (lab.status?.includes('Critical') ? 'critical' : lab.status !== 'Normal' ? 'attention' : 'optimal'),
       category: lab.category || 'Laboratory',
-      explanation: lab.clinical_explanation || lab.explanation || '',
+      explanation: lab.clinical_explanation || lab.explanation || lab.interpretation || lab.description || '',
       recommendation: lab.recommendation || '',
       confidence: lab.confidence || 96.5,
       validation_status: lab.validation_status || 'Verified',
@@ -451,6 +451,27 @@ export default function AIAnalysisPage() {
                       index={i}
                     />
                   ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Empty Biomarker Diagnostic Feedback Banner ── */}
+            {biomarkers.length === 0 && (
+              <motion.div variants={fadeUp} custom={3} initial="hidden" animate="visible" className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 text-center space-y-3">
+                <Activity className="h-8 w-8 text-[#3A3A38]/30 mx-auto" />
+                <h3 className="font-['Space_Grotesk'] text-base font-bold text-[#111827]">
+                  No laboratory biomarkers detected in this document
+                </h3>
+                <div className="font-['Public_Sans'] text-xs text-[#3A3A38] max-w-md mx-auto text-left bg-[#F7F7F5] p-4 rounded-[10px] space-y-1.5 border border-[#3A3A38]/10">
+                  <p className="font-bold text-[#111827]">Possible reasons:</p>
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li>This report contains no numerical laboratory test values (e.g. Prescription, Radiology, Invoice).</li>
+                    <li>OCR confidence was low or document handwriting is faint/blurred.</li>
+                    <li>AI extraction pass returned non-table narrative format.</li>
+                  </ul>
+                  <p className="text-[11px] text-[#1A3C2B] font-semibold pt-1">
+                    💡 Tip: Re-upload a clear, high-resolution document or select a specific report target mode.
+                  </p>
                 </div>
               </motion.div>
             )}

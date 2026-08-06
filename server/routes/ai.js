@@ -751,8 +751,29 @@ async function analyzeReportWithGemini(reportName, reportType, fileUrl, geminiAp
         rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
         try {
           const parsed = JSON.parse(rawText);
-          if (parsed && (parsed.biomarkers || parsed.key_findings)) {
-            // Ensure biomarkers always exists (bridge old key_findings if needed)
+          console.log('[AI RAW RESPONSE (Gemini)]:', rawText.substring(0, 300) + '...');
+          console.log('[PARSED JSON (Gemini)]:', {
+            laboratoryCount: parsed.laboratory?.length || 0,
+            biomarkersCount: parsed.biomarkers?.length || 0,
+            medicationsCount: parsed.medications?.length || 0,
+          });
+
+          if (parsed && (parsed.biomarkers || parsed.laboratory || parsed.key_findings || parsed.summary || parsed.medications || parsed.diagnosis)) {
+            // Ensure biomarkers exists (bridge laboratory or key_findings if missing)
+            if (!parsed.biomarkers && parsed.laboratory) {
+              parsed.biomarkers = parsed.laboratory.map(lab => ({
+                name: lab.test_name || lab.name || 'Laboratory Test',
+                value: lab.value || '',
+                numeric_value: parseFloat(lab.value) || null,
+                unit: lab.unit || '',
+                normal_range: lab.reference_range || lab.normal_range || '',
+                status: lab.status || 'Normal',
+                severity: lab.severity || (lab.status?.includes('Critical') ? 'critical' : lab.status !== 'Normal' ? 'attention' : 'optimal'),
+                category: lab.category || parsed.report_type || 'Laboratory',
+                explanation: lab.clinical_explanation || lab.explanation || lab.interpretation || '',
+                recommendation: lab.recommendation || '',
+              }));
+            }
             if (!parsed.biomarkers && parsed.key_findings) {
               parsed.biomarkers = parsed.key_findings.map(kf => ({
                 name: kf.biomarker || kf.title || 'Unknown',
@@ -775,7 +796,7 @@ async function analyzeReportWithGemini(reportName, reportType, fileUrl, geminiAp
           if (match) {
             try {
               const parsed = JSON.parse(match[0]);
-              if (parsed && (parsed.biomarkers || parsed.key_findings)) return parsed;
+              if (parsed && (parsed.biomarkers || parsed.laboratory || parsed.key_findings || parsed.summary)) return parsed;
             } catch {}
           }
         }
@@ -833,7 +854,28 @@ async function analyzeReportWithOpenRouter(reportName, reportType, fileUrl, open
         rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
         try {
           const parsed = JSON.parse(rawText);
-          if (parsed && (parsed.biomarkers || parsed.key_findings)) {
+          console.log('[AI RAW RESPONSE (OpenRouter)]:', rawText.substring(0, 300) + '...');
+          console.log('[PARSED JSON (OpenRouter)]:', {
+            laboratoryCount: parsed.laboratory?.length || 0,
+            biomarkersCount: parsed.biomarkers?.length || 0,
+            medicationsCount: parsed.medications?.length || 0,
+          });
+
+          if (parsed && (parsed.biomarkers || parsed.laboratory || parsed.key_findings || parsed.summary || parsed.medications || parsed.diagnosis)) {
+            if (!parsed.biomarkers && parsed.laboratory) {
+              parsed.biomarkers = parsed.laboratory.map(lab => ({
+                name: lab.test_name || lab.name || 'Laboratory Test',
+                value: lab.value || '',
+                numeric_value: parseFloat(lab.value) || null,
+                unit: lab.unit || '',
+                normal_range: lab.reference_range || lab.normal_range || '',
+                status: lab.status || 'Normal',
+                severity: lab.severity || (lab.status?.includes('Critical') ? 'critical' : lab.status !== 'Normal' ? 'attention' : 'optimal'),
+                category: lab.category || parsed.report_type || 'Laboratory',
+                explanation: lab.clinical_explanation || lab.explanation || lab.interpretation || '',
+                recommendation: lab.recommendation || '',
+              }));
+            }
             if (!parsed.biomarkers && parsed.key_findings) {
               parsed.biomarkers = parsed.key_findings.map(kf => ({
                 name: kf.biomarker || kf.title || 'Unknown',
