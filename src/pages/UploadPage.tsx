@@ -179,7 +179,7 @@ export default function UploadPage() {
     toast.loading(`Ingesting ${file.name}...`, { id: 'upload-toast' });
 
     try {
-      // Retrieve the authenticated user before uploading and inserting into reports
+      // 3. Retrieve authenticated user before storage upload and database inserts
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -188,11 +188,14 @@ export default function UploadPage() {
         throw new Error('User not authenticated');
       }
 
+      console.log('[Authenticated User]', user);
+      console.log('[User ID]', user.id);
+
       const currentUserId = user.id;
       const sanitizeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const storageFilePath = `${currentUserId}/${Date.now()}_${sanitizeName}`;
 
-      console.log('[Storage Upload Request]', { path: storageFilePath, userId: currentUserId });
+      console.log('[Storage Upload Payload]', { path: storageFilePath, size: file.size, type: file.type });
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('medical-reports')
@@ -225,8 +228,12 @@ export default function UploadPage() {
         status: 'Analyzed',
       };
 
+      console.log('[Reports Table Insert Payload]', newReport);
+
       const { data: insertResult, error: insertError } = await supabase.from('reports').insert(newReport);
-      console.log('[Database Insert Result]', { insertResult, error: insertError, reportId: newReport.id });
+
+      console.log('[Supabase Insert Response]', insertResult);
+      console.log('[Supabase Insert Error]', insertError);
 
       if (insertError) {
         console.error('[RLS Error Details]', {
@@ -297,17 +304,23 @@ export default function UploadPage() {
         };
 
         localStorage.setItem('meditrack_latest_analysis', JSON.stringify(finalPayload));
-        const { error: analysisDbError } = await supabase.from('analysis_results').insert({
+
+        const analysisPayload = {
           id: finalPayload.id,
           report_id: newReport.id,
           user_id: currentUserId,
           result_json: JSON.stringify(aiRes.data.analysis),
           created_at: new Date().toISOString(),
-        });
+        };
 
-        if (analysisDbError) {
-          console.error('[Analysis RLS Error Details]', analysisDbError);
-        }
+        console.log('[Analysis Results Table Insert Payload]', analysisPayload);
+
+        const { data: analysisRes, error: analysisDbError } = await supabase
+          .from('analysis_results')
+          .insert(analysisPayload);
+
+        console.log('[Analysis Results Supabase Response]', analysisRes);
+        console.log('[Analysis Results Supabase Error]', analysisDbError);
 
         setLatestAnalysisData(finalPayload);
         window.dispatchEvent(new Event('meditrack_report_uploaded'));

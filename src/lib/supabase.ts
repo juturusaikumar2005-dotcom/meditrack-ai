@@ -2,7 +2,7 @@
  * MEDITRACK AI — Supabase Client & Storage Adapter
  * 
  * Provides complete Supabase Authentication, Storage (medical-reports bucket),
- * and DB table sync (profiles, reports, chat_history).
+ * and DB table sync (profiles, reports, chat_history, analysis_results).
  * Includes automatic JWT expiration check & token refresh before storage/db calls.
  */
 
@@ -68,6 +68,32 @@ function getSupabaseUrl(): string {
 
 function getSupabaseAnonKey(): string {
   return (import.meta.env.VITE_SUPABASE_ANON_KEY as string) || '';
+}
+
+/**
+ * Checks whether valid, real Supabase URL and Anon Key are provided in environment variables
+ */
+export function isRealSupabaseConfigured(): boolean {
+  const url = getSupabaseUrl();
+  const key = getSupabaseAnonKey();
+  if (!url || !key) return false;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+  if (
+    url.includes('your_supabase_url') ||
+    url.includes('your-project-ref') ||
+    url.includes('placeholder') ||
+    url.includes('example.com')
+  ) {
+    return false;
+  }
+  if (
+    key.includes('your_supabase_anon_key') ||
+    key.includes('your_anon_key') ||
+    key.includes('placeholder')
+  ) {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -189,12 +215,7 @@ async function getOrRefreshSession(): Promise<Session | null> {
   const supabaseUrl = getSupabaseUrl();
   const anonKey = getSupabaseAnonKey();
 
-  if (
-    session.refresh_token &&
-    supabaseUrl &&
-    !supabaseUrl.includes('your_supabase_url') &&
-    supabaseUrl.startsWith('http')
-  ) {
+  if (session.refresh_token && isRealSupabaseConfigured()) {
     try {
       const res = await fetch(`${supabaseUrl.replace(/\/$/, '')}/auth/v1/token?grant_type=refresh_token`, {
         method: 'POST',
@@ -281,7 +302,7 @@ export const supabase = {
       const supabaseUrl = getSupabaseUrl();
       const anonKey = getSupabaseAnonKey();
 
-      if (supabaseUrl && !supabaseUrl.includes('your_supabase_url') && supabaseUrl.startsWith('http')) {
+      if (isRealSupabaseConfigured()) {
         try {
           const res = await fetch(`${supabaseUrl.replace(/\/$/, '')}/auth/v1/signup`, {
             method: 'POST',
@@ -370,7 +391,7 @@ export const supabase = {
       const supabaseUrl = getSupabaseUrl();
       const anonKey = getSupabaseAnonKey();
 
-      if (supabaseUrl && !supabaseUrl.includes('your_supabase_url') && supabaseUrl.startsWith('http')) {
+      if (isRealSupabaseConfigured()) {
         try {
           const res = await fetch(
             `${supabaseUrl.replace(/\/$/, '')}/auth/v1/token?grant_type=password`,
@@ -451,7 +472,7 @@ export const supabase = {
       const supabaseUrl = getSupabaseUrl();
       const anonKey = getSupabaseAnonKey();
 
-      if (!supabaseUrl || supabaseUrl.includes('your_supabase_url') || !supabaseUrl.startsWith('http')) {
+      if (!isRealSupabaseConfigured()) {
         return {
           data: null,
           error: new Error('VITE_SUPABASE_URL is not configured. Please set a valid Supabase URL in your .env file.'),
@@ -489,11 +510,11 @@ export const supabase = {
           const activeSession = await getOrRefreshSession();
           const tokenToUse = activeSession?.access_token || anonKey;
 
-          console.log(`[Supabase Storage] Initiate upload request for: ${filePath}`);
-          console.log(`[Supabase Storage] User ID: ${activeSession?.user?.id || 'anonymous'}`);
-          console.log(`[Supabase Storage] Token Expire Timestamp: ${activeSession?.expires_at ? new Date(activeSession.expires_at * 1000).toISOString() : 'N/A'}`);
+          console.log(`[Supabase Storage Request] Bucket: ${bucketName}, FilePath: ${filePath}`);
+          console.log(`[Supabase Storage Auth] User ID: ${activeSession?.user?.id || 'anonymous'}`);
+          console.log(`[Supabase Storage Auth] Expire Timestamp: ${activeSession?.expires_at ? new Date(activeSession.expires_at * 1000).toISOString() : 'N/A'}`);
 
-          if (supabaseUrl && !supabaseUrl.includes('your_supabase_url') && supabaseUrl.startsWith('http')) {
+          if (isRealSupabaseConfigured()) {
             try {
               const uploadUrl = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/${bucketName}/${filePath}`;
               const res = await fetch(uploadUrl, {
@@ -516,7 +537,7 @@ export const supabase = {
                 };
               }
 
-              console.log(`[Supabase Storage] Upload succeeded for ${filePath}`);
+              console.log(`[Supabase Storage Success] Uploaded to: ${filePath}`);
               return {
                 data: { path: filePath, fullPath: `${bucketName}/${filePath}` },
                 error: null,
@@ -536,7 +557,7 @@ export const supabase = {
 
         getPublicUrl(filePath: string): { data: { publicUrl: string } } {
           const supabaseUrl = getSupabaseUrl();
-          const baseUrl = supabaseUrl && !supabaseUrl.includes('your_supabase_url')
+          const baseUrl = isRealSupabaseConfigured()
             ? supabaseUrl.replace(/\/$/, '')
             : 'https://placeholder.supabase.co';
 
@@ -550,7 +571,7 @@ export const supabase = {
     },
   },
 
-  // ── Supabase Database Methods (profiles, reports, chat_history tables) ────
+  // ── Supabase Database Methods (profiles, reports, chat_history, analysis_results) ────
   from(table: string) {
     return {
       async upsert(record: any): Promise<{ data: any; error: Error | null }> {
@@ -559,7 +580,7 @@ export const supabase = {
         const activeSession = await getOrRefreshSession();
         const tokenToUse = activeSession?.access_token || anonKey;
 
-        if (supabaseUrl && !supabaseUrl.includes('your_supabase_url') && supabaseUrl.startsWith('http')) {
+        if (isRealSupabaseConfigured()) {
           try {
             await fetch(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/${table}`, {
               method: 'POST',
@@ -584,7 +605,7 @@ export const supabase = {
         const activeSession = await getOrRefreshSession();
         const tokenToUse = activeSession?.access_token || anonKey;
 
-        if (supabaseUrl && !supabaseUrl.includes('your_supabase_url') && supabaseUrl.startsWith('http')) {
+        if (isRealSupabaseConfigured()) {
           try {
             const res = await fetch(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/${table}`, {
               method: 'POST',
@@ -632,7 +653,7 @@ export const supabase = {
                 const activeSession = await getOrRefreshSession();
                 const tokenToUse = activeSession?.access_token || anonKey;
 
-                if (supabaseUrl && !supabaseUrl.includes('your_supabase_url') && supabaseUrl.startsWith('http')) {
+                if (isRealSupabaseConfigured()) {
                   try {
                     const orderDir = options?.ascending ? 'asc' : 'desc';
                     const res = await fetch(

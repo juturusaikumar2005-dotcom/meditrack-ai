@@ -151,14 +151,24 @@ export function AIAssistantProvider({ children }: { children: ReactNode }) {
       }
 
       // Save message pair into Supabase chat_history table
-      await supabase.from('chat_history').insert({
+      const { data: { user: chatUser } } = await supabase.auth.getUser();
+      const currentChatUserId = chatUser?.id || userId;
+
+      const chatPayload = {
         id: `chat_${Date.now()}`,
-        user_id: userId,
+        user_id: currentChatUserId,
         user_message: trimmed,
         ai_response: aiResponseText,
         is_emergency: isEmergency,
         created_at: new Date().toISOString(),
-      });
+      };
+
+      console.log('[Chat History Table Insert Payload]', chatPayload);
+
+      const { data: chatRes, error: chatError } = await supabase.from('chat_history').insert(chatPayload);
+
+      console.log('[Chat History Supabase Response]', chatRes);
+      console.log('[Chat History Supabase Error]', chatError);
     },
     [userId, messages, isOpen]
   );
