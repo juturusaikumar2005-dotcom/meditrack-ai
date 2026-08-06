@@ -8,6 +8,20 @@
     {
       "source": "/(.*)",
       "destination": "/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "type": "service",
+        "service": "meditrack-ai-api"
+      }
     }
-  ]
+  ],
+  "services": {
+    "meditrack-ai-api": {
+      "root": ".",
+      "framework": "vite",
+      "buildCommand": "cd server && npm install"
+    }
+  }
 }
