@@ -1,21 +1,18 @@
 import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, Search, Bell, Command, CheckCircle2 } from 'lucide-react';
+import { Menu, Search, Command, User, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { CommandPalette } from './CommandPalette';
-
-const seedNotifications = [
-  { id: 'n-1', title: 'Blood Panel Analyzed', message: 'Ferritin level flagged at 14 ng/mL (Low bound).', time: '10m ago', read: false },
-  { id: 'n-2', title: 'Specialist Match Ready', message: 'Dr. Sarah Jenkins (Hematologist) available tomorrow.', time: '1h ago', read: false },
-  { id: 'n-3', title: 'Report Backup Complete', message: '256-bit encrypted archival of 4 diagnostic files.', time: '1d ago', read: true },
-];
+import { SignOutModal } from '@/components/auth/SignOutModal';
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
-  const { profile } = useAuth();
-  const [notifOpen, setNotifOpen] = useState(false);
+  const { profile, session, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [notifs, setNotifs] = useState(seedNotifications);
-  const unread = notifs.filter((n) => !n.read).length;
+  const [signOutModalOpen, setSignOutModalOpen] = useState(false);
+  const [signOutLoading, setSignOutLoading] = useState(false);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -28,14 +25,35 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  const markAllRead = () => setNotifs((n) => n.map((x) => ({ ...x, read: true })));
+  const handleConfirmSignOut = async () => {
+    setSignOutLoading(true);
+    try {
+      await signOut();
+      setSignOutModalOpen(false);
+      setMenuOpen(false);
+      navigate('/signin', { replace: true });
+    } catch (err) {
+      console.error('Error signing out:', err);
+    } finally {
+      setSignOutLoading(false);
+    }
+  };
+
+  const userInitial = (
+    profile?.full_name?.[0] ||
+    session?.user?.email?.[0] ||
+    'U'
+  ).toUpperCase();
+
+  const userName = profile?.full_name || 'Patient Account';
+  const userEmail = session?.user?.email || profile?.email || 'patient@meditrack.ai';
 
   return (
     <>
       <header className="sticky top-0 z-30 h-18 px-4 sm:px-6 flex items-center gap-3 bg-white border-b border-[#3A3A38]/20 shadow-xs select-none">
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-2.5 rounded-[10px] text-[#1A3C2B] hover:bg-[#1A3C2B]/10 transition-colors"
+          className="lg:hidden p-2.5 rounded-[10px] text-[#1A3C2B] hover:bg-[#1A3C2B]/10 transition-colors cursor-pointer"
           aria-label="Toggle Sidebar Menu"
         >
           <Menu className="h-6 w-6" />
@@ -55,72 +73,93 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
 
         <div className="flex-1" />
 
-        {/* Notifications Dropdown */}
+        {/* User Account Avatar & Dropdown Menu */}
         <div className="relative">
           <button
-            onClick={() => setNotifOpen(!notifOpen)}
-            className="p-2 rounded-[10px] hover:bg-[#F7F7F5] border border-transparent hover:border-[#3A3A38]/20 transition-colors relative text-[#1A3C2B]"
-            aria-label="Notifications"
+            type="button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="h-10 w-10 rounded-full bg-[#1A3C2B] text-[#9EFFBF] font-['Space_Grotesk'] text-base font-bold flex items-center justify-center shrink-0 border-2 border-[#1A3C2B] hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs ring-2 ring-emerald-50"
+            aria-label="User Account Menu"
           >
-            <Bell className="h-4 w-4" />
-            {unread > 0 && (
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#FF8C69]" />
-            )}
+            {userInitial}
           </button>
 
           <AnimatePresence>
-            {notifOpen && (
+            {menuOpen && (
               <>
-                <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
+                {/* Backdrop to close menu on outside click */}
+                <div className="fixed inset-0 z-30" onClick={() => setMenuOpen(false)} />
+
+                {/* Account Dropdown Card */}
                 <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.97 }}
-                  className="absolute right-0 top-12 z-40 w-80 sm:w-96 bg-white border border-[#3A3A38]/20 rounded-[10px] shadow-xl overflow-hidden"
+                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                  transition={{ duration: 0.18, ease: 'easeOut' }}
+                  className="absolute right-0 top-13 z-40 w-72 bg-white border border-[#3A3A38]/20 rounded-[16px] shadow-xl overflow-hidden font-['Public_Sans'] select-none"
                 >
-                  <div className="p-3.5 bg-[#F7F7F5] border-b border-[#3A3A38]/15 flex items-center justify-between font-['Space_Grotesk'] font-bold text-sm text-[#111827]">
-                    <span>Health Notifications</span>
-                    <button
-                      onClick={markAllRead}
-                      className="text-xs font-['Public_Sans'] text-[#1A3C2B] hover:underline"
-                    >
-                      Mark all read
-                    </button>
+                  {/* Account Header */}
+                  <div className="p-4 bg-[#F7F7F5] border-b border-[#3A3A38]/15 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-[#1A3C2B] text-[#9EFFBF] font-['Space_Grotesk'] font-bold text-base flex items-center justify-center shrink-0 shadow-xs">
+                      {userInitial}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-['Space_Grotesk'] text-sm font-bold text-[#111827] truncate">
+                        {userName}
+                      </h4>
+                      <p className="text-xs text-[#3A3A38] truncate">{userEmail}</p>
+                    </div>
                   </div>
-                  <div className="max-h-80 overflow-y-auto divide-y divide-[#3A3A38]/10 font-['Public_Sans'] text-xs">
-                    {notifs.map((n) => (
-                      <div
-                        key={n.id}
-                        className={`p-3.5 hover:bg-[#F7F7F5] transition-colors ${
-                          !n.read ? 'bg-[#9EFFBF]/10' : ''
-                        }`}
-                      >
-                        <div className="flex items-start gap-2.5">
-                          <CheckCircle2 className="h-4 w-4 text-[#1A3C2B] shrink-0 mt-0.5" />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-bold text-[#111827]">{n.title}</p>
-                            <p className="text-[#3A3A38] text-xs mt-0.5">{n.message}</p>
-                            <p className="text-[10px] font-['JetBrains_Mono'] text-[#3A3A38] mt-1">
-                              {n.time}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+
+                  {/* Menu Items */}
+                  <div className="p-2 space-y-1 text-sm text-[#111827]">
+                    <Link
+                      to="/app/profile"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-[10px] hover:bg-[#1A3C2B]/10 hover:text-[#1A3C2B] font-medium transition-colors cursor-pointer"
+                    >
+                      <User className="h-4 w-4 text-[#1A3C2B]" />
+                      <span>My Profile</span>
+                    </Link>
+
+                    <Link
+                      to="/app/settings"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-[10px] hover:bg-[#1A3C2B]/10 hover:text-[#1A3C2B] font-medium transition-colors cursor-pointer"
+                    >
+                      <Settings className="h-4 w-4 text-[#1A3C2B]" />
+                      <span>Account Settings</span>
+                    </Link>
+
+                    <div className="my-1 border-t border-[#3A3A38]/15" />
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setSignOutModalOpen(true);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[10px] text-red-600 hover:bg-red-50 font-semibold transition-colors cursor-pointer"
+                    >
+                      <LogOut className="h-4 w-4 text-red-600" />
+                      <span>Sign Out</span>
+                    </button>
                   </div>
                 </motion.div>
               </>
             )}
           </AnimatePresence>
         </div>
-
-        {/* User Profile Avatar Pill */}
-        <div className="h-8 w-8 rounded-full bg-[#1A3C2B] text-white font-['Space_Grotesk'] text-xs font-bold flex items-center justify-center shrink-0">
-          {profile?.full_name?.[0]?.toUpperCase() ?? 'M'}
-        </div>
       </header>
 
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+
+      <SignOutModal
+        isOpen={signOutModalOpen}
+        onClose={() => setSignOutModalOpen(false)}
+        onConfirm={handleConfirmSignOut}
+        loading={signOutLoading}
+      />
     </>
   );
 }
