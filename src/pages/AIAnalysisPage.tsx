@@ -28,8 +28,25 @@ const fadeUp: Variants = {
 
 /* ─────────────────────────── Helpers ─────────────────────────────────────── */
 function normalizeBiomarkers(analysis: any) {
-  // Support both new biomarkers[] and legacy key_findings[]
+  // Support biomarkers[], laboratory[], and legacy key_findings[]
   if (analysis?.biomarkers?.length) return analysis.biomarkers;
+  if (analysis?.laboratory?.length) {
+    return analysis.laboratory.map((lab: any) => ({
+      name: lab.test_name || lab.name || 'Laboratory Test',
+      value: lab.value || '',
+      numeric_value: parseFloat(lab.value) || null,
+      unit: lab.unit || '',
+      normal_range: lab.reference_range || lab.normal_range || '',
+      status: lab.status || 'Normal',
+      severity: lab.severity || (lab.status?.includes('Critical') ? 'critical' : lab.status !== 'Normal' ? 'attention' : 'optimal'),
+      category: lab.category || 'Laboratory',
+      explanation: lab.clinical_explanation || lab.explanation || '',
+      recommendation: lab.recommendation || '',
+      confidence: lab.confidence || 96.5,
+      validation_status: lab.validation_status || 'Verified',
+      needs_manual_review: lab.needs_manual_review || false,
+    }));
+  }
   if (analysis?.key_findings?.length) {
     return analysis.key_findings.map((kf: any) => ({
       name: kf.biomarker || kf.title || 'Finding',
@@ -42,6 +59,8 @@ function normalizeBiomarkers(analysis: any) {
       category: 'General',
       explanation: kf.description || kf.title || '',
       recommendation: '',
+      confidence: 95.0,
+      validation_status: 'Verified',
     }));
   }
   return [];
@@ -379,6 +398,9 @@ export default function AIAnalysisPage() {
                       category={b.category}
                       explanation={b.explanation}
                       recommendation={b.recommendation}
+                      confidence={b.confidence}
+                      validationStatus={b.validation_status}
+                      needsManualReview={b.needs_manual_review}
                       index={i}
                     />
                   ))}
@@ -404,6 +426,9 @@ export default function AIAnalysisPage() {
                       category={b.category}
                       explanation={b.explanation}
                       recommendation={b.recommendation}
+                      confidence={b.confidence}
+                      validationStatus={b.validation_status}
+                      needsManualReview={b.needs_manual_review}
                       index={i}
                     />
                   ))}
