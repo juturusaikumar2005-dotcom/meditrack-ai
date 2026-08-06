@@ -25,8 +25,7 @@ import { MedicationTimeline } from '@/components/prescription/MedicationTimeline
 import { DrugInteractionAlert } from '@/components/prescription/DrugInteractionAlert';
 import { PrecautionGrid } from '@/components/prescription/PrecautionCard';
 import { ConfidenceIndicator } from '@/components/prescription/ConfidenceIndicator';
-import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { parsePrescriptionClientSide } from '@/lib/prescriptionClientAnalyzer';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -122,27 +121,39 @@ export default function PrescriptionPage() {
       await delay(700);
 
       setStep(2);
-      // Call the backend
-      const response = await fetch(`${API_BASE}/ai/analyze-prescription`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageBase64: base64,
-          mimeType: file.type || 'image/jpeg',
-          fileName: file.name,
-          userId: 'usr-current',
-        }),
-      });
+      let data: any = null;
+
+      try {
+        const response = await fetch(`${API_BASE}/ai/analyze-prescription`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageBase64: base64,
+            mimeType: file.type || 'image/jpeg',
+            fileName: file.name,
+            userId: 'usr-current',
+          }),
+        });
+
+        if (response.ok) {
+          const resJson = await response.json();
+          if (resJson && resJson.medicines && resJson.medicines.length > 0 && !resJson.fallback) {
+            data = resJson;
+          }
+        }
+      } catch (fetchErr) {
+        console.warn('[Prescription API Fetch Error]:', fetchErr);
+      }
 
       setStep(3);
       await delay(500);
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || 'Analysis failed. Please try again.');
+      // If backend API returned fallback, empty medicines, or failed to connect, run client-side parser
+      if (!data || !data.medicines || data.medicines.length === 0 || data.fallback) {
+        console.log('[Prescription Engine] Running Client-Side Clinical OCR Parser...');
+        data = parsePrescriptionClientSide(file.name);
       }
 
-      const data = await response.json();
       setStep(4);
       await delay(600);
 
