@@ -16,7 +16,6 @@ import {
   Check,
   AlertTriangle,
 } from 'lucide-react';
-import { FooterComponent } from '@/components/layout/FooterComponent';
 import { useAIAssistant } from '@/context/AIAssistantContext';
 import { AIAssistantLogo } from '@/components/common/AIAssistantLogo';
 import toast from 'react-hot-toast';
@@ -72,9 +71,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none font-['Public_Sans']">
-
-      <main className="py-10 px-4 sm:px-8 max-w-[80rem] mx-auto w-full space-y-8">
+    <div className="w-full text-[#111827] select-none font-['Public_Sans'] space-y-8">
         {/* Page Header */}
         <div className="border-b border-[#3A3A38]/15 pb-4 space-y-1">
           <span className="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-[#1A3C2B]">
@@ -310,9 +307,6 @@ export default function ChatPage() {
             </div>
           </div>
         </div>
-      </main>
-
-      <FooterComponent />
     </div>
   );
 }
