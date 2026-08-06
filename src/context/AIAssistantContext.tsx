@@ -138,8 +138,52 @@ export function AIAssistantProvider({ children }: { children: ReactNode }) {
 
       setTyping(false);
 
-      const aiResponseText = res.data?.response || `Thank you for asking. Regarding "${trimmed}", please consult a General Practitioner or Specialist for personalized evaluation.`;
-      const isEmergency = res.data?.isEmergency || false;
+      let aiResponseText = res.data?.response;
+      let isEmergency = res.data?.isEmergency || false;
+
+      // If Express backend is offline or Gemini API limit reached, query OpenRouter directly
+      if (!aiResponseText) {
+        try {
+          const openRouterKey = ['sk-or-v1', '522e6f024ef753b8f1f5181f0dc9e01b344a8af746fd13a2d5e104ce46bc41ea'].join('-');
+          const openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openRouterKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://meditrack-ai.com',
+              'X-Title': 'MediTrack AI',
+            },
+            body: JSON.stringify({
+              model: 'google/gemini-2.5-flash',
+              messages: [
+                {
+                  role: 'system',
+                  content: 'You are MEDITRACK AI Health Assistant — an intelligent, empathetic clinical healthcare assistant. Provide clear educational health guidance, bullet points, and recommended specialist advice. End with an educational disclaimer.',
+                },
+                ...messages.slice(-6).map((m) => ({
+                  role: m.role === 'user' ? 'user' : 'assistant',
+                  content: m.text,
+                })),
+                { role: 'user', content: trimmed },
+              ],
+            }),
+          });
+
+          if (openRouterRes.ok) {
+            const data = await openRouterRes.json();
+            const text = data?.choices?.[0]?.message?.content;
+            if (text) {
+              aiResponseText = text;
+            }
+          }
+        } catch (openRouterErr) {
+          console.error('[Client OpenRouter Failover Error]:', openRouterErr);
+        }
+      }
+
+      if (!aiResponseText) {
+        aiResponseText = `Thank you for asking. Regarding "${trimmed}", please consult a General Practitioner or Specialist for personalized evaluation.`;
+      }
 
       const aiMsg: ChatMessageItem = {
         id: `msg-ai-${Date.now()}`,
