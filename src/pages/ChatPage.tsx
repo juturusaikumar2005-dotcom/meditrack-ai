@@ -198,6 +198,24 @@ export default function ChatPage() {
 
                         <div className="whitespace-pre-wrap">{m.text}</div>
 
+                        {/* Option Buttons Below Text inside the bubble */}
+                        {m.suggestedFollowUps && m.suggestedFollowUps.length > 0 && (
+                          <div className="mt-2.5 pt-2 border-t border-[#3A3A38]/15 space-y-1.5">
+                            <div className="flex flex-wrap gap-1.5">
+                              {m.suggestedFollowUps.map((chip) => (
+                                <button
+                                  key={chip}
+                                  type="button"
+                                  onClick={() => handleSend(chip)}
+                                  className="px-2.5 py-1 bg-white border border-[#3A3A38]/20 hover:border-[#1A3C2B] hover:bg-[#1A3C2B]/10 text-[#111827] text-xs rounded-full transition-colors cursor-pointer font-medium shadow-2xs"
+                                >
+                                  {chip}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {!isUser && (
                           <button
                             onClick={() => handleCopy(m.id, m.text)}

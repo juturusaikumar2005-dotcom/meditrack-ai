@@ -12,6 +12,16 @@ export interface ChatMessageItem {
   suggestedFollowUps?: string[];
 }
 
+export const SUGGESTION_CHIPS = [
+  'Explain My Report',
+  'Headache',
+  'Fever',
+  'Chest Pain',
+  'Blood Test',
+  'Find a Doctor',
+  'Health Tips',
+];
+
 export const INITIAL_WELCOME_MESSAGE: ChatMessageItem = {
   id: 'msg-welcome-0',
   role: 'ai',
@@ -21,9 +31,5 @@ I can help explain medical reports, understand symptoms, recommend accredited sp
 
 How can I assist you today?`,
   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-  suggestedFollowUps: [
-    'Explain My Report',
-    'Health Tips',
-    'Find Specialist',
-  ],
+  suggestedFollowUps: SUGGESTION_CHIPS,
 };

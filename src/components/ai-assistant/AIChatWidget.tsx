@@ -155,35 +155,6 @@ export function AIChatWidget() {
 
             {/* CHAT MESSAGES / WELCOME SCREEN */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 font-['Public_Sans']">
-              {isOnlyWelcomeMessage && (
-                <div className="bg-white border border-[#3A3A38]/20 p-3.5 rounded-[12px] space-y-2.5 my-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">👋</span>
-                    <div>
-                      <h4 className="font-['Space_Grotesk'] text-sm font-bold text-[#111827]">
-                        Hi! I'm your MediTrack Health Assistant.
-                      </h4>
-                      <p className="text-xs text-[#3A3A38]">
-                        Ask about lab reports, symptoms, or recommended specialists.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Suggestion Chips */}
-                  <div className="pt-1.5 flex flex-wrap gap-1.5">
-                    {SUGGESTION_CHIPS.map((chip) => (
-                      <button
-                        key={chip}
-                        onClick={() => handleSend(chip)}
-                        className="px-2.5 py-1 bg-[#F7F7F5] border border-[#3A3A38]/20 hover:border-[#1A3C2B] hover:bg-[#1A3C2B]/5 text-[#111827] text-xs rounded-full transition-colors cursor-pointer font-medium"
-                      >
-                        {chip}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* MESSAGE HISTORY */}
               {messages.map((m) => {
                 const isUser = m.role === 'user';
@@ -208,6 +179,24 @@ export function AIChatWidget() {
                       }`}
                     >
                       <p className="whitespace-pre-wrap">{m.text}</p>
+
+                      {/* Option Buttons Below Text inside the bubble */}
+                      {m.suggestedFollowUps && m.suggestedFollowUps.length > 0 && (
+                        <div className="mt-2.5 pt-2 border-t border-[#3A3A38]/15 space-y-1.5">
+                          <div className="flex flex-wrap gap-1.5">
+                            {m.suggestedFollowUps.map((chip) => (
+                              <button
+                                key={chip}
+                                type="button"
+                                onClick={() => handleSend(chip)}
+                                className="px-2.5 py-1 bg-[#F7F7F5] border border-[#3A3A38]/20 hover:border-[#1A3C2B] hover:bg-[#1A3C2B]/10 text-[#111827] text-xs rounded-full transition-colors cursor-pointer font-medium shadow-2xs"
+                              >
+                                {chip}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {m.specialistReferral && (
                         <div className="mt-2.5 pt-2 border-t border-[#3A3A38]/15 font-['JetBrains_Mono'] text-xs text-[#1A3C2B] flex items-center gap-1.5 font-bold">
