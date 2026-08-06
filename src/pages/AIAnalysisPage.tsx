@@ -12,6 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { LabValueCard } from '@/components/medical-report/LabValueCard';
 import { ReportSummaryBanner } from '@/components/medical-report/ReportSummaryBanner';
+import { OrganHealthScores } from '@/components/medical-report/OrganHealthScores';
 import toast from 'react-hot-toast';
 
 /* ─────────────────────────── Animation Variants ─────────────────────────── */
@@ -256,6 +257,9 @@ export default function AIAnalysisPage() {
               reportName={reportName}
               provider={provider}
             />
+
+            {/* Organ Health Breakdown Scores */}
+            <OrganHealthScores scores={analysis.organ_health_scores} />
 
             {/* ── Critical / Abnormal Values First ──── */}
             {abnormalBiomarkers.length > 0 && (

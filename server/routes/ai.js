@@ -532,35 +532,47 @@ function generateCategorySpecificAnalysis(reportName, reportType) {
 }
 
 /**
- * Build the enhanced clinical report analysis prompt
+ * Build the enhanced clinical report analysis prompt (Universal 11-Step Pipeline)
  */
 function buildReportAnalysisPrompt(reportName, reportType) {
-  return `You are MEDITRACK AI — a world-class clinical medical report analyst.
+  return `You are MEDITRACK AI — a world-class clinical diagnostic parsing engine.
 
 Analyze this medical document:
 - Document Name: "${reportName}"
 - Reported Type: "${reportType || 'Medical Document'}"
 
-CRITICAL RULES:
-1. Auto-detect the exact report type: CBC | Blood Test | Thyroid | LFT | KFT | Urine | Lipid Panel | HbA1c | X-Ray | CT | MRI | ECG | Discharge | General
-2. Extract ALL numeric biomarker values from the report with their actual measured values.
-3. Compare each value against standard clinical normal ranges.
-4. Never fabricate values. If you cannot extract a real value, use null.
-5. NEVER diagnose diseases with certainty. Always recommend consulting a doctor.
-6. Status options: "Normal" | "Low" | "High" | "Borderline Low" | "Borderline High" | "Critical Low" | "Critical High"
-7. Severity: "optimal" | "warning" | "attention" | "critical"
+CRITICAL RULES (Universal 11-Step Pipeline):
+1. Auto-detect document_type from: Prescription | Discharge Summary | CBC Report | Blood Report | LFT | KFT | RFT | Urine Report | MRI | CT Scan | X-Ray Report | ECG | Echo | Biopsy | Histopathology | Medical Bill | Insurance Document | Vaccination Certificate | Doctor Note | Operation Notes | ICU Summary | Progress Notes | Discharge Card | Medical Certificate | Referral Letter | Lab Report | Radiology Report | Pharmacy Bill | Medicine Invoice | Health Checkup Report
+2. Extract Patient & Hospital details if present (name, age, gender, UHID, IP/OP number, blood group, doctor, hospital, ward, bed).
+3. Extract Diagnosis (primary, secondary, final, provisional, differential) and Complaints (pain, fever, cough, etc.).
+4. Extract Vitals (BP, HR, RR, Temp, SpO2, BMI, weight, height).
+5. Extract ALL Laboratory & Biomarker values with measured value, unit, normal range, status ("Normal" | "Low" | "High" | "Borderline Low" | "Borderline High" | "Critical Low" | "Critical High"), severity ("optimal" | "warning" | "attention" | "critical"), plain-English explanation, and recommendation.
+6. Calculate 8 Organ Health Scores (0-100 score + status + details for bloodHealth, kidneyHealth, liverHealth, heartHealth, diabetesRisk, vitaminDeficiency, infectionIndicators, hydrationElectrolytes).
+7. NEVER diagnose diseases with certainty. Always recommend consulting a doctor.
 
-Return ONLY this exact JSON (no markdown, no explanation):
+Return ONLY valid JSON matching this schema (no markdown fences):
 {
-  "report_type": "CBC",
-  "patient_name": null,
-  "collection_date": null,
-  "lab_name": null,
-  "diagnosis": null,
-  "doctor_name": null,
-  "summary": "3-4 sentence clinical summary of this specific report.",
+  "document_type": "CBC Report",
+  "hospital": { "name": null, "department": null, "ward": null, "bed": null },
+  "patient": { "name": null, "age": null, "gender": null, "uhid": null, "blood_group": null },
+  "doctor": { "name": null, "specialty": null },
+  "diagnosis": { "primary": null, "secondary": null, "final": null, "provisional": null },
+  "complaints": [],
+  "vitals": { "bp": null, "hr": null, "temp": null, "spo2": null },
+  "organ_health_scores": {
+    "overallScore": 92,
+    "bloodHealth": { "status": "Optimal", "score": 94, "details": "RBC and Hemoglobin normal" },
+    "kidneyHealth": { "status": "Optimal", "score": 96, "details": "Creatinine & eGFR clear" },
+    "liverHealth": { "status": "Optimal", "score": 90, "details": "Enzyme balance healthy" },
+    "heartHealth": { "status": "Optimal", "score": 88, "details": "Cardio markers clear" },
+    "diabetesRisk": { "status": "Low Risk", "score": 95, "details": "Glucose control optimal" },
+    "vitaminDeficiency": { "status": "Optimal", "score": 85, "details": "Vitamin D & B12 clear" },
+    "infectionIndicators": { "status": "Normal", "score": 95, "details": "WBC & CRP clear" },
+    "hydrationElectrolytes": { "status": "Optimal", "score": 92, "details": "Electrolytes balanced" }
+  },
+  "summary": "3-4 sentence clinical summary of this specific document.",
   "overall_status": "Normal | Borderline | Attention Needed | Critical",
-  "confidence_score": 96.5,
+  "confidence_score": 97.5,
   "risk_level": "Low | Moderate | Attention Needed",
   "biomarkers": [
     {
@@ -572,31 +584,21 @@ Return ONLY this exact JSON (no markdown, no explanation):
       "status": "Low",
       "severity": "attention",
       "category": "CBC",
-      "explanation": "Hemoglobin is below the normal range for females, indicating mild anemia.",
+      "explanation": "Hemoglobin is below normal range for females, indicating mild anemia.",
       "recommendation": "Discuss iron supplementation and dietary changes with your doctor."
     }
   ],
-  "abnormal_count": 2,
-  "normal_count": 5,
+  "medications": [],
+  "abnormal_count": 1,
+  "normal_count": 6,
   "critical_count": 0,
   "recommended_specialist": "General Physician or Hematologist",
-  "recommended_specialist_reason": "Due to below-normal hemoglobin levels.",
+  "recommended_specialist_reason": "For low hemoglobin evaluation.",
   "lifestyle_recommendations": [
-    "Increase iron-rich foods: spinach, lentils, red meat",
-    "Take iron supplements as prescribed",
-    "Vitamin C helps iron absorption — take with meals"
+    "Increase iron-rich foods: spinach, lentils, dates",
+    "Pair iron intake with Vitamin C to improve absorption"
   ],
-  "key_findings": [
-    {
-      "biomarker": "Hemoglobin",
-      "value": "11.2 g/dL",
-      "range": "12.0-15.5",
-      "status": "Low",
-      "severity": "attention",
-      "title": "Low Hemoglobin",
-      "description": "Hemoglobin is below normal range. Mild anemia may be present."
-    }
-  ]
+  "disclaimer": "AI-generated analysis. Not a medical diagnosis. Consult your doctor."
 }`;
 }
 
