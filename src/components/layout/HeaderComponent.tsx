@@ -69,30 +69,39 @@ export function HeaderComponent({
         </Link>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-6 lg:gap-10 text-base lg:text-lg font-medium font-['Public_Sans'] text-[#3A3A38]">
+        <nav className="hidden md:flex items-center gap-2 lg:gap-3 text-base lg:text-lg font-medium font-['Public_Sans'] text-[#3A3A38]">
           {navLinks.map((link) => {
             const isActive = currentPath === link.href;
             const isRouterLink = link.href.startsWith('/');
-            return isRouterLink ? (
-              <Link
-                key={link.label}
-                to={link.href}
-                className={`transition-colors hover:text-[#1A3C2B] ${
-                  isActive ? 'text-[#1A3C2B] font-bold border-b-2 border-[#1A3C2B] pb-1' : ''
-                }`}
-              >
-                {link.label}
-              </Link>
-            ) : (
-              <a
-                key={link.label}
-                href={link.href}
-                className={`transition-colors hover:text-[#1A3C2B] ${
-                  isActive ? 'text-[#1A3C2B] font-bold border-b-2 border-[#1A3C2B] pb-1' : ''
-                }`}
-              >
-                {link.label}
-              </a>
+            return (
+              <div key={link.label} className="relative px-3 py-1.5 flex items-center justify-center">
+                {isActive && (
+                  <motion.div
+                    layoutId="active-header-pill"
+                    className="absolute inset-0 bg-[#1A3C2B]/10 border border-[#1A3C2B]/30 rounded-[10px] -z-0"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+                {isRouterLink ? (
+                  <Link
+                    to={link.href}
+                    className={`relative z-10 transition-colors hover:text-[#1A3C2B] font-medium ${
+                      isActive ? 'text-[#1A3C2B] font-bold' : ''
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ) : (
+                  <a
+                    href={link.href}
+                    className={`relative z-10 transition-colors hover:text-[#1A3C2B] font-medium ${
+                      isActive ? 'text-[#1A3C2B] font-bold' : ''
+                    }`}
+                  >
+                    {link.label}
+                  </a>
+                )}
+              </div>
             );
           })}
         </nav>

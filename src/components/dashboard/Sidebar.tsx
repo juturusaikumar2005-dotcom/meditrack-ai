@@ -247,18 +247,27 @@ function NavItem({
       className={({ isActive }) =>
         clsx(
           'relative flex items-center gap-3.5 px-3.5 py-3 rounded-[12px] text-sm sm:text-base font-semibold transition-colors group select-none',
-          isActive
-            ? 'bg-[#1A3C2B] text-white font-bold shadow-xs'
-            : 'text-[#3A3A38] hover:bg-[#1A3C2B]/10 hover:text-[#1A3C2B]'
+          isActive ? 'text-white font-bold' : 'text-[#3A3A38] hover:bg-[#1A3C2B]/10 hover:text-[#1A3C2B]'
         )
       }
     >
-      <Icon className="h-5 w-5 shrink-0" />
-      {!collapsed && <span>{label}</span>}
-      {collapsed && (
-        <span className="absolute left-full ml-3 px-3 py-1.5 rounded-[10px] bg-[#111827] text-white text-xs font-['Public_Sans'] font-semibold opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-md">
-          {label}
-        </span>
+      {({ isActive }) => (
+        <>
+          {isActive && (
+            <motion.div
+              layoutId="active-sidebar-pill"
+              className="absolute inset-0 bg-[#1A3C2B] rounded-[12px] z-0 shadow-xs"
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            />
+          )}
+          <Icon className="h-5 w-5 shrink-0 z-10" />
+          {!collapsed && <span className="z-10">{label}</span>}
+          {collapsed && (
+            <span className="absolute left-full ml-3 px-3 py-1.5 rounded-[10px] bg-[#111827] text-white text-xs font-['Public_Sans'] font-semibold opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-md">
+              {label}
+            </span>
+          )}
+        </>
       )}
     </NavLink>
   );
