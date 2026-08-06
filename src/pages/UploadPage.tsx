@@ -324,13 +324,15 @@ export default function UploadPage() {
       setCoordinatorStep(4);
       setCoordinatorProgress(60);
 
-      // Convert file to base64 for Vision AI Vision Processing
+      // Convert file to base64 for Vision AI Processing (Images + PDFs)
       let imageBase64: string | undefined;
       try {
-        if (file.type.startsWith('image/')) {
+        if (file.type.startsWith('image/') || file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
           imageBase64 = await fileToBase64(file);
         }
-      } catch {}
+      } catch (e) {
+        console.warn('[File to Base64 Error]:', e);
+      }
 
       // Trigger AI Analysis via Express Backend & Gemini API
       setCoordinatorStep(5);
