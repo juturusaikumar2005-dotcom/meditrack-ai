@@ -16,6 +16,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { useAIAssistant } from '@/context/AIAssistantContext';
+import { AIAssistantLogo } from '@/components/common/AIAssistantLogo';
 
 const SUGGESTION_CHIPS = [
   'Explain My Report',
@@ -43,10 +44,8 @@ export function AIChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, typing, isOpen]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleSend = (textToSend?: string) => {
     const text = textToSend || input;
@@ -70,11 +69,11 @@ export function AIChatWidget() {
             whileHover={{ y: -3, scale: 1.03 }}
             whileTap={{ scale: 0.95 }}
             onClick={toggleAssistant}
-            className="fixed bottom-6 right-6 z-50 bg-[#1A3C2B] text-white border border-[#9EFFBF]/30 shadow-xl rounded-full px-5 py-3.5 flex items-center gap-2.5 cursor-pointer font-['Public_Sans'] font-semibold text-sm transition-all select-none hover:bg-[#0D2419] hover:border-[#9EFFBF]"
+            className="fixed bottom-6 right-6 z-50 bg-[#1A3C2B] text-white border border-[#9EFFBF]/30 shadow-xl rounded-full px-4.5 py-3 flex items-center gap-3 cursor-pointer font-['Public_Sans'] font-semibold text-sm transition-all select-none hover:bg-[#0D2419] hover:border-[#9EFFBF] group"
             aria-label="AI Health Assistant"
           >
             <div className="relative flex items-center justify-center">
-              <MessageSquare className="h-5 w-5 text-[#9EFFBF]" />
+              <AIAssistantLogo size="sm" showSparkles={true} />
               {unreadCount > 0 && (
                 <span className="absolute -top-2 -right-2 h-4 w-4 bg-[#FF8C69] text-white text-[10px] font-['JetBrains_Mono'] font-bold rounded-full flex items-center justify-center border border-white">
                   {unreadCount}
@@ -82,7 +81,7 @@ export function AIChatWidget() {
               )}
             </div>
 
-            <span className="font-['Space_Grotesk'] font-bold text-[#9EFFBF] text-sm">
+            <span className="font-['Space_Grotesk'] font-bold text-[#9EFFBF] text-sm tracking-tight">
               AI Health Assistant
             </span>
           </motion.button>
@@ -117,9 +116,7 @@ export function AIChatWidget() {
                   <ArrowLeft className="h-5 w-5" />
                 </button>
 
-                <div className="h-9 w-9 bg-[#1A3C2B] text-[#9EFFBF] rounded-[10px] flex items-center justify-center shrink-0">
-                  <Bot className="h-5 w-5" />
-                </div>
+                <AIAssistantLogo size="md" showSparkles={true} />
 
                 <div>
                   <div className="flex items-center gap-2">
@@ -162,13 +159,13 @@ export function AIChatWidget() {
                     key={m.id}
                     className={`flex items-start gap-2.5 ${isUser ? 'flex-row-reverse' : ''}`}
                   >
-                    <div
-                      className={`h-7 w-7 rounded-[10px] flex items-center justify-center text-white shrink-0 text-xs ${
-                        isUser ? 'bg-[#111827]' : 'bg-[#1A3C2B]'
-                      }`}
-                    >
-                      {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                    </div>
+                    {isUser ? (
+                      <div className="h-7 w-7 rounded-[10px] bg-[#111827] text-white flex items-center justify-center shrink-0 text-xs">
+                        <User className="h-4 w-4" />
+                      </div>
+                    ) : (
+                      <AIAssistantLogo size="sm" showSparkles={false} showGlow={false} />
+                    )}
 
                     <div
                       className={`max-w-[85%] p-3.5 rounded-[16px] text-xs sm:text-sm leading-relaxed ${

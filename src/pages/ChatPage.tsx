@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { FooterComponent } from '@/components/layout/FooterComponent';
 import { useAIAssistant } from '@/context/AIAssistantContext';
+import { AIAssistantLogo } from '@/components/common/AIAssistantLogo';
 import toast from 'react-hot-toast';
 
 const chatFaqs = [
@@ -126,11 +127,9 @@ export default function ChatPage() {
             {/* Top Chat Header */}
             <div className="bg-[#F7F7F5] border-b border-[#3A3A38]/20 p-4 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
-                <div className="h-11 w-11 bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center rounded-[10px]">
-                  <Bot className="h-6 w-6" />
-                </div>
+                <AIAssistantLogo size="lg" showSparkles={true} />
                 <div>
-                  <h3 className="font-['Space_Grotesk'] font-bold text-xl text-[#111827]">
+                  <h3 className="font-[#Space_Grotesk] font-bold text-xl text-[#111827]">
                     Ask MediTrack AI
                   </h3>
                   <span className="font-['JetBrains_Mono'] text-xs text-[#1A3C2B] uppercase">
@@ -173,9 +172,7 @@ export default function ChatPage() {
                 return (
                   <div key={m.id} className={`flex gap-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}>
                     {!isUser && (
-                      <div className="h-7 w-7 rounded-[8px] bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center shrink-0">
-                        <Bot className="h-4 w-4" />
-                      </div>
+                      <AIAssistantLogo size="sm" showSparkles={false} showGlow={false} />
                     )}
                     <div className="max-w-[85%] sm:max-w-[520px] space-y-1">
                       <div
