@@ -41,6 +41,7 @@ const ProfilePage = lazyWithRetry(() => import('@/pages/ProfilePage'));
 const SettingsPage = lazyWithRetry(() => import('@/pages/SettingsPage'));
 const PrescriptionPage = lazyWithRetry(() => import('@/pages/PrescriptionPage'));
 const HealthTimelinePage = lazyWithRetry(() => import('@/pages/HealthTimelinePage'));
+const WelcomeLandingPage = lazyWithRetry(() => import('@/pages/WelcomeLandingPage'));
 
 function ProtectedRoutes() {
   const { session, loading } = useAuth();
@@ -68,13 +69,17 @@ export default function App() {
               {/* OAuth Callback Handler */}
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
+              {/* Welcome Post Sign-In Landing Page */}
+              <Route path="/welcome" element={<WelcomeLandingPage />} />
+
               {/* Authentication Pages */}
               <Route path="/signin" element={<SignInPage />} />
               <Route path="/signup" element={<SignUpPage />} />
 
               {/* Core MVP Protected Application Routes */}
               <Route path="/app" element={<ProtectedRoutes />}>
-                <Route index element={<Navigate to="/app/dashboard" replace />} />
+                <Route index element={<Navigate to="/welcome" replace />} />
+                <Route path="welcome" element={<WelcomeLandingPage />} />
                 <Route path="dashboard" element={<DashboardPage />} />
                 <Route path="upload" element={<UploadPage />} />
                 <Route path="prescription" element={<PrescriptionPage />} />

@@ -81,7 +81,7 @@ export default function SignUpPage() {
       toast.error(error);
     } else {
       toast.success('Account created successfully!');
-      navigate('/app/dashboard');
+      navigate('/app/welcome');
     }
   };
 
@@ -91,7 +91,7 @@ export default function SignUpPage() {
       toast.error(`Google Sign-In failed: ${error}`);
     } else {
       toast.success('Signed in with Google successfully');
-      navigate('/app/dashboard');
+      navigate('/app/welcome');
     }
   };
 

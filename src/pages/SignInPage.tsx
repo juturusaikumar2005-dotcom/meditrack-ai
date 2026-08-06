@@ -70,7 +70,7 @@ export default function SignInPage() {
       toast.error(error);
     } else {
       toast.success('Welcome back to MEDITRACK AI');
-      navigate('/app/dashboard');
+      navigate('/app/welcome');
     }
   };
 
@@ -80,7 +80,7 @@ export default function SignInPage() {
       toast.error(`Google Sign-In failed: ${error}`);
     } else {
       toast.success('Signed in with Google successfully');
-      navigate('/app/dashboard');
+      navigate('/app/welcome');
     }
   };
 

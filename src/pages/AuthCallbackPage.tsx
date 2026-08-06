@@ -29,9 +29,9 @@ export default function AuthCallbackPage() {
       if (activeSession) {
         console.log(`[OAuth Callback Success] Session restored. User ID: ${activeSession.user.id}`);
         await refreshProfile();
-        if (isMounted) navigate('/app/dashboard', { replace: true });
+        if (isMounted) navigate('/app/welcome', { replace: true });
       } else if (session) {
-        if (isMounted) navigate('/app/dashboard', { replace: true });
+        if (isMounted) navigate('/app/welcome', { replace: true });
       } else {
         console.warn('[OAuth Callback Warning] No active session found. Redirecting to signin.');
         if (isMounted) navigate('/signin', { replace: true });
