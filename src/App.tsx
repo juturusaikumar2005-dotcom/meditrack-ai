@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
@@ -7,18 +7,40 @@ import { LoadingScreen } from '@/components/LoadingScreen';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 import LandingPage from '@/pages/LandingPage';
-const SignInPage = lazy(() => import('@/pages/SignInPage'));
-const SignUpPage = lazy(() => import('@/pages/SignUpPage'));
-const AuthCallbackPage = lazy(() => import('@/pages/AuthCallbackPage'));
-const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
-const UploadPage = lazy(() => import('@/pages/UploadPage'));
-const AIAnalysisPage = lazy(() => import('@/pages/AIAnalysisPage'));
-const ChatPage = lazy(() => import('@/pages/ChatPage'));
-const HistoryPage = lazy(() => import('@/pages/HistoryPage'));
-const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
-const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
-const PrescriptionPage = lazy(() => import('@/pages/PrescriptionPage'));
-const HealthTimelinePage = lazy(() => import('@/pages/HealthTimelinePage'));
+
+// Self-healing lazy loader for dynamic imports across Vercel deployments
+const lazyWithRetry = (componentImport: () => Promise<any>) =>
+  lazy(async () => {
+    const pageHasBeenRefreshed = JSON.parse(
+      window.sessionStorage.getItem('meditrack_stale_reload') || 'false'
+    );
+
+    try {
+      const component = await componentImport();
+      window.sessionStorage.setItem('meditrack_stale_reload', 'false');
+      return component;
+    } catch (error: any) {
+      if (!pageHasBeenRefreshed) {
+        window.sessionStorage.setItem('meditrack_stale_reload', 'true');
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      throw error;
+    }
+  });
+
+const SignInPage = lazyWithRetry(() => import('@/pages/SignInPage'));
+const SignUpPage = lazyWithRetry(() => import('@/pages/SignUpPage'));
+const AuthCallbackPage = lazyWithRetry(() => import('@/pages/AuthCallbackPage'));
+const DashboardPage = lazyWithRetry(() => import('@/pages/DashboardPage'));
+const UploadPage = lazyWithRetry(() => import('@/pages/UploadPage'));
+const AIAnalysisPage = lazyWithRetry(() => import('@/pages/AIAnalysisPage'));
+const ChatPage = lazyWithRetry(() => import('@/pages/ChatPage'));
+const HistoryPage = lazyWithRetry(() => import('@/pages/HistoryPage'));
+const ProfilePage = lazyWithRetry(() => import('@/pages/ProfilePage'));
+const SettingsPage = lazyWithRetry(() => import('@/pages/SettingsPage'));
+const PrescriptionPage = lazyWithRetry(() => import('@/pages/PrescriptionPage'));
+const HealthTimelinePage = lazyWithRetry(() => import('@/pages/HealthTimelinePage'));
 
 function ProtectedRoutes() {
   const { session, loading } = useAuth();
