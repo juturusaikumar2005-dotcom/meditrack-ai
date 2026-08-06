@@ -94,8 +94,36 @@ const CRISIS_RESPONSE = "I'm really sorry you're going through this. I'm glad yo
 
 const EMERGENCY_RESPONSE = "🚨 **ACUTE MEDICAL EMERGENCY ALERT** 🚨\n\nBased on your message regarding acute emergency symptoms, please seek **IMMEDIATE EMERGENCY MEDICAL CARE**.\n\n• Call **911 / 112** or your local emergency service immediately.\n• Go directly to the nearest hospital **Emergency Room (ER)**.\n• Do NOT wait for online medical AI responses during an acute physical crisis.\n\n*MediTrack AI does not provide emergency medical treatment or triage for acute life-threatening conditions.*";
 
+const MEDICINE_SEARCH_DICTIONARY = [
+  'azax', 'azax500', 'azee', 'azee500', 'azithromycin', 'azithral', 'zithromax', 'azicip',
+  'dolo', 'dolo650', 'crocin', 'calpol', 'tylenol', 'panadol', 'paracetamol', 'acetaminophen',
+  'metformin', 'glycomet', 'glucophage', 'bigomet', 'walaphage',
+  'augmentin', 'amoxicillin', 'mox', 'novamox', 'ospamox',
+  'pantop', 'pantop40', 'pan', 'pan40', 'pantoprazole', 'ocid', 'omez', 'omeprazole', 'protonix', 'pantodac',
+  'rantac', 'ranitidine', 'zifi', 'cefixime', 'taxim', 'cefotaxime',
+  'montek', 'montek-lc', 'monteklc', 'montelukast', 'singulair', 'montair',
+  'cetirizine', 'cetzine', 'zyrtec', 'okacet', 'ctz',
+  'telma', 'telma40', 'telmisartan', 'telsartan', 'telmikind', 'micardis',
+  'ecosprin', 'disprin', 'aspirin', 'aspro', 'sorbitrate',
+  'thyronorm', 'eltroxin', 'thyrox', 'levothyroxine', 'synthroid', 'levothroid',
+  'shelcal', 'calcirol', 'uprise', 'd3', 'vitamin d', 'vitamin c', 'limcee', 'fersolate', 'orofer', 'ferium',
+  'ciplox', 'ciprofloxacin', 'cifran', 'voveran', 'voltaren', 'diclofenac', 'brufen', 'combiflam', 'advil', 'ibuprofen', 'nurofen', 'ibugesic', 'diclomol', 'dynapar',
+  'alprax', 'restyl', 'xanax', 'alprazolam', 'alzolam', 'stamlo', 'amlodipine', 'norvasc', 'amlip', 'amlodac', 'daonil', 'glibenclamide', 'glynase',
+  'rozavel', 'crestor', 'rosuvastatin', 'rosulip', 'rosuvas', 'atorva', 'lipitor', 'atorvastatin', 'tonact', 'atocor', 'clopidogrel', 'plavix', 'deplatt', 'clopivas'
+];
+
+function isMedicineEntity(input) {
+  const normalized = input.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+  if (!normalized || normalized.length < 3) return false;
+  return MEDICINE_SEARCH_DICTIONARY.some(m => {
+    const normM = m.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return normalized === normM || normalized.includes(normM) || normM.includes(normalized);
+  });
+}
+
 function classifyHealthIntent(message) {
   const text = message.toLowerCase().trim();
+  const normalized = text.replace(/[^a-z0-9]/g, '');
 
   // 1. Self-Harm Detection
   for (const pattern of CRISIS_PATTERNS) {
@@ -121,19 +149,24 @@ function classifyHealthIntent(message) {
     }
   }
 
-  // 4. Allowed Health Intent Categories Check
+  // 4. Medicine Entity & Brand Fuzzy Lookup
+  if (isMedicineEntity(text)) {
+    return { category: 'medicine', allowed: true, isEmergency: false };
+  }
+
+  // 5. Allowed Health Intent Categories Check
   for (const [category, keywords] of Object.entries(ALLOWED_HEALTH_CATEGORIES)) {
     if (keywords.some(kw => text.includes(kw))) {
       return { category, allowed: true, isEmergency: false };
     }
   }
 
-  // 5. General Healthcare Query Heuristics (how to, symptoms, treatment, remedies)
-  if (/\b(how|what|why|can i|is it|treatment|cause|cure|remedy|feel|hurt|sick|tired|weak|head|throat|chest|back|stomach)\b/i.test(text)) {
+  // 6. General Healthcare Query Heuristics (how to, symptoms, treatment, remedies)
+  if (/\b(how|what|why|can i|is it|treatment|cause|cure|remedy|feel|hurt|sick|tired|weak|head|throat|chest|back|stomach|fever|vomiting)\b/i.test(text)) {
     return { category: 'medical', allowed: true, isEmergency: false };
   }
 
-  // 6. Otherwise Non-Medical Refusal
+  // 7. Otherwise Non-Medical Refusal
   return { category: 'non_medical', allowed: false, response: STANDARD_REFUSAL_MESSAGE, isEmergency: false };
 }
 
