@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Stethoscope,
   Star,
@@ -11,10 +11,45 @@ import {
   ArrowRight,
   UserCheck,
   Sparkles,
+  HeartPulse,
 } from 'lucide-react';
 import { FooterComponent } from '@/components/layout/FooterComponent';
 import toast from 'react-hot-toast';
 
+/* ─────────────────────────── Animation Variants ─────────────────────────── */
+const fadeUp = {
+  hidden: { opacity: 0, y: 32 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 },
+  }),
+};
+
+const fadeLeft = {
+  hidden: { opacity: 0, x: -24 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: i * 0.1 },
+  }),
+};
+
+const scalePop = {
+  hidden: { opacity: 0, scale: 0.93 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: i * 0.1 },
+  }),
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
+};
+
+/* ───────────────────────────── Types & Data ──────────────────────────────── */
 interface Clinic {
   id: string;
   doctorName: string;
@@ -59,6 +94,7 @@ const nearbyClinics: Clinic[] = [
   },
 ];
 
+/* ─────────────────────────────── Component ───────────────────────────────── */
 export default function PatientsPage() {
   const [selectedDoctor, setSelectedDoctor] = useState<Clinic | null>(nearbyClinics[0]);
   const [bookingStep, setBookingStep] = useState<number>(1);
@@ -76,21 +112,45 @@ export default function PatientsPage() {
     <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none">
 
       <main className="py-12 px-4 sm:px-8 max-w-[80rem] mx-auto w-full space-y-12">
-        {/* Page Header */}
-        <div className="border-b border-[#3A3A38]/15 pb-6 space-y-2">
-          <span className="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-[#1A3C2B]">
-            ACCREDITED CARE NETWORK
-          </span>
-          <h1 className="font-['Space_Grotesk'] text-4xl sm:text-5xl font-bold text-[#111827]">
-            Specialist Recommendations
-          </h1>
-          <p className="font-['Public_Sans'] text-sm sm:text-base text-[#3A3A38]">
-            Matched directly to your low Ferritin (14 ng/mL) & Vitamin D diagnostic findings.
-          </p>
-        </div>
 
-        {/* Report Summary Box */}
-        <div className="bg-white border border-[#3A3A38]/20 border-l-4 border-l-[#1A3C2B] p-6 rounded-[2px] space-y-3">
+        {/* ── Page Header ── */}
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="border-b border-[#3A3A38]/15 pb-6 space-y-2"
+        >
+          <motion.span
+            variants={fadeLeft}
+            custom={0}
+            className="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-[#1A3C2B] block"
+          >
+            ACCREDITED CARE NETWORK
+          </motion.span>
+          <motion.h1
+            variants={fadeUp}
+            custom={1}
+            className="font-['Space_Grotesk'] text-4xl sm:text-5xl font-bold text-[#111827]"
+          >
+            Specialist Recommendations
+          </motion.h1>
+          <motion.p
+            variants={fadeUp}
+            custom={2}
+            className="font-['Public_Sans'] text-sm sm:text-base text-[#3A3A38]"
+          >
+            Matched directly to your low Ferritin (14 ng/mL) &amp; Vitamin D diagnostic findings.
+          </motion.p>
+        </motion.div>
+
+        {/* ── Report Summary Box ── */}
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          custom={0}
+          className="bg-white border border-[#3A3A38]/20 border-l-4 border-l-[#1A3C2B] p-6 rounded-[2px] space-y-3"
+        >
           <div className="flex items-center justify-between">
             <span className="font-['JetBrains_Mono'] text-xs font-bold text-[#1A3C2B] uppercase">
               CURRENT DIAGNOSTIC REASONING
@@ -98,15 +158,23 @@ export default function PatientsPage() {
             <span className="font-['JetBrains_Mono'] text-xs text-[#3A3A38]">MATCH ACCURACY: 98.2%</span>
           </div>
           <h3 className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827]">
-            Primary Need: Iron Metabolism & General Wellness Assessment
+            Primary Need: Iron Metabolism &amp; General Wellness Assessment
           </h3>
           <p className="font-['Public_Sans'] text-xs sm:text-sm text-[#3A3A38] leading-relaxed">
-            Your recent laboratory upload indicated lower-bound Serum Ferritin (14 ng/mL) and sub-optimal Vitamin D. Consulting an Internal Medicine General Practitioner or Clinical Nutritionist is recommended to review oral supplementation and dietary optimization.
+            Your recent laboratory upload indicated lower-bound Serum Ferritin (14 ng/mL) and sub-optimal Vitamin D.
+            Consulting an Internal Medicine General Practitioner or Clinical Nutritionist is recommended to review oral
+            supplementation and dietary optimization.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Primary Recommendation Card (General Practitioner) */}
-        <div className="bg-[#1A3C2B] text-white border border-[#3A3A38]/30 p-8 rounded-[2px] space-y-6">
+        {/* ── Primary Recommendation Card ── */}
+        <motion.div
+          variants={scalePop}
+          initial="hidden"
+          animate="visible"
+          custom={0}
+          className="bg-[#1A3C2B] text-white border border-[#3A3A38]/30 p-8 rounded-[2px] space-y-6"
+        >
           <div className="flex items-center justify-between">
             <span className="font-['JetBrains_Mono'] text-xs text-[#9EFFBF] uppercase font-bold">
               PRIMARY CLINICAL RECOMMENDATION
@@ -122,7 +190,8 @@ export default function PatientsPage() {
                 General Practitioner / Internal Medicine
               </h2>
               <p className="font-['Public_Sans'] text-sm text-slate-300 leading-relaxed">
-                Best suited to conduct a complete evaluation, rule out underlying gastrointestinal causes for iron depletion, and coordinate follow-up blood panels.
+                Best suited to conduct a complete evaluation, rule out underlying gastrointestinal causes for iron
+                depletion, and coordinate follow-up blood panels.
               </p>
             </div>
 
@@ -135,102 +204,131 @@ export default function PatientsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* 3 Specialized Support Cards (Cardiologist, Nutritionist, Wellness Coach) */}
+        {/* ── Specialized Support Cards ── */}
         <div className="space-y-4">
-          <h3 className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827]">
+          <motion.h3
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={0}
+            className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827]"
+          >
             Specialized Care Support Cards
-          </h3>
+          </motion.h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-            <div className="h-full flex flex-col justify-between bg-white border border-[#3A3A38]/20 border-l-4 border-l-[#FF8C69] p-6 rounded-[2px] space-y-3">
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch"
+          >
+            {/* Cardiologist */}
+            <motion.div
+              variants={fadeUp}
+              custom={0}
+              whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(0,0,0,0.10)' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              className="h-full flex flex-col justify-between bg-white border border-[#3A3A38]/20 border-l-4 border-l-[#FF8C69] p-6 rounded-[2px] space-y-3"
+            >
               <div>
                 <HeartPulse className="h-6 w-6 text-[#FF8C69] mb-2" />
-                <h4 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
-                  Cardiologist
-                </h4>
+                <h4 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">Cardiologist</h4>
                 <p className="font-['Public_Sans'] text-xs text-[#3A3A38] leading-relaxed mt-1">
                   Recommended if fatigue is accompanied by exertional chest discomfort or palpitations.
                 </p>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="h-full flex flex-col justify-between bg-white border border-[#3A3A38]/20 border-l-4 border-l-[#9EFFBF] p-6 rounded-[2px] space-y-3">
+            {/* Clinical Nutritionist */}
+            <motion.div
+              variants={fadeUp}
+              custom={1}
+              whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(0,0,0,0.10)' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              className="h-full flex flex-col justify-between bg-white border border-[#3A3A38]/20 border-l-4 border-l-[#9EFFBF] p-6 rounded-[2px] space-y-3"
+            >
               <div>
                 <Sparkles className="h-6 w-6 text-[#1A3C2B] mb-2" />
-                <h4 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
-                  Clinical Nutritionist
-                </h4>
+                <h4 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">Clinical Nutritionist</h4>
                 <p className="font-['Public_Sans'] text-xs text-[#3A3A38] leading-relaxed mt-1">
                   Specialized dietary planning to enhance heme iron absorption and optimize gut absorption.
                 </p>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="h-full flex flex-col justify-between bg-white border border-[#3A3A38]/20 border-l-4 border-l-[#F4D35E] p-6 rounded-[2px] space-y-3">
+            {/* Wellness Coach */}
+            <motion.div
+              variants={fadeUp}
+              custom={2}
+              whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(0,0,0,0.10)' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              className="h-full flex flex-col justify-between bg-white border border-[#3A3A38]/20 border-l-4 border-l-[#F4D35E] p-6 rounded-[2px] space-y-3"
+            >
               <div>
                 <UserCheck className="h-6 w-6 text-amber-600 mb-2" />
-                <h4 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
-                  Wellness Coach
-                </h4>
+                <h4 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">Wellness Coach</h4>
                 <p className="font-['Public_Sans'] text-xs text-[#3A3A38] leading-relaxed mt-1">
                   Lifestyle, sleep, and physical recovery tracking to complement your medical treatment.
                 </p>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
 
-        {/* Care Locator & Streamlined 3-Step Booking Flow */}
-        <div className="space-y-6">
+        {/* ── Care Locator & Booking Flow ── */}
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          custom={0}
+          className="space-y-6"
+        >
           <div className="border-b border-[#3A3A38]/15 pb-3">
             <h3 className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827]">
-              Care Locator & Booking Flow
+              Care Locator &amp; Booking Flow
             </h3>
             <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">
               Select a nearby accredited provider and schedule a consultation in 3 easy steps.
             </p>
           </div>
 
-          {/* 3 Step Process Bar */}
+          {/* 3 Step Progress Bar */}
           <div className="grid grid-cols-3 gap-3 text-center font-['JetBrains_Mono'] text-xs">
-            <div
-              className={`p-3 border rounded-[2px] ${
-                bookingStep >= 1
-                  ? 'bg-[#1A3C2B] text-white border-[#1A3C2B]'
-                  : 'bg-white text-[#3A3A38] border-[#3A3A38]/20'
-              }`}
-            >
-              1. SELECT PROVIDER
-            </div>
-            <div
-              className={`p-3 border rounded-[2px] ${
-                bookingStep >= 2
-                  ? 'bg-[#1A3C2B] text-white border-[#1A3C2B]'
-                  : 'bg-white text-[#3A3A38] border-[#3A3A38]/20'
-              }`}
-            >
-              2. CHOOSE TIME SLOT
-            </div>
-            <div
-              className={`p-3 border rounded-[2px] ${
-                bookingStep === 3
-                  ? 'bg-[#1A3C2B] text-white border-[#1A3C2B]'
-                  : 'bg-white text-[#3A3A38] border-[#3A3A38]/20'
-              }`}
-            >
-              3. CONFIRM
-            </div>
+            {['1. SELECT PROVIDER', '2. CHOOSE TIME SLOT', '3. CONFIRM'].map((label, i) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, scaleX: 0.8 }}
+                animate={{ opacity: 1, scaleX: 1 }}
+                transition={{ duration: 0.4, delay: 0.2 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                className={`p-3 border rounded-[2px] ${
+                  bookingStep > i
+                    ? 'bg-[#1A3C2B] text-white border-[#1A3C2B]'
+                    : 'bg-white text-[#3A3A38] border-[#3A3A38]/20'
+                }`}
+              >
+                {label}
+              </motion.div>
+            ))}
           </div>
 
           {/* Nearby Clinic Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-            {nearbyClinics.map((clinic) => {
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch"
+          >
+            {nearbyClinics.map((clinic, idx) => {
               const isSelected = selectedDoctor?.id === clinic.id;
               return (
-                <div
+                <motion.div
                   key={clinic.id}
+                  variants={fadeUp}
+                  custom={idx}
+                  whileHover={{ y: -4, boxShadow: '0 16px 40px rgba(26,60,43,0.12)' }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   onClick={() => {
                     setSelectedDoctor(clinic);
                     setBookingStep(2);
@@ -271,61 +369,86 @@ export default function PatientsPage() {
                     </span>
                     <span className="text-[#1A3C2B] font-bold">Select →</span>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
 
           {/* Booking Time Slot Selection & Confirmation Drawer */}
-          {selectedDoctor && bookingStep >= 2 && (
-            <div className="bg-white border border-[#3A3A38]/20 rounded-[2px] p-6 space-y-4">
-              <h4 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
-                Schedule Appointment with {selectedDoctor.doctorName}
-              </h4>
+          <AnimatePresence>
+            {selectedDoctor && bookingStep >= 2 && (
+              <motion.div
+                key="booking-drawer"
+                initial={{ opacity: 0, y: 24, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: 16, height: 0 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                className="overflow-hidden bg-white border border-[#3A3A38]/20 rounded-[2px] p-6 space-y-4"
+              >
+                <h4 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
+                  Schedule Appointment with {selectedDoctor.doctorName}
+                </h4>
 
-              <div className="grid sm:grid-cols-3 gap-3 font-['Public_Sans'] text-xs">
-                {['Tomorrow at 10:30 AM', 'Tomorrow at 02:00 PM', 'Thursday at 09:15 AM'].map((slot) => (
-                  <button
-                    key={slot}
-                    onClick={() => setSelectedSlot(slot)}
-                    className={`p-3 rounded-[2px] border text-center font-semibold transition-colors ${
-                      selectedSlot === slot
-                        ? 'bg-[#1A3C2B] text-white border-[#1A3C2B]'
-                        : 'bg-[#F7F7F5] border-[#3A3A38]/20 text-[#111827] hover:border-[#1A3C2B]'
-                    }`}
+                <div className="grid sm:grid-cols-3 gap-3 font-['Public_Sans'] text-xs">
+                  {['Tomorrow at 10:30 AM', 'Tomorrow at 02:00 PM', 'Thursday at 09:15 AM'].map((slot, si) => (
+                    <motion.button
+                      key={slot}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: si * 0.08, duration: 0.35 }}
+                      onClick={() => setSelectedSlot(slot)}
+                      className={`p-3 rounded-[2px] border text-center font-semibold transition-colors ${
+                        selectedSlot === slot
+                          ? 'bg-[#1A3C2B] text-white border-[#1A3C2B]'
+                          : 'bg-[#F7F7F5] border-[#3A3A38]/20 text-[#111827] hover:border-[#1A3C2B]'
+                      }`}
+                    >
+                      {slot}
+                    </motion.button>
+                  ))}
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleConfirmBooking}
+                    className="px-6 py-3 bg-[#1A3C2B] text-white font-['Public_Sans'] font-bold text-sm rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors"
                   >
-                    {slot}
-                  </button>
-                ))}
-              </div>
+                    Confirm Appointment ({selectedSlot})
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
-              <div className="pt-2 flex items-center justify-end gap-3">
-                <button
-                  onClick={handleConfirmBooking}
-                  className="px-6 py-3 bg-[#1A3C2B] text-white font-['Public_Sans'] font-bold text-sm rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors"
-                >
-                  Confirm Appointment ({selectedSlot})
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* ── Trust Metrics Section ── */}
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center"
+        >
+          {[
+            { value: '1,200+', label: 'Accredited Clinics & Specialists' },
+            { value: '99.1%', label: 'Patient Satisfaction Rating' },
+            { value: '< 24 hrs', label: 'Average Consultation Turnaround' },
+          ].map((metric, i) => (
+            <motion.div
+              key={metric.label}
+              variants={scalePop}
+              custom={i}
+              whileHover={{ y: -3, boxShadow: '0 12px 30px rgba(26,60,43,0.10)' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              className="bg-white border border-[#3A3A38]/20 p-6 rounded-[14px] space-y-1"
+            >
+              <span className="font-['Space_Grotesk'] text-3xl font-bold text-[#1A3C2B]">{metric.value}</span>
+              <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">{metric.label}</p>
+            </motion.div>
+          ))}
+        </motion.div>
 
-        {/* Trust Metrics Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-          <div className="bg-white border border-[#3A3A38]/20 p-6 rounded-[14px] space-y-1">
-            <span className="font-['Space_Grotesk'] text-3xl font-bold text-[#1A3C2B]">1,200+</span>
-            <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">Accredited Clinics & Specialists</p>
-          </div>
-          <div className="bg-white border border-[#3A3A38]/20 p-6 rounded-[14px] space-y-1">
-            <span className="font-['Space_Grotesk'] text-3xl font-bold text-[#1A3C2B]">99.1%</span>
-            <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">Patient Satisfaction Rating</p>
-          </div>
-          <div className="bg-white border border-[#3A3A38]/20 p-6 rounded-[2px] space-y-1">
-            <span className="font-['Space_Grotesk'] text-3xl font-bold text-[#1A3C2B]">&lt; 24 hrs</span>
-            <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">Average Consultation Turnaround</p>
-          </div>
-        </div>
       </main>
 
       <FooterComponent />
