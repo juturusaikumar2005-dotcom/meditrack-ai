@@ -24,8 +24,9 @@ import { MedicineCard } from '@/components/prescription/MedicineCard';
 import { MedicationTimeline } from '@/components/prescription/MedicationTimeline';
 import { DrugInteractionAlert } from '@/components/prescription/DrugInteractionAlert';
 import { PrecautionGrid } from '@/components/prescription/PrecautionCard';
-import { ConfidenceIndicator } from '@/components/prescription/ConfidenceIndicator';
 import { parsePrescriptionClientSide } from '@/lib/prescriptionClientAnalyzer';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
