@@ -79,6 +79,13 @@ export default function PrescriptionPage() {
   // Entrance curtain animation
   const [curtainDone, setCurtainDone] = useState(false);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCurtainDone(true);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleFile = useCallback((f: File) => {
     if (!ACCEPTED_TYPES.includes(f.type) && !f.name.toLowerCase().endsWith('.pdf')) {
       toast.error('Unsupported file type. Please upload JPG, PNG, WEBP, HEIC or PDF.');
