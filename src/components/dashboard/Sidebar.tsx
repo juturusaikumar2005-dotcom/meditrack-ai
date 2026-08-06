@@ -179,43 +179,6 @@ function SidebarContent({
         ))}
       </nav>
 
-      {/* User Profile Footer */}
-      <div className="p-3.5 border-t border-[#3A3A38]/20 shrink-0">
-        <div
-          className={clsx(
-            'flex items-center gap-3 rounded-[12px] p-2.5 bg-[#F7F7F5] border border-[#3A3A38]/15',
-            collapsed && 'justify-center p-2'
-          )}
-        >
-          <div className="h-9 w-9 rounded-full bg-[#1A3C2B] text-white flex items-center justify-center text-sm font-bold shrink-0">
-            {typeof profile?.full_name === 'string' && profile.full_name.trim().length > 0
-              ? profile.full_name.trim()[0].toUpperCase()
-              : 'U'}
-          </div>
-          {!collapsed && (
-            <>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-[#111827] truncate font-['Space_Grotesk']">
-                  {typeof profile?.full_name === 'string' && profile.full_name.trim().length > 0
-                    ? profile.full_name
-                    : 'User'}
-                </div>
-                <div className="text-[11px] font-['JetBrains_Mono'] text-[#1A3C2B] font-semibold">
-                  PERSONAL ACCOUNT
-                </div>
-              </div>
-              <button
-                onClick={onSignOut}
-                className="p-1 text-[#3A3A38] hover:text-red-600 transition-colors cursor-pointer"
-                title="Sign Out"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
       {/* Collapse Toggle */}
       {!mobile && (
         <button
