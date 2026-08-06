@@ -54,23 +54,21 @@ export default function SignUpPage() {
   const navigate = useNavigate();
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
 
   useEffect(() => {
     if (session) {
-      navigate('/app/dashboard', { replace: true });
+      navigate('/app/welcome', { replace: true });
     }
   }, [session, navigate]);
 
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<SignUpForm>({
-    defaultValues: { fullName: '', email: '', password: '', confirmPassword: '', terms: false },
+    defaultValues: { fullName: '', email: '', password: '', terms: true },
   });
-
-  const passwordValue = watch('password');
 
   const onSubmit: SubmitHandler<SignUpForm> = async (data) => {
     setLoading(true);
@@ -86,6 +84,11 @@ export default function SignUpPage() {
   };
 
   const handleGoogleAuth = async () => {
+    if (!isRealSupabaseConfigured()) {
+      setShowGoogleModal(true);
+      return;
+    }
+
     const { error } = await signInWithGoogle();
     if (error) {
       toast.error(`Google Sign-In failed: ${error}`);
@@ -93,6 +96,15 @@ export default function SignUpPage() {
       toast.success('Signed in with Google successfully');
       navigate('/app/welcome');
     }
+  };
+
+  const handleCustomGoogleSelect = async (fullName: string, email: string) => {
+    setShowGoogleModal(false);
+    setLoading(true);
+    await signUp(email, 'google-oauth-pwd-123', fullName);
+    setLoading(false);
+    toast.success(`Signed in with Google as ${fullName}`);
+    navigate('/app/welcome');
   };
 
   return (
@@ -398,10 +410,11 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      {/* Bottom Footer Note */}
-      <footer className="py-4 text-center text-[11px] font-['JetBrains_Mono'] text-[#3A3A38]">
-        © {new Date().getFullYear()} MEDITRACK AI · HIPAA COMPLIANT · 256-BIT ENCRYPTED
-      </footer>
+      <GoogleAccountModal
+        isOpen={showGoogleModal}
+        onClose={() => setShowGoogleModal(false)}
+        onSelectAccount={handleCustomGoogleSelect}
+      />
     </div>
   );
 }

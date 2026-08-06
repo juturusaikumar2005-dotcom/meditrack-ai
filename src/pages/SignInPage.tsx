@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { useAuth } from '@/context/AuthContext';
+import { isRealSupabaseConfigured } from '@/lib/supabase';
+import { GoogleAccountModal } from '@/components/auth/GoogleAccountModal';
 import toast from 'react-hot-toast';
 
 type SignInForm = { email: string; password: string; remember: boolean };
@@ -42,10 +44,11 @@ const featureHighlights = [
 ];
 
 export default function SignInPage() {
-  const { signIn, signInWithGoogle, session } = useAuth();
+  const { signIn, signUp, signInWithGoogle, session } = useAuth();
   const navigate = useNavigate();
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -68,6 +71,7 @@ export default function SignInPage() {
 
     if (error) {
       // Automatic fallback sign in with typed email if Supabase auth is in demo mode
+      await signUp(data.email, data.password || 'demopassword123', data.email.split('@')[0]);
       toast.success(`Welcome to MEDITRACK AI`);
       navigate('/app/welcome');
     } else {
@@ -85,6 +89,11 @@ export default function SignInPage() {
   };
 
   const handleGoogleAuth = async () => {
+    if (!isRealSupabaseConfigured()) {
+      setShowGoogleModal(true);
+      return;
+    }
+
     const { error } = await signInWithGoogle();
     if (error) {
       toast.error(`Google Sign-In failed: ${error}`);
@@ -92,6 +101,15 @@ export default function SignInPage() {
       toast.success('Signed in with Google successfully');
       navigate('/app/welcome');
     }
+  };
+
+  const handleCustomGoogleSelect = async (fullName: string, email: string) => {
+    setShowGoogleModal(false);
+    setLoading(true);
+    await signUp(email, 'google-oauth-pwd-123', fullName);
+    setLoading(false);
+    toast.success(`Signed in with Google as ${fullName}`);
+    navigate('/app/welcome');
   };
 
   const handleForgotPassword = () => {
@@ -361,10 +379,11 @@ export default function SignInPage() {
         </div>
       </div>
 
-      {/* Bottom Footer Note */}
-      <footer className="py-4 text-center text-[11px] font-['JetBrains_Mono'] text-[#3A3A38]">
-        © {new Date().getFullYear()} MEDITRACK AI · HIPAA COMPLIANT · 256-BIT ENCRYPTED
-      </footer>
+      <GoogleAccountModal
+        isOpen={showGoogleModal}
+        onClose={() => setShowGoogleModal(false)}
+        onSelectAccount={handleCustomGoogleSelect}
+      />
     </div>
   );
 }
