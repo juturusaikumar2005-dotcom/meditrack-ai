@@ -77,13 +77,13 @@ export function GoogleAccountModal({
               {/* Quick Account Suggestions */}
               <div className="space-y-2">
                 <p className="font-['JetBrains_Mono'] text-[11px] font-bold uppercase tracking-wider text-[#3A3A38]">
-                  Or Select Account:
+                  Select Demo Google Account:
                 </p>
 
                 <div className="space-y-2">
                   <button
                     type="button"
-                    onClick={() => handleQuickSelect('Saikumar Juturu', 'juturusaikumar2005@gmail.com')}
+                    onClick={() => handleQuickSelect('Sarah Jenkins', 'sarah.jenkins@gmail.com')}
                     className="w-full p-3 rounded-[14px] bg-[#F7F7F5] border border-[#3A3A38]/20 hover:border-[#1A3C2B] hover:bg-[#1A3C2B]/5 flex items-center gap-3 transition-colors text-left cursor-pointer group"
                   >
                     <div className="h-9 w-9 rounded-full bg-[#1A3C2B] text-[#9EFFBF] font-['Space_Grotesk'] font-bold text-sm flex items-center justify-center shrink-0">
@@ -91,9 +91,25 @@ export function GoogleAccountModal({
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-[#111827] group-hover:text-[#1A3C2B]">
-                        Saikumar Juturu
+                        Sarah Jenkins
                       </p>
-                      <p className="text-[11px] text-[#3A3A38] truncate">juturusaikumar2005@gmail.com</p>
+                      <p className="text-[11px] text-[#3A3A38] truncate">sarah.jenkins@gmail.com</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleQuickSelect('David Chen', 'david.chen@gmail.com')}
+                    className="w-full p-3 rounded-[14px] bg-[#F7F7F5] border border-[#3A3A38]/20 hover:border-[#1A3C2B] hover:bg-[#1A3C2B]/5 flex items-center gap-3 transition-colors text-left cursor-pointer group"
+                  >
+                    <div className="h-9 w-9 rounded-full bg-[#1A3C2B] text-[#9EFFBF] font-['Space_Grotesk'] font-bold text-sm flex items-center justify-center shrink-0">
+                      DC
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-[#111827] group-hover:text-[#1A3C2B]">
+                        David Chen
+                      </p>
+                      <p className="text-[11px] text-[#3A3A38] truncate">david.chen@gmail.com</p>
                     </div>
                   </button>
                 </div>
@@ -102,7 +118,7 @@ export function GoogleAccountModal({
               <div className="relative flex items-center justify-center py-1">
                 <div className="w-full border-t border-[#3A3A38]/15" />
                 <span className="absolute bg-white px-3 font-['JetBrains_Mono'] text-[10px] text-[#3A3A38] uppercase">
-                  ENTER CUSTOM GOOGLE ACCOUNT
+                  OR ENTER CUSTOM GOOGLE ACCOUNT
                 </span>
               </div>
 
@@ -116,7 +132,7 @@ export function GoogleAccountModal({
                     <User className="absolute left-3.5 h-4 w-4 text-[#3A3A38]" />
                     <input
                       type="text"
-                      placeholder="e.g. Saikumar Juturu"
+                      placeholder="e.g. Sarah Jenkins"
                       value={fullName}
                       onChange={(e) => {
                         setFullName(e.target.value);
@@ -136,7 +152,7 @@ export function GoogleAccountModal({
                     <Mail className="absolute left-3.5 h-4 w-4 text-[#3A3A38]" />
                     <input
                       type="email"
-                      placeholder="name@gmail.com"
+                      placeholder="e.g. sarah.jenkins@gmail.com"
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value);
