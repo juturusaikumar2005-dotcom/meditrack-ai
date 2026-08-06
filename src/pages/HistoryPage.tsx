@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Activity,
@@ -11,7 +11,8 @@ import {
   TrendingUp,
   Filter,
   Upload,
-  MessageSquare,
+  ArrowRight,
+  Sparkles,
 } from 'lucide-react';
 import { HeaderComponent } from '@/components/layout/HeaderComponent';
 import { FooterComponent } from '@/components/layout/FooterComponent';
@@ -24,6 +25,8 @@ interface TimelineEntry {
   summary: string;
   status: 'Analyzed' | 'Stable' | 'Action Needed';
   statusColor: string;
+  value: string;
+  facility: string;
 }
 
 const mockTimeline: TimelineEntry[] = [
@@ -35,6 +38,8 @@ const mockTimeline: TimelineEntry[] = [
     summary: 'Ferritin low at 14 ng/mL. Fasting glucose normal at 92 mg/dL.',
     status: 'Action Needed',
     statusColor: 'bg-[#FF8C69]/20 text-[#FF8C69] border-[#FF8C69]',
+    value: '14 ng/mL Ferritin',
+    facility: 'Central Diagnostics Lab',
   },
   {
     id: 't-2',
@@ -44,6 +49,8 @@ const mockTimeline: TimelineEntry[] = [
     summary: 'Mild L4-L5 disc protrusion noted without nerve root compression.',
     status: 'Stable',
     statusColor: 'bg-[#9EFFBF]/30 text-[#1A3C2B] border-[#1A3C2B]',
+    value: 'L4-L5 Mild Protrusion',
+    facility: 'Advanced Imaging Center',
   },
   {
     id: 't-3',
@@ -53,6 +60,8 @@ const mockTimeline: TimelineEntry[] = [
     summary: 'Clear lung fields without focal consolidation or pleural effusion.',
     status: 'Analyzed',
     statusColor: 'bg-[#9EFFBF]/30 text-[#1A3C2B] border-[#1A3C2B]',
+    value: 'Normal Lungs',
+    facility: 'Metro Radiology Institute',
   },
   {
     id: 't-4',
@@ -62,16 +71,20 @@ const mockTimeline: TimelineEntry[] = [
     summary: 'Daily multivitamin & Vitamin D3 (2000 IU) supplementation started.',
     status: 'Analyzed',
     statusColor: 'bg-[#F4D35E]/30 text-amber-900 border-[#F4D35E]',
+    value: 'Vitamin D3 Supplement',
+    facility: 'St. Jude Heart Clinic',
   },
 ];
 
+const categories = ['All Reports', 'Blood Tests', 'Imaging', 'Prescriptions'];
+
 export default function HistoryPage() {
-  const [filter, setFilter] = useState<string>('All Reports');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All Reports');
   const navigate = useNavigate();
 
-  const filteredEntries = mockTimeline.filter((item) => {
-    if (filter === 'All Reports') return true;
-    return item.category === filter;
+  const filteredHistory = mockTimeline.filter((item) => {
+    if (selectedCategory === 'All Reports') return true;
+    return item.category === selectedCategory;
   });
 
   return (
@@ -80,7 +93,7 @@ export default function HistoryPage() {
 
       <main className="py-12 px-4 sm:px-8 max-w-[80rem] mx-auto w-full space-y-10">
         {/* Page Header */}
-        <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
           <div className="space-y-1">
             <span className="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-[#1A3C2B]">
               LONGITUDINAL TRACKING
@@ -96,7 +109,7 @@ export default function HistoryPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/app/upload')}
-              className="px-4 py-2.5 bg-[#1A3C2B] text-white font-['Public_Sans'] font-semibold text-xs rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2.5 bg-[#1A3C2B] text-white font-['Public_Sans'] font-semibold text-xs rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Upload className="h-4 w-4" />
               <span>Upload Report</span>
@@ -133,7 +146,7 @@ export default function HistoryPage() {
                   <div className="absolute -left-[31px] top-1.5 h-4 w-4 rounded-full bg-white border-4 border-[#1A3C2B] transition-transform group-hover:scale-125" />
 
                   {/* Card Body */}
-                  <div className="bg-white border border-[#3A3A38]/20 p-5 rounded-[14px] space-y-3 hover:border-[#1A3C2B] transition-colors">
+                  <div className="bg-white border border-[#3A3A38]/20 p-5 rounded-[14px] space-y-3 hover:border-[#1A3C2B] transition-colors shadow-xs">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 rounded-full bg-[#1A3C2B] text-[#9EFFBF] font-['JetBrains_Mono'] text-[10px] uppercase font-bold">
@@ -177,14 +190,21 @@ export default function HistoryPage() {
 
           {/* Right Sidebar Stats & Vital Trends */}
           <div className="space-y-6">
+            {/* Health Status Summary Box */}
+            <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 space-y-3 shadow-xs">
+              <div className="flex items-center gap-2 text-[#1A3C2B]">
+                <Activity className="h-5 w-5" />
+                <h4 className="font-['Space_Grotesk'] font-bold text-lg text-[#111827]">
+                  Health Summary Status
+                </h4>
               </div>
-              <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">
-                Overall vitals are stable. Iron levels require monitoring.
+              <p className="font-['Public_Sans'] text-xs text-[#3A3A38] leading-relaxed">
+                Overall vitals are stable across the past 4 months. Serum Ferritin remains the primary biomarker requiring ongoing dietary monitoring.
               </p>
             </div>
 
             {/* Progress Bars (Iron & Vitamin D) */}
-            <div className="bg-white border border-[#3A3A38]/20 rounded-[2px] p-6 space-y-4">
+            <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 space-y-4 shadow-xs">
               <h4 className="font-['Space_Grotesk'] font-bold text-lg text-[#111827]">
                 Biomarker Progress
               </h4>
@@ -195,7 +215,7 @@ export default function HistoryPage() {
                     <span>Iron Reserve Stability</span>
                     <span className="font-['JetBrains_Mono'] text-[#FF8C69]">65%</span>
                   </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-[2px] overflow-hidden">
+                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                     <div className="h-full bg-[#FF8C69] w-[65%]" />
                   </div>
                 </div>
@@ -205,7 +225,7 @@ export default function HistoryPage() {
                     <span>Vitamin D Target</span>
                     <span className="font-['JetBrains_Mono'] text-amber-600">45%</span>
                   </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-[2px] overflow-hidden">
+                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                     <div className="h-full bg-[#F4D35E] w-[45%]" />
                   </div>
                 </div>
@@ -213,7 +233,7 @@ export default function HistoryPage() {
             </div>
 
             {/* Trend Visualization (Ferritin over 4 months) */}
-            <div className="bg-[#1A3C2B] text-white border border-[#3A3A38]/30 rounded-[2px] p-6 space-y-3">
+            <div className="bg-[#1A3C2B] text-white border border-[#3A3A38]/30 rounded-[14px] p-6 space-y-3 shadow-xs">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-[#9EFFBF]" />
                 <span className="font-['JetBrains_Mono'] text-xs uppercase text-[#9EFFBF]">
