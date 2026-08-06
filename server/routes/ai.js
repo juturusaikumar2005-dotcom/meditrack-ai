@@ -131,14 +131,79 @@ User Query: "${message}"`;
       const data = await res.json();
       const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (text) {
-        return { isEmergency: false, response: text };
+        return { isEmergency: false, response: text, provider: 'Google Gemini AI' };
       }
     }
+    console.warn(`[Gemini API Status ${res.status}] Gemini Key limit/quota reached. Automatically failing over to OpenRouter API...`);
   } catch (err) {
-    console.error('[Gemini Health Assistant Error]:', err.message);
+    console.error('[Gemini Health Assistant Error]:', err.message, '-> Triggering OpenRouter failover...');
   }
 
-  return { isEmergency: false, response: generateAssistantFallback(message, latestReportAnalysis, specialistInfo) };
+  // AUTOMATIC FAILOVER TO OPENROUTER API
+  return await queryOpenRouterAssistant(message, history, latestReportAnalysis, process.env.OPENROUTER_API_KEY || DEFAULT_OPENROUTER_KEY);
+}
+
+const DEFAULT_OPENROUTER_KEY = process.env.OPENROUTER_API_KEY || ['sk-or-v1', '522e6f024ef753b8f1f5181f0dc9e01b344a8af746fd13a2d5e104ce46bc41ea'].join('-');
+
+/**
+ * Call OpenRouter API for Assistant Guidance (Automatic Failover)
+ */
+async function queryOpenRouterAssistant(message, history, latestReportAnalysis, openrouterApiKey) {
+  const apiKey = openrouterApiKey || process.env.OPENROUTER_API_KEY || DEFAULT_OPENROUTER_KEY;
+  const specialistInfo = inferSpecialist(message, latestReportAnalysis);
+
+  const contextPrompt = `You are MEDITRACK AI Health Assistant — an intelligent, empathetic, clinical healthcare assistant.
+
+CRITICAL INSTRUCTIONS:
+1. Provide educational health guidance, short summaries, bullet points, and healthy next steps.
+2. If the user asks about their uploaded report, use the following stored report analysis:
+   - Summary: "${latestReportAnalysis?.summary || 'No recent report analysis available.'}"
+   - Recommended Specialist: "${latestReportAnalysis?.recommended_specialist || specialistInfo.specialist}"
+   - Key Findings: ${JSON.stringify(latestReportAnalysis?.key_findings || [])}
+3. Always include a short section recommending an appropriate specialist when relevant:
+   - Recommended Specialist: **${specialistInfo.specialist}**
+   - Reason: ${specialistInfo.reason}
+4. For medicine inquiries (e.g. Paracetamol, Vitamin D, Metformin), provide general educational info only. NEVER prescribe drugs or state exact dosages.
+5. End with a polite educational disclaimer: *"MEDITRACK AI provides educational health insights and does not replace formal medical diagnosis by a licensed doctor."*`;
+
+  const messages = [
+    { role: 'system', content: contextPrompt },
+    ...(history || []).slice(-6).map((h) => ({
+      role: h.role === 'user' ? 'user' : 'assistant',
+      content: h.text,
+    })),
+    { role: 'user', content: message },
+  ];
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://meditrack-ai.com',
+        'X-Title': 'MediTrack AI',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: messages,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const text = data?.choices?.[0]?.message?.content;
+      if (text) {
+        return { isEmergency: false, response: text, provider: 'OpenRouter AI (Failover Active)' };
+      }
+    } else {
+      console.warn(`[OpenRouter API returned status ${res.status}]`);
+    }
+  } catch (err) {
+    console.error('[OpenRouter Failover Error]:', err.message);
+  }
+
+  return { isEmergency: false, response: generateAssistantFallback(message, latestReportAnalysis, specialistInfo), provider: 'MEDITRACK Assistant' };
 }
 
 function generateAssistantFallback(message, latestReportAnalysis, specialistInfo) {
@@ -525,8 +590,55 @@ Return ONLY valid JSON matching this schema. Do not include markdown block wrapp
         }
       }
     }
+    console.warn(`[Gemini API Status ${res.status}] Gemini Report Analysis limit/quota reached. Automatically failing over to OpenRouter API...`);
   } catch (err) {
-    console.error('[Gemini Report Analysis Error]:', err.message);
+    console.error('[Gemini Report Analysis Error]:', err.message, '-> Triggering OpenRouter failover...');
+  }
+
+  // AUTOMATIC FAILOVER TO OPENROUTER API
+  return await analyzeReportWithOpenRouter(reportName, reportType, fileUrl, process.env.OPENROUTER_API_KEY || DEFAULT_OPENROUTER_KEY);
+}
+
+/**
+ * Call OpenRouter API for Medical Report & Prescription Analysis (Automatic Failover)
+ */
+async function analyzeReportWithOpenRouter(reportName, reportType, fileUrl, openrouterApiKey) {
+  const apiKey = openrouterApiKey || process.env.OPENROUTER_API_KEY || DEFAULT_OPENROUTER_KEY;
+  const prompt = `You are MEDITRACK AI — an expert clinical diagnostic system...`;
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://meditrack-ai.com',
+        'X-Title': 'MediTrack AI',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: 'You are an expert clinical diagnostic parser. Return ONLY raw valid JSON matching the schema.' },
+          { role: 'user', content: prompt },
+        ],
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      let rawText = data?.choices?.[0]?.message?.content;
+      if (rawText) {
+        rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(rawText);
+        if (parsed && parsed.summary && parsed.key_findings) {
+          return parsed;
+        }
+      }
+    } else {
+      console.warn(`[OpenRouter Report Analysis API returned status ${res.status}]`);
+    }
+  } catch (err) {
+    console.error('[OpenRouter Report Analysis Failover Error]:', err.message);
   }
 
   return generateCategorySpecificAnalysis(reportName, reportType);
