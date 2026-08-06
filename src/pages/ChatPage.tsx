@@ -169,29 +169,29 @@ export default function ChatPage() {
             </div>
 
             {/* Message Thread */}
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 text-base sm:text-lg">
+            <div className="flex-1 p-3.5 sm:p-5 overflow-y-auto space-y-3 text-xs">
               {messages.map((m) => {
                 const isUser = m.role === 'user';
                 return (
-                  <div key={m.id} className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
+                  <div key={m.id} className={`flex gap-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}>
                     {!isUser && (
-                      <div className="h-9 w-9 rounded-[10px] bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center shrink-0">
-                        <Bot className="h-5 w-5" />
+                      <div className="h-7 w-7 rounded-[8px] bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center shrink-0">
+                        <Bot className="h-4 w-4" />
                       </div>
                     )}
-                    <div className="max-w-[80%] space-y-1">
+                    <div className="max-w-[85%] sm:max-w-[520px] space-y-1">
                       <div
-                        className={`p-4 rounded-[14px] leading-relaxed relative group text-base sm:text-lg ${
+                        className={`px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-[12px] leading-snug relative group text-xs sm:text-xs font-normal ${
                           isUser
-                            ? 'bg-[#1A3C2B] text-white rounded-br-none font-medium'
+                            ? 'bg-[#1A3C2B] text-white rounded-br-none'
                             : m.isEmergency
-                            ? 'bg-red-950 text-red-100 border-2 border-red-500 rounded-bl-none shadow-md font-medium'
-                            : 'bg-[#F7F7F5] border border-[#3A3A38]/20 text-[#111827] rounded-bl-none font-medium'
+                            ? 'bg-red-950 text-red-100 border border-red-500 rounded-bl-none shadow-sm'
+                            : 'bg-[#F7F7F5] border border-[#3A3A38]/20 text-[#111827] rounded-bl-none'
                         }`}
                       >
                         {m.isEmergency && (
-                          <div className="flex items-center gap-1.5 text-red-400 font-['JetBrains_Mono'] font-bold text-xs sm:text-sm mb-2">
-                            <AlertTriangle className="h-4 w-4 text-red-400" />
+                          <div className="flex items-center gap-1.5 text-red-400 font-['JetBrains_Mono'] font-bold text-[11px] mb-1.5">
+                            <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
                             <span>EMERGENCY WARNING DETECTED</span>
                           </div>
                         )}
@@ -201,20 +201,20 @@ export default function ChatPage() {
                         {!isUser && (
                           <button
                             onClick={() => handleCopy(m.id, m.text)}
-                            className="absolute top-2.5 right-2.5 p-1 text-[#3A3A38] hover:text-[#111827] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            className="absolute top-2 right-2 p-1 text-[#3A3A38] hover:text-[#111827] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                             title="Copy response"
                           >
-                            {copiedId === m.id ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                            {copiedId === m.id ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                           </button>
                         )}
                       </div>
-                      <span className={`block text-xs font-['JetBrains_Mono'] ${isUser ? 'text-slate-400 text-right' : 'text-[#3A3A38]'}`}>
+                      <span className={`block text-[10px] font-['JetBrains_Mono'] ${isUser ? 'text-slate-400 text-right' : 'text-[#3A3A38]'}`}>
                         {m.timestamp || m.time}
                       </span>
                     </div>
                     {isUser && (
-                      <div className="h-9 w-9 rounded-[10px] bg-slate-200 text-[#111827] flex items-center justify-center shrink-0 font-bold text-sm">
-                        <User className="h-5 w-5" />
+                      <div className="h-7 w-7 rounded-[8px] bg-slate-200 text-[#111827] flex items-center justify-center shrink-0 font-bold text-xs">
+                        <User className="h-4 w-4" />
                       </div>
                     )}
                   </div>
@@ -222,8 +222,8 @@ export default function ChatPage() {
               })}
 
               {typing && (
-                <div className="flex items-center gap-2 text-sm font-['JetBrains_Mono'] text-[#1A3C2B]">
-                  <Bot className="h-5 w-5 animate-bounce" />
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-['JetBrains_Mono'] text-[#1A3C2B]">
+                  <Bot className="h-4 w-4 sm:h-5 sm:w-5 animate-bounce" />
                   <span>MEDITRACK AI is formulating clinical guidance...</span>
                 </div>
               )}
@@ -231,7 +231,7 @@ export default function ChatPage() {
             </div>
 
             {/* Input Bar */}
-            <div className="p-4 bg-white border-t border-[#3A3A38]/15 flex items-center gap-3">
+            <div className="p-3.5 sm:p-4 bg-white border-t border-[#3A3A38]/15 flex items-center gap-3">
               <input
                 type="text"
                 value={input}
@@ -243,11 +243,11 @@ export default function ChatPage() {
                   }
                 }}
                 placeholder="Ask about a symptom, lab report, or specialist guidance..."
-                className="flex-1 bg-[#F7F7F5] border border-[#3A3A38]/20 rounded-[12px] px-4 py-3 text-base text-[#111827] outline-none focus:border-[#1A3C2B] transition-colors"
+                className="flex-1 bg-[#F7F7F5] border border-[#3A3A38]/20 rounded-[12px] px-4 py-2.5 sm:py-3 text-sm sm:text-base text-[#111827] outline-none focus:border-[#1A3C2B] transition-colors"
               />
               <button
                 onClick={() => handleSend(input)}
-                className="px-6 py-3 bg-[#1A3C2B] text-white rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors shrink-0 flex items-center gap-2 font-['Public_Sans'] text-base font-semibold cursor-pointer shadow-xs"
+                className="px-5 py-2.5 sm:px-6 sm:py-3 bg-[#1A3C2B] text-white rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors shrink-0 flex items-center gap-2 font-['Public_Sans'] text-sm sm:text-base font-semibold cursor-pointer shadow-xs"
               >
                 <span>Send</span>
                 <Send className="h-4 w-4" />

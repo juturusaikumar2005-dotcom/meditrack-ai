@@ -64,7 +64,7 @@ export function HeaderComponent({
             <HeartHandshake className="h-6 w-6 lg:h-7 lg:w-7" />
           </div>
           <span className="font-['Space_Grotesk'] text-2xl sm:text-3xl lg:text-[36px] font-bold text-[#111827] tracking-tight leading-none">
-            MEDITRACK <span className="text-[#1A3C2B]">AI</span>
+            MEDITRACK
           </span>
         </Link>
 

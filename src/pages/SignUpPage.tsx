@@ -126,7 +126,7 @@ export default function SignUpPage() {
                   <HeartHandshake className="h-6 w-6" />
                 </motion.div>
                 <span className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827] tracking-tight">
-                  MEDITRACK <span className="text-[#1A3C2B]">AI</span>
+                  MEDITRACK
                 </span>
               </div>
 

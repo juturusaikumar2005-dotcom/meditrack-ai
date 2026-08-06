@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Languages, ShieldCheck, Sun, User, LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { SignOutModal } from '@/components/auth/SignOutModal';
 import toast from 'react-hot-toast';
 
 export default function SettingsPage() {
@@ -9,15 +10,24 @@ export default function SettingsPage() {
   const navigate = useNavigate();
 
   const [language, setLanguage] = useState('English');
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const userEmail = profile?.email || session?.user?.email || 'user@meditrack.ai';
 
-  const handleSignOut = async () => {
+  const handleConfirmSignOut = async () => {
+    setSigningOut(true);
     await signOut();
     navigate('/');
   };
 
   return (
     <div className="space-y-8 select-none font-['Public_Sans']">
+      <SignOutModal
+        isOpen={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        onConfirm={handleConfirmSignOut}
+        loading={signingOut}
+      />
       {/* Header */}
       <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 space-y-1 shadow-xs">
         <span className="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-[#1A3C2B]">
@@ -111,7 +121,7 @@ export default function SettingsPage() {
           </div>
 
           <button
-            onClick={handleSignOut}
+            onClick={() => setShowSignOutModal(true)}
             className="w-full py-2.5 bg-red-50 text-red-600 border border-red-200 font-bold text-xs rounded-[12px] hover:bg-red-100 transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <LogOut className="h-4 w-4" />

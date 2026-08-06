@@ -51,10 +51,14 @@ export function AIAssistantProvider({ children }: { children: ReactNode }) {
             });
           }
           if (row.ai_response) {
+            let aiText = row.ai_response;
+            if (aiText.includes("I'm **MEDITRACK") || aiText.includes("Understanding symptoms") || aiText.includes("dedicated clinical")) {
+              aiText = `Hello! I'm **MEDITRACK Health Assistant** 👋\n\nHow can I assist you today?`;
+            }
             loadedMsgs.push({
               id: `msg-ai-${row.id || Date.now()}`,
-              role: 'assistant',
-              text: row.ai_response,
+              role: 'ai',
+              text: aiText,
               timestamp: new Date(row.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               isEmergency: row.is_emergency || false,
             });

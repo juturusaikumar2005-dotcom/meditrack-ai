@@ -156,59 +156,30 @@ export function AIChatWidget() {
             {/* CHAT MESSAGES / WELCOME SCREEN */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 font-['Public_Sans']">
               {isOnlyWelcomeMessage && (
-                <div className="bg-white border border-[#3A3A38]/20 p-5 rounded-[14px] space-y-4 my-2">
+                <div className="bg-white border border-[#3A3A38]/20 p-3.5 rounded-[12px] space-y-2.5 my-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">👋</span>
+                    <span className="text-xl">👋</span>
                     <div>
-                      <h4 className="font-['Space_Grotesk'] text-lg font-bold text-[#111827]">
-                        Hi! I'm your MediTrack AI Assistant.
+                      <h4 className="font-['Space_Grotesk'] text-sm font-bold text-[#111827]">
+                        Hi! I'm your MediTrack Health Assistant.
                       </h4>
                       <p className="text-xs text-[#3A3A38]">
-                        Your 24/7 personal healthcare interpreter & clinical guide.
+                        Ask about lab reports, symptoms, or recommended specialists.
                       </p>
                     </div>
                   </div>
 
-                  <div className="space-y-2 text-xs text-[#3A3A38] pt-1">
-                    <p className="font-semibold font-['JetBrains_Mono'] text-[11px] text-[#1A3C2B] uppercase">
-                      I CAN HELP YOU:
-                    </p>
-                    <ul className="space-y-1.5">
-                      <li className="flex items-center gap-2">
-                        <FileText className="h-3.5 w-3.5 text-[#1A3C2B] shrink-0" />
-                        <span>Explain complex medical & blood lab reports</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <HelpCircle className="h-3.5 w-3.5 text-[#FF8C69] shrink-0" />
-                        <span>Understand acute symptoms & severity bounds</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Stethoscope className="h-3.5 w-3.5 text-[#F4D35E] shrink-0" />
-                        <span>Recommend the right accredited specialist</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <ShieldCheck className="h-3.5 w-3.5 text-[#9EFFBF] shrink-0" />
-                        <span>Answer general medicine & prescription questions</span>
-                      </li>
-                    </ul>
-                  </div>
-
                   {/* Suggestion Chips */}
-                  <div className="pt-2 space-y-2">
-                    <span className="font-['JetBrains_Mono'] text-[10px] text-[#3A3A38] uppercase block font-semibold">
-                      QUICK SUGGESTIONS:
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {SUGGESTION_CHIPS.map((chip) => (
-                        <button
-                          key={chip}
-                          onClick={() => handleSend(chip)}
-                          className="px-3 py-1 bg-[#F7F7F5] border border-[#3A3A38]/20 hover:border-[#1A3C2B] hover:bg-[#1A3C2B]/5 text-[#111827] text-xs rounded-full transition-colors cursor-pointer"
-                        >
-                          {chip}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="pt-1.5 flex flex-wrap gap-1.5">
+                    {SUGGESTION_CHIPS.map((chip) => (
+                      <button
+                        key={chip}
+                        onClick={() => handleSend(chip)}
+                        className="px-2.5 py-1 bg-[#F7F7F5] border border-[#3A3A38]/20 hover:border-[#1A3C2B] hover:bg-[#1A3C2B]/5 text-[#111827] text-xs rounded-full transition-colors cursor-pointer font-medium"
+                      >
+                        {chip}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}

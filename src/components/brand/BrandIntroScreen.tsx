@@ -147,10 +147,7 @@ export function BrandIntroScreen({ onComplete }: BrandIntroScreenProps) {
           className="mb-5 leading-none"
         >
           <h1 className="font-['Space_Grotesk'] text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black tracking-tighter text-[#0F172A]">
-            MEDITRACK{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] to-[#059669] drop-shadow-[0_4px_16px_rgba(16,185,129,0.35)]">
-              AI
-            </span>
+            MEDITRACK
           </h1>
         </motion.div>
 

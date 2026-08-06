@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '@/context/AuthContext';
+import { SignOutModal } from '@/components/auth/SignOutModal';
 
 const publicNav = [
   { to: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -41,14 +43,24 @@ export function Sidebar({
   setMobileOpen: (v: boolean) => void;
 }) {
   const { profile, signOut } = useAuth();
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
-  const handleSignOut = async () => {
+  const handleConfirmSignOut = async () => {
+    setSigningOut(true);
     await signOut();
     window.location.href = '/';
   };
 
   return (
     <>
+      <SignOutModal
+        isOpen={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        onConfirm={handleConfirmSignOut}
+        loading={signingOut}
+      />
+
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -71,7 +83,7 @@ export function Sidebar({
           collapsed={collapsed}
           setCollapsed={setCollapsed}
           profile={profile}
-          onSignOut={handleSignOut}
+          onSignOut={() => setShowSignOutModal(true)}
         />
       </motion.aside>
 
@@ -88,7 +100,7 @@ export function Sidebar({
               collapsed={false}
               setCollapsed={setMobileOpen}
               profile={profile}
-              onSignOut={handleSignOut}
+              onSignOut={() => setShowSignOutModal(true)}
               mobile
               onClose={() => setMobileOpen(false)}
             />
@@ -133,7 +145,7 @@ function SidebarContent({
               <HeartHandshake className="h-6 w-6" />
             </div>
             <span className="font-['Space_Grotesk'] text-xl font-bold text-[#111827] tracking-tight">
-              MEDITRACK <span className="text-[#1A3C2B]">AI</span>
+              MEDITRACK
             </span>
             {mobile && (
               <button onClick={onClose} className="ml-auto p-1 text-[#3A3A38] hover:text-[#111827]">

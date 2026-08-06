@@ -52,11 +52,22 @@ interface KeyFinding {
 
 function inferReportType(fileName: string): string {
   const name = fileName.toLowerCase();
-  if (name.includes('blood') || name.includes('cbc') || name.includes('panel') || name.includes('lab')) return 'Blood Test';
-  if (name.includes('mri') || name.includes('spine') || name.includes('brain')) return 'MRI Scan';
-  if (name.includes('ct') || name.includes('scan') || name.includes('chest')) return 'CT Scan';
-  if (name.includes('xray') || name.includes('x-ray') || name.includes('radiology')) return 'X-Ray';
-  if (name.includes('prescription') || name.includes('rx') || name.includes('med')) return 'Prescription';
+  if (
+    name.includes('prescription') ||
+    name.includes('rx') ||
+    name.includes('med') ||
+    name.includes('tablet') ||
+    name.includes('pharma') ||
+    name.includes('dr_') ||
+    name.includes('doctor')
+  ) {
+    return 'Prescription';
+  }
+  if (name.includes('blood') || name.includes('cbc') || name.includes('panel') || name.includes('lab') || name.includes('ferritin') || name.includes('lipid')) return 'Blood Test';
+  if (name.includes('mri') || name.includes('spine') || name.includes('brain') || name.includes('knee')) return 'MRI Scan';
+  if (name.includes('ct') || name.includes('scan') || name.includes('chest') || name.includes('abdomen')) return 'CT Scan';
+  if (name.includes('xray') || name.includes('x-ray') || name.includes('radiology') || name.includes('bone')) return 'X-Ray';
+  if (name.includes('ekg') || name.includes('ecg') || name.includes('cardio') || name.includes('heart')) return 'Cardiology EKG';
   return 'Medical Report';
 }
 

@@ -35,7 +35,7 @@ export function FooterComponent({
                 <HeartHandshake className="h-5 w-5" />
               </div>
               <span className="font-['Space_Grotesk'] text-2xl font-bold tracking-tight text-white">
-                MEDITRACK <span className="text-[#9EFFBF]">AI</span>
+                MEDITRACK
               </span>
             </Link>
             <p className="text-sm text-slate-300 font-['Public_Sans'] leading-relaxed max-w-sm">

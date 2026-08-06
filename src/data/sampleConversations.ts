@@ -15,22 +15,15 @@ export interface ChatMessageItem {
 export const INITIAL_WELCOME_MESSAGE: ChatMessageItem = {
   id: 'msg-welcome-0',
   role: 'ai',
-  text: `Hello! I'm **MEDITRACK AI Health Assistant**, your dedicated clinical guidance assistant.
+  text: `Hello! I'm **MEDITRACK Health Assistant** 👋
 
-I can assist you with:
-• **Understanding symptoms** and potential causes
-• **Explaining lab reports** and medical terms
-• **Recommending the right specialist** (Cardiologist, Dermatologist, ENT, etc.)
-• **Medication & precaution tips**
+I can help explain medical reports, understand symptoms, recommend accredited specialists, and provide general health precautions.
 
-*Note: I provide health guidance and education. I do not provide a final medical diagnosis or replace a emergency doctor.*
-
-How can I help you today?`,
+How can I assist you today?`,
   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
   suggestedFollowUps: [
-    'I have a headache',
-    'My chest hurts',
     'Explain My Report',
-    'Which doctor should I visit?',
+    'Health Tips',
+    'Find Specialist',
   ],
 };
