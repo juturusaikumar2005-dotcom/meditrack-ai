@@ -18,6 +18,7 @@ const HistoryPage = lazy(() => import('@/pages/HistoryPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
 const PrescriptionPage = lazy(() => import('@/pages/PrescriptionPage'));
+const HealthTimelinePage = lazy(() => import('@/pages/HealthTimelinePage'));
 
 function ProtectedRoutes() {
   const { session, loading } = useAuth();
@@ -57,6 +58,7 @@ export default function App() {
                 <Route path="prescription" element={<PrescriptionPage />} />
                 <Route path="ai-analysis" element={<AIAnalysisPage />} />
                 <Route path="history" element={<HistoryPage />} />
+                <Route path="timeline" element={<HealthTimelinePage />} />
                 <Route path="chat" element={<ChatPage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="settings" element={<SettingsPage />} />

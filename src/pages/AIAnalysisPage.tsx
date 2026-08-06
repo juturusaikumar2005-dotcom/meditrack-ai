@@ -1,484 +1,431 @@
+// @refresh reset
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FileText,
-  CheckCircle2,
-  AlertTriangle,
-  Info,
-  Stethoscope,
-  MessageSquare,
-  Upload,
-  Download,
-  Share2,
-  ArrowRight,
-  Sparkles,
-  Activity,
-  Pill,
-  Clock,
+  FileText, CheckCircle2, AlertTriangle, Stethoscope, MessageSquare,
+  Upload, ArrowRight, Sparkles, Activity, TrendingUp, TrendingDown,
+  Shield, ChevronRight, Lightbulb, Star, Clock, RotateCcw,
 } from 'lucide-react';
 import { FooterComponent } from '@/components/layout/FooterComponent';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { LabValueCard } from '@/components/medical-report/LabValueCard';
+import { ReportSummaryBanner } from '@/components/medical-report/ReportSummaryBanner';
 import toast from 'react-hot-toast';
 
-interface KeyFinding {
-  biomarker: string;
-  value: string;
-  range: string;
-  status: string;
-  severity?: 'optimal' | 'warning' | 'attention';
-  title?: string;
-  description?: string;
+/* ─────────────────────────── Animation Variants ─────────────────────────── */
+const fadeUp = {
+  hidden: { opacity: 0, y: 28 },
+  visible: (i = 0) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 },
+  }),
+};
+
+/* ─────────────────────────── Helpers ─────────────────────────────────────── */
+function normalizeBiomarkers(analysis: any) {
+  // Support both new biomarkers[] and legacy key_findings[]
+  if (analysis?.biomarkers?.length) return analysis.biomarkers;
+  if (analysis?.key_findings?.length) {
+    return analysis.key_findings.map((kf: any) => ({
+      name: kf.biomarker || kf.title || 'Finding',
+      value: kf.value || '',
+      numeric_value: parseFloat(kf.value) || null,
+      unit: '',
+      normal_range: kf.range || '',
+      status: kf.status || 'Normal',
+      severity: kf.severity || 'optimal',
+      category: 'General',
+      explanation: kf.description || kf.title || '',
+      recommendation: '',
+    }));
+  }
+  return [];
 }
 
+function getSeverityGroup(biomarkers: any[]) {
+  const critical = biomarkers.filter(b => b.severity === 'critical' || b.status?.includes('Critical'));
+  const attention = biomarkers.filter(b => b.severity === 'attention' && !b.status?.includes('Critical'));
+  const warning = biomarkers.filter(b => b.severity === 'warning');
+  const normal = biomarkers.filter(b => b.severity === 'optimal' || b.status === 'Normal');
+  return { critical, attention, warning, normal };
+}
+
+/* ─────────────────────────── Section Header ─────────────────────────────── */
+function SectionHeader({ icon, label, count, color }: { icon: React.ReactNode; label: string; count?: number; color?: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <span className={`font-['JetBrains_Mono'] text-xs font-bold uppercase tracking-widest ${color || 'text-[#1A3C2B]'}`}>
+        {icon} {label}
+      </span>
+      {count != null && (
+        <span className="font-['JetBrains_Mono'] text-[10px] text-[#3A3A38] bg-[#F7F7F5] px-2 py-0.5 rounded-full">
+          {count} value{count !== 1 ? 's' : ''}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────── Main Page ───────────────────────────────────── */
 export default function AIAnalysisPage() {
   const { profile, session } = useAuth();
   const navigate = useNavigate();
+  const [curtainDone, setCurtainDone] = useState(false);
 
   const [analysisData, setAnalysisData] = useState<any>(() => {
     const stored = localStorage.getItem('meditrack_latest_analysis');
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {}
-    }
+    if (stored) { try { return JSON.parse(stored); } catch {} }
     return null;
   });
 
   const userId = profile?.id || session?.user?.id || 'usr-demo';
-  const userName = profile?.full_name || 'Patient';
 
-  // ── Fetch Latest Analysis Result from Supabase analysis_results table ─────────
   useEffect(() => {
     let isMounted = true;
     async function loadLatestResult() {
       if (!userId) return;
-      const { data, error } = await supabase
-        .from('analysis_results')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (isMounted && !error && data && data.length > 0) {
-        try {
-          const latest = data[0];
-          const parsed = typeof latest.result_json === 'string'
-            ? JSON.parse(latest.result_json)
-            : latest.result_json;
-
-          setAnalysisData({
-            id: latest.id || `ans_${Date.now()}`,
-            report_name: latest.report_name || 'Medical Diagnostic Report',
-            provider: 'Google Gemini AI',
-            analysis: parsed,
-          });
-        } catch (err) {
-          console.error('[Analysis Result Parsing Error]:', err);
+      try {
+        const { data } = await supabase
+          .from('analysis_results')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (isMounted && data?.[0]) {
+          const merged = { ...data[0], ...(data[0].analysis_payload || {}) };
+          setAnalysisData(merged);
         }
-      }
+      } catch {}
     }
-
     loadLatestResult();
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [userId]);
 
-  const reportName = analysisData?.report_name || 'Comprehensive Blood Panel Results';
-  const provider = analysisData?.provider || 'Google Gemini AI';
-  const analysis = analysisData?.analysis || {};
+  const analysis = analysisData?.analysis || analysisData;
+  const reportName = analysisData?.report_name || analysisData?.reportName || 'Medical Report';
+  const reportType = analysis?.report_type || analysisData?.report_type || 'General';
+  const provider = analysisData?.provider || analysis?.provider;
 
-  const confidenceScore = analysis.confidence_score || 99.4;
-  const summaryText = analysis.summary || 'Comprehensive clinical parsing completed. Results indicate stable blood glucose and hemoglobin levels alongside mild iron reserve (Ferritin) depletion.';
-  const keyFindings: KeyFinding[] = analysis.key_findings || [
-    {
-      biomarker: 'Serum Ferritin',
-      value: '14 ng/mL',
-      range: '12 - 150 ng/mL',
-      status: 'Low Bound',
-      severity: 'attention',
-      title: 'Low Iron Reserve',
-      description: 'Serum Ferritin is measured at 14 ng/mL. Indicates low stored iron reserves requiring dietary adjustment.',
-    },
-    {
-      biomarker: 'Fasting Blood Sugar',
-      value: '92 mg/dL',
-      range: '70 - 99 mg/dL',
-      status: 'Normal',
-      severity: 'optimal',
-      title: 'Normal Glycemic Control',
-      description: 'Fasting blood glucose is well within healthy clinical reference thresholds.',
-    },
-    {
-      biomarker: 'Vitamin D (25-OH)',
-      value: '22 ng/mL',
-      range: '30 - 100 ng/mL',
-      status: 'Mild Low',
-      severity: 'warning',
-      title: 'Vitamin D Sub-Optimal',
-      description: 'Vitamin D level is 22 ng/mL (optimal target is 30–100 ng/mL). Mild sun exposure recommended.',
-    },
-  ];
+  const biomarkers = normalizeBiomarkers(analysis);
+  const { critical, attention, warning, normal } = getSeverityGroup(biomarkers);
+  const abnormalBiomarkers = [...critical, ...attention];
 
-  const specialist = analysis.recommended_specialist || 'Hematologist or General Physician';
-  const specialistReason = analysis.recommended_specialist_reason || 'Based on low Ferritin (14 ng/mL) and mild Vitamin D insufficiency, we recommend scheduling a routine consultation to review iron supplementation.';
-  const lifestyle: string[] = analysis.lifestyle_recommendations || [
-    'Incorporate iron-rich foods such as spinach, lentils, and lean proteins',
-    'Pair iron intake with Vitamin C to enhance intestinal absorption',
-    'Get 15-20 minutes of daily natural sunlight exposure for Vitamin D synthesis',
-  ];
+  // Compute counts
+  const normalCount = analysis?.normal_count ?? normal.length;
+  const abnormalCount = analysis?.abnormal_count ?? (attention.length + warning.length);
+  const criticalCount = analysis?.critical_count ?? critical.length;
 
-  const medicationSchedule = analysis.medication_schedule || [
-    {
-      medicine_name: 'Amoxicillin 500mg (Antibiotic)',
-      dosage: '1 Capsule (500mg)',
-      frequency: '3 times daily (Every 8 hours)',
-      duration: '7 Days Course',
-      instructions: 'Take with a full glass of water. Complete the full 7-day course even if symptoms resolve.',
-      timings: [
-        { time: '08:00 AM', meal_relation: 'After Breakfast' },
-        { time: '02:00 PM', meal_relation: 'After Lunch' },
-        { time: '09:00 PM', meal_relation: 'After Dinner' },
-      ],
-    },
-    {
-      medicine_name: 'Pantoprazole 40mg (Gastric Shield / Antacid)',
-      dosage: '1 Tablet (40mg)',
-      frequency: 'Once daily (Mornings)',
-      duration: '14 Days Course',
-      instructions: 'Swallow whole with water before your morning meal. Do not chew or crush.',
-      timings: [
-        { time: '07:30 AM', meal_relation: '30 mins Before Breakfast' },
-      ],
-    },
-    {
-      medicine_name: 'Paracetamol 650mg (Pain / Fever Relief)',
-      dosage: '1 Tablet (650mg)',
-      frequency: 'As needed (Max 3x daily, min 6h gap)',
-      duration: '3-5 Days (PRN)',
-      instructions: 'Take only when experiencing fever >100°F or severe body ache.',
-      timings: [
-        { time: '01:00 PM / 08:00 PM', meal_relation: 'After Meals as needed' },
-      ],
-    },
-  ];
-
-  const handleDownloadPDF = () => {
-    toast.success(`Downloading ${reportName} AI Summary (PDF)`);
-  };
-
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success('Report analysis link copied to clipboard');
-  };
+  const lifestyleRecs = analysis?.lifestyle_recommendations || [];
+  const specialist = analysis?.recommended_specialist;
+  const specialistReason = analysis?.recommended_specialist_reason;
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none font-['Public_Sans']">
-
-      <main className="py-12 px-4 sm:px-8 max-w-[80rem] mx-auto w-full space-y-10">
-        {/* Report Header */}
-        <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 bg-[#9EFFBF]/50 text-[#1A3C2B] font-['JetBrains_Mono'] font-bold text-xs uppercase rounded-full">
-                ANALYSIS COMPLETE · {confidenceScore}% CONFIDENCE
-              </span>
-              <span className="font-['JetBrains_Mono'] text-xs text-[#1A3C2B] font-semibold bg-[#1A3C2B]/10 px-2.5 py-0.5 rounded-full">
-                POWERED BY {provider.toUpperCase()}
-              </span>
-            </div>
-            <h1 className="font-['Space_Grotesk'] text-3xl sm:text-4xl font-bold text-[#111827]">
-              {reportName}
-            </h1>
-            <p className="font-['Public_Sans'] text-sm sm:text-base text-[#3A3A38]">
-              Ingested & Evaluated for Patient: <span className="font-semibold text-[#111827]">{userName}</span> · {keyFindings.length} Biomarkers Analyzed
-            </p>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              onClick={() => navigate('/app/chat')}
-              className="px-5 py-3 bg-[#1A3C2B] text-white text-sm sm:text-base font-semibold rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors flex items-center gap-2 cursor-pointer shadow-xs"
+    <div className="relative min-h-screen bg-[#F7F7F5]">
+      {/* ── Curtain Entrance ─────────────────────────── */}
+      <AnimatePresence>
+        {!curtainDone && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-[#0D2419] flex items-center justify-center pointer-events-none"
+            initial={{ y: 0 }}
+            animate={{ y: '-100%' }}
+            exit={{ y: '-100%' }}
+            transition={{ duration: 0.85, ease: [0.76, 0, 0.24, 1], delay: 0.4 }}
+            onAnimationComplete={() => setCurtainDone(true)}
+          >
+            <motion.div
+              className="absolute inset-x-0 h-px bg-[#9EFFBF] shadow-[0_0_16px_4px_rgba(158,255,191,0.6)]"
+              initial={{ top: '0%' }}
+              animate={{ top: '100%' }}
+              transition={{ duration: 0.6, ease: 'linear', delay: 0.1 }}
+            />
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="flex flex-col items-center gap-3"
             >
-              <MessageSquare className="h-4 w-4 text-[#9EFFBF]" />
-              <span>Ask AI Assistant</span>
-            </button>
-            <button
-              onClick={() => navigate('/app/upload')}
-              className="px-5 py-3 bg-white border border-[#3A3A38]/30 text-[#111827] text-sm sm:text-base font-semibold rounded-[12px] hover:border-[#1A3C2B] transition-colors flex items-center gap-2 cursor-pointer shadow-xs"
+              <div className="h-12 w-12 bg-[#9EFFBF]/20 rounded-[14px] border border-[#9EFFBF]/40 flex items-center justify-center">
+                <Activity className="h-6 w-6 text-[#9EFFBF]" />
+              </div>
+              <p className="font-['JetBrains_Mono'] text-[#9EFFBF] text-xs tracking-[0.3em] uppercase">
+                AI Report Analyser
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+
+        {/* ── Header ─────────────────────────────────── */}
+        <motion.div variants={fadeUp} custom={0} initial="hidden" animate={curtainDone ? 'visible' : 'hidden'}>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-['JetBrains_Mono'] text-[10px] font-bold uppercase tracking-[0.2em] text-[#1A3C2B]">
+              MEDITRACK AI — Report Analysis
+            </span>
+            <span className="h-px flex-1 bg-[#1A3C2B]/20" />
+          </div>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="font-['Space_Grotesk'] text-3xl sm:text-4xl font-black text-[#111827] tracking-tight">
+                Medical Report Analysis
+              </h1>
+              <p className="font-['Public_Sans'] text-sm text-[#3A3A38] mt-1">
+                AI-powered biomarker extraction with normal range comparison and plain-English explanations.
+              </p>
+            </div>
+            <Link
+              to="/app/upload"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#1A3C2B] text-white rounded-[12px] font-['Public_Sans'] text-sm font-bold hover:bg-[#1A3C2B]/90 transition-colors shrink-0"
             >
               <Upload className="h-4 w-4" />
-              <span>Upload New</span>
-            </button>
-            <button
-              onClick={handleDownloadPDF}
-              className="p-3 bg-white border border-[#3A3A38]/30 text-[#111827] rounded-[12px] hover:border-[#1A3C2B] transition-colors cursor-pointer"
-              title="Download PDF"
-            >
-              <Download className="h-4 w-4" />
-            </button>
-            <button
-              onClick={handleShare}
-              className="p-3 bg-white border border-[#3A3A38]/30 text-[#111827] rounded-[12px] hover:border-[#1A3C2B] transition-colors cursor-pointer"
-              title="Share"
-            >
-              <Share2 className="h-4 w-4" />
-            </button>
+              Upload New
+            </Link>
           </div>
-        </div>
+        </motion.div>
 
-        {/* AI Medical Summary Banner */}
-        <div className="bg-[#1A3C2B] text-white border-l-4 border-l-[#9EFFBF] rounded-[14px] p-6 sm:p-8 space-y-2.5 shadow-md">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-[#9EFFBF]" />
-            <span className="font-['JetBrains_Mono'] text-xs text-[#9EFFBF] font-bold uppercase tracking-wider">
-              CLINICAL AI SUMMARY
-            </span>
-          </div>
-          <p className="font-['Public_Sans'] text-base sm:text-lg text-slate-200 leading-relaxed">
-            {summaryText}
-          </p>
-        </div>
-
-        {/* 3 Key Findings Summary Boxes */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-          {keyFindings.slice(0, 3).map((item, idx) => {
-            const isAttention = item.severity === 'attention' || item.status.toLowerCase().includes('low') || item.status.toLowerCase().includes('high');
-            const isWarning = item.severity === 'warning' || item.status.toLowerCase().includes('sub') || item.status.toLowerCase().includes('mild');
-
-            const borderColor = isAttention
-              ? 'border-l-[#FF8C69]'
-              : isWarning
-              ? 'border-l-[#F4D35E]'
-              : 'border-l-[#9EFFBF]';
-
-            const badgeText = isAttention
-              ? 'REQUIRES ATTENTION'
-              : isWarning
-              ? 'MILD DEFICIENCY'
-              : 'OPTIMAL BIOMARKER';
-
-            const badgeColor = isAttention
-              ? 'text-[#FF8C69]'
-              : isWarning
-              ? 'text-amber-700'
-              : 'text-emerald-700';
-
-            const Icon = isAttention
-              ? AlertTriangle
-              : isWarning
-              ? Info
-              : CheckCircle2;
-
-            const iconColor = isAttention
-              ? 'text-[#FF8C69]'
-              : isWarning
-              ? 'text-amber-600'
-              : 'text-emerald-600';
-
-            return (
-              <div
-                key={idx}
-                className={`h-full flex flex-col justify-between bg-white border border-[#3A3A38]/20 border-l-4 ${borderColor} p-6 sm:p-8 rounded-[14px] space-y-3.5 shadow-xs`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`font-['JetBrains_Mono'] text-xs sm:text-sm font-bold uppercase ${badgeColor}`}>
-                    {badgeText}
-                  </span>
-                  <Icon className={`h-6 w-6 ${iconColor}`} />
-                </div>
-                <h3 className="font-['Space_Grotesk'] text-xl sm:text-2xl font-bold text-[#111827]">
-                  {item.title || item.biomarker}
-                </h3>
-                <p className="font-['Public_Sans'] text-sm sm:text-base text-[#3A3A38] leading-relaxed">
-                  {item.description || `${item.biomarker} measured at ${item.value} (Target: ${item.range}).`}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Detailed Biomarker Results Table */}
-        <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 sm:p-8 space-y-4 shadow-xs">
-          <h3 className="font-['Space_Grotesk'] text-2xl sm:text-3xl font-bold text-[#111827]">
-            Complete Biomarker Analysis
-          </h3>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left font-['Public_Sans'] text-sm sm:text-base">
-              <thead>
-                <tr className="border-b border-[#3A3A38]/20 font-['JetBrains_Mono'] text-xs uppercase text-[#3A3A38]">
-                  <th className="py-3.5 px-4">Biomarker</th>
-                  <th className="py-3.5 px-4">Measured Value</th>
-                  <th className="py-3.5 px-4">Reference Range</th>
-                  <th className="py-3.5 px-4">Clinical Marker</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#3A3A38]/10">
-                {keyFindings.map((b, idx) => {
-                  const isLow = b.status.toLowerCase().includes('low');
-                  const isOptimal = b.status.toLowerCase().includes('normal') || b.status.toLowerCase().includes('optimal');
-
-                  const statusColor = isLow
-                    ? 'border-l-[#FF8C69] text-[#FF8C69]'
-                    : isOptimal
-                    ? 'border-l-[#9EFFBF] text-emerald-600'
-                    : 'border-l-[#F4D35E] text-amber-600';
-
-                  return (
-                    <tr key={idx} className="hover:bg-[#F7F7F5] transition-colors">
-                      <td className="py-4 px-4 font-bold text-[#111827]">{b.biomarker}</td>
-                      <td className="py-4 px-4 font-['JetBrains_Mono'] font-bold text-[#111827] text-base sm:text-lg">
-                        {b.value}
-                      </td>
-                      <td className="py-4 px-4 font-['JetBrains_Mono'] text-[#3A3A38]">{b.range}</td>
-                      <td className="py-4 px-4">
-                        <span className={`inline-block font-['JetBrains_Mono'] font-bold text-xs sm:text-sm ${statusColor}`}>
-                          {b.status}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Dedicated Prescription Dosage & Daily Timing Schedule Card */}
-        <div className="bg-white border border-[#1A3C2B]/30 rounded-[18px] p-6 sm:p-8 space-y-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#3A3A38]/15 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-[12px] bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center font-bold shadow-xs">
-                <Pill className="h-5 w-5" />
-              </div>
-              <div>
-                <span className="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-[#1A3C2B] font-bold">
-                  PRESCRIPTION DOSAGE & INTAKE TIMINGS
-                </span>
-                <h3 className="font-['Space_Grotesk'] text-2xl sm:text-3xl font-bold text-[#111827]">
-                  Medication Intake Schedule & Times
-                </h3>
-              </div>
+        {/* ── No Analysis State ──────────────────────── */}
+        {!analysis && (
+          <motion.div
+            variants={fadeUp} custom={1} initial="hidden" animate={curtainDone ? 'visible' : 'hidden'}
+            className="bg-white border border-[#3A3A38]/20 rounded-[18px] p-10 text-center space-y-6"
+          >
+            <div className="h-16 w-16 bg-[#1A3C2B]/8 rounded-[16px] flex items-center justify-center mx-auto">
+              <FileText className="h-8 w-8 text-[#1A3C2B]" />
             </div>
-            <span className="px-3.5 py-1.5 bg-[#1A3C2B]/10 text-[#1A3C2B] font-['JetBrains_Mono'] text-xs font-bold rounded-full w-fit">
-              {medicationSchedule.length} PRESCRIBED MEDICATIONS
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            {medicationSchedule.map((med: any, idx: number) => (
-              <div
-                key={idx}
-                className="p-5 rounded-[14px] bg-[#F7F7F5] border border-[#3A3A38]/20 space-y-4 hover:border-[#1A3C2B] transition-colors"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <h4 className="font-['Space_Grotesk'] text-lg sm:text-xl font-bold text-[#111827] flex items-center gap-2">
-                      <Pill className="h-4.5 w-4.5 text-[#1A3C2B]" />
-                      <span>{med.medicine_name}</span>
-                    </h4>
-                    <p className="text-xs sm:text-sm text-[#3A3A38] font-medium mt-1">
-                      Dosage: <strong className="text-[#111827]">{med.dosage}</strong> · Duration: <strong className="text-[#1A3C2B]">{med.duration}</strong>
-                    </p>
-                  </div>
-                  <span className="px-3 py-1 bg-white border border-[#3A3A38]/20 text-[#1A3C2B] text-xs font-['JetBrains_Mono'] font-bold rounded-lg w-fit">
-                    {med.frequency}
-                  </span>
-                </div>
-
-                {/* Daily Timings Breakdown */}
-                <div className="pt-2">
-                  <span className="font-['JetBrains_Mono'] text-[11px] uppercase tracking-wider text-[#3A3A38] font-bold block mb-2">
-                    EXACT INTAKE TIMINGS:
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {med.timings.map((slot: any, sIdx: number) => (
-                      <div
-                        key={sIdx}
-                        className="p-3 rounded-[10px] bg-white border border-[#3A3A38]/15 flex items-center gap-3 shadow-2xs"
-                      >
-                        <div className="h-9 w-9 rounded-lg bg-[#1A3C2B]/10 text-[#1A3C2B] flex items-center justify-center shrink-0">
-                          <Clock className="h-4.5 w-4.5" />
-                        </div>
-                        <div>
-                          <span className="font-['Space_Grotesk'] text-sm font-bold text-[#111827] block">
-                            {slot.time}
-                          </span>
-                          <span className="text-[11px] text-[#3A3A38] block font-medium">
-                            {slot.meal_relation}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Administration Instructions */}
-                {med.instructions && (
-                  <div className="pt-2 text-xs text-[#3A3A38] flex items-start gap-2 bg-white p-3 rounded-[10px] border border-[#3A3A38]/15">
-                    <Info className="h-4 w-4 text-[#1A3C2B] shrink-0 mt-0.5" />
-                    <span><strong>Instructions:</strong> {med.instructions}</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Lifestyle & Precaution Guidelines */}
-        {lifestyle && lifestyle.length > 0 && (
-          <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 sm:p-8 space-y-4 shadow-xs">
-            <h3 className="font-['Space_Grotesk'] text-xl sm:text-2xl font-bold text-[#111827]">
-              Actionable Health Recommendations
-            </h3>
-            <ul className="space-y-3 font-['Public_Sans'] text-base sm:text-lg text-[#111827]">
-              {lifestyle.map((rec, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span className="mt-1 h-5 w-5 rounded-full bg-[#9EFFBF] text-[#1A3C2B] flex items-center justify-center shrink-0 font-bold text-xs">
-                    ✓
-                  </span>
-                  <span>{rec}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Specialist Referral Section */}
-        <div className="bg-[#1A3C2B] text-white border border-[#3A3A38]/30 rounded-[14px] p-6 sm:p-8 space-y-6 shadow-md">
-          <div className="flex items-center gap-2">
-            <span className="px-3.5 py-1 bg-white/10 text-[#9EFFBF] border border-white/20 font-['JetBrains_Mono'] text-xs uppercase font-bold rounded-full">
-              RECOMMENDED CLINICAL REFERRAL
-            </span>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 items-center">
-            <div className="md:col-span-2 space-y-3">
-              <h2 className="font-['Space_Grotesk'] text-3xl sm:text-4xl font-bold text-white">
-                Consult a {specialist}
+            <div>
+              <h2 className="font-['Space_Grotesk'] text-xl font-black text-[#111827]">
+                No Analysis Available
               </h2>
-              <p className="font-['Public_Sans'] text-base sm:text-lg text-slate-200 leading-relaxed">
-                {specialistReason}
+              <p className="font-['Public_Sans'] text-sm text-[#3A3A38] mt-2 max-w-sm mx-auto">
+                Upload a blood test, CBC, thyroid report, LFT, KFT, or any medical document to get an AI analysis.
               </p>
             </div>
 
-            <div className="text-left md:text-right">
-              <button
-                onClick={() => navigate('/app/history')}
-                className="w-full md:w-auto px-6 py-4 bg-[#9EFFBF] text-[#1A3C2B] font-['Public_Sans'] font-bold text-base rounded-[12px] hover:bg-white transition-colors inline-flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-              >
-                <span>Find Nearby Specialists</span>
-                <ArrowRight className="h-5 w-5" />
-              </button>
+            {/* Report types supported */}
+            <div className="flex flex-wrap gap-2 justify-center">
+              {['🩸 CBC', '🦋 Thyroid', '🫀 LFT', '🫘 KFT', '💛 Lipid', '📊 HbA1c', '🩻 X-Ray', '❤️ ECG'].map(t => (
+                <span key={t} className="font-['JetBrains_Mono'] text-[10px] px-3 py-1.5 bg-[#F7F7F5] border border-[#3A3A38]/20 rounded-full text-[#3A3A38]">
+                  {t}
+                </span>
+              ))}
             </div>
-          </div>
-        </div>
-      </main>
 
-      <FooterComponent />
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <Link
+                to="/app/upload"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#1A3C2B] text-white rounded-[12px] font-['Public_Sans'] text-sm font-bold hover:bg-[#1A3C2B]/90 transition-colors"
+              >
+                <Upload className="h-4 w-4" />
+                Upload a Report
+              </Link>
+              <Link
+                to="/app/prescription"
+                className="inline-flex items-center gap-2 px-6 py-3 border border-[#3A3A38]/25 rounded-[12px] font-['Public_Sans'] text-sm font-bold text-[#3A3A38] hover:border-[#1A3C2B] hover:text-[#1A3C2B] transition-colors"
+              >
+                <Sparkles className="h-4 w-4" />
+                Analyse Prescription
+              </Link>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── Report Analysis Results ────────────────── */}
+        {analysis && (
+          <motion.div
+            className="space-y-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: curtainDone ? 1 : 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            {/* Summary Banner */}
+            <ReportSummaryBanner
+              reportType={reportType}
+              overallStatus={analysis.overall_status || analysis.risk_level}
+              riskLevel={analysis.risk_level}
+              confidenceScore={analysis.confidence_score}
+              summary={analysis.summary}
+              normalCount={normalCount}
+              abnormalCount={abnormalCount}
+              criticalCount={criticalCount}
+              patientName={analysis.patient_name}
+              labName={analysis.lab_name}
+              collectionDate={analysis.collection_date}
+              doctorName={analysis.doctor_name}
+              reportName={reportName}
+              provider={provider}
+            />
+
+            {/* ── Critical / Abnormal Values First ──── */}
+            {abnormalBiomarkers.length > 0 && (
+              <motion.div variants={fadeUp} custom={2} initial="hidden" animate="visible" className="space-y-3">
+                <SectionHeader
+                  icon="🔴"
+                  label={`Abnormal Values`}
+                  count={abnormalBiomarkers.length}
+                  color="text-red-700"
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {abnormalBiomarkers.map((b: any, i: number) => (
+                    <LabValueCard
+                      key={`abn-${i}`}
+                      name={b.name}
+                      value={b.value}
+                      numericValue={b.numeric_value}
+                      unit={b.unit}
+                      normalRange={b.normal_range}
+                      status={b.status}
+                      severity={b.severity}
+                      category={b.category}
+                      explanation={b.explanation}
+                      recommendation={b.recommendation}
+                      index={i}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── All Biomarkers ───────────────────── */}
+            {biomarkers.length > 0 && (
+              <motion.div variants={fadeUp} custom={3} initial="hidden" animate="visible" className="space-y-3">
+                <SectionHeader icon="📋" label="All Results" count={biomarkers.length} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {biomarkers.map((b: any, i: number) => (
+                    <LabValueCard
+                      key={`all-${i}`}
+                      name={b.name}
+                      value={b.value}
+                      numericValue={b.numeric_value}
+                      unit={b.unit}
+                      normalRange={b.normal_range}
+                      status={b.status}
+                      severity={b.severity}
+                      category={b.category}
+                      explanation={b.explanation}
+                      recommendation={b.recommendation}
+                      index={i}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Specialist Recommendation ─────────── */}
+            {specialist && (
+              <motion.div
+                variants={fadeUp} custom={4} initial="hidden" animate="visible"
+                className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-5 flex items-start gap-4"
+              >
+                <div className="h-10 w-10 bg-[#1A3C2B]/10 rounded-[10px] flex items-center justify-center shrink-0">
+                  <Stethoscope className="h-5 w-5 text-[#1A3C2B]" />
+                </div>
+                <div>
+                  <p className="font-['JetBrains_Mono'] text-[9px] text-[#3A3A38] uppercase tracking-widest mb-1">
+                    Recommended Specialist
+                  </p>
+                  <p className="font-['Space_Grotesk'] text-base font-bold text-[#111827]">{specialist}</p>
+                  {specialistReason && (
+                    <p className="font-['Public_Sans'] text-xs text-[#3A3A38] mt-1">{specialistReason}</p>
+                  )}
+                  <Link
+                    to="/app/chat"
+                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-['Public_Sans'] font-bold text-[#1A3C2B] hover:underline"
+                  >
+                    Ask AI Health Assistant
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Lifestyle Recommendations ─────────── */}
+            {lifestyleRecs.length > 0 && (
+              <motion.div
+                variants={fadeUp} custom={5} initial="hidden" animate="visible"
+                className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-5 space-y-4"
+              >
+                <div className="flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-[#1A3C2B]" />
+                  <span className="font-['JetBrains_Mono'] text-xs font-bold uppercase tracking-widest text-[#1A3C2B]">
+                    Lifestyle Recommendations
+                  </span>
+                </div>
+                <ul className="space-y-2.5">
+                  {lifestyleRecs.map((rec: string, i: number) => (
+                    <motion.li
+                      key={i}
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + i * 0.06 }}
+                      className="flex items-start gap-3"
+                    >
+                      <span className="h-5 w-5 bg-[#9EFFBF]/30 text-[#1A3C2B] rounded-full flex items-center justify-center shrink-0 mt-0.5 font-['JetBrains_Mono'] text-[10px] font-bold">
+                        {i + 1}
+                      </span>
+                      <p className="font-['Public_Sans'] text-sm text-[#111827]">{rec}</p>
+                    </motion.li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
+
+            {/* ── Quick Actions ─────────────────────── */}
+            <motion.div
+              variants={fadeUp} custom={6} initial="hidden" animate="visible"
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+            >
+              <Link
+                to="/app/chat"
+                className="flex items-center gap-3 bg-white border border-[#3A3A38]/20 rounded-[14px] p-4 hover:border-[#1A3C2B]/40 hover:shadow-md transition-all group"
+              >
+                <div className="h-9 w-9 bg-[#1A3C2B]/8 rounded-[10px] flex items-center justify-center">
+                  <MessageSquare className="h-4.5 w-4.5 text-[#1A3C2B]" />
+                </div>
+                <div>
+                  <p className="font-['Space_Grotesk'] text-sm font-bold text-[#111827]">Ask AI Assistant</p>
+                  <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">Get answers about your results</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-[#1A3C2B] ml-auto group-hover:translate-x-1 transition-transform" />
+              </Link>
+
+              <Link
+                to="/app/timeline"
+                className="flex items-center gap-3 bg-white border border-[#3A3A38]/20 rounded-[14px] p-4 hover:border-[#1A3C2B]/40 hover:shadow-md transition-all group"
+              >
+                <div className="h-9 w-9 bg-[#1A3C2B]/8 rounded-[10px] flex items-center justify-center">
+                  <TrendingUp className="h-4.5 w-4.5 text-[#1A3C2B]" />
+                </div>
+                <div>
+                  <p className="font-['Space_Grotesk'] text-sm font-bold text-[#111827]">Health Timeline</p>
+                  <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">View your health trends</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-[#1A3C2B] ml-auto group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </motion.div>
+
+            {/* ── Safety Disclaimer ─────────────────── */}
+            <motion.div
+              variants={fadeUp} custom={7} initial="hidden" animate="visible"
+              className="bg-[#1A3C2B] text-white rounded-[14px] px-6 py-5 flex items-start gap-3"
+            >
+              <Shield className="h-5 w-5 text-[#9EFFBF] shrink-0 mt-0.5" />
+              <div>
+                <p className="font-['JetBrains_Mono'] text-[10px] font-bold text-[#9EFFBF] uppercase tracking-widest mb-1">
+                  Safety Disclaimer
+                </p>
+                <p className="font-['Public_Sans'] text-xs text-white/80 leading-relaxed">
+                  AI-generated analysis may contain errors. This is not a medical diagnosis. Normal ranges may vary by laboratory.
+                  Always discuss your results with a qualified healthcare professional before making any health decisions.
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        <FooterComponent />
+      </div>
     </div>
   );
 }

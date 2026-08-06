@@ -14,6 +14,7 @@ import {
   X,
   ChevronLeft,
   Pill,
+  TrendingUp,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '@/context/AuthContext';
@@ -25,6 +26,7 @@ const publicNav = [
   { to: '/app/prescription', label: 'Rx Engine', icon: Pill },
   { to: '/app/ai-analysis', label: 'AI Analysis', icon: BrainCircuit },
   { to: '/app/history', label: 'Report History', icon: History },
+  { to: '/app/timeline', label: 'Health Timeline', icon: TrendingUp },
   { to: '/app/chat', label: 'AI Health Assistant', icon: MessageSquare },
 ];
 

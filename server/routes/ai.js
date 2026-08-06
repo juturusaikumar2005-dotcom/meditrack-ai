@@ -532,43 +532,79 @@ function generateCategorySpecificAnalysis(reportName, reportType) {
 }
 
 /**
+ * Build the enhanced clinical report analysis prompt
+ */
+function buildReportAnalysisPrompt(reportName, reportType) {
+  return `You are MEDITRACK AI — a world-class clinical medical report analyst.
+
+Analyze this medical document:
+- Document Name: "${reportName}"
+- Reported Type: "${reportType || 'Medical Document'}"
+
+CRITICAL RULES:
+1. Auto-detect the exact report type: CBC | Blood Test | Thyroid | LFT | KFT | Urine | Lipid Panel | HbA1c | X-Ray | CT | MRI | ECG | Discharge | General
+2. Extract ALL numeric biomarker values from the report with their actual measured values.
+3. Compare each value against standard clinical normal ranges.
+4. Never fabricate values. If you cannot extract a real value, use null.
+5. NEVER diagnose diseases with certainty. Always recommend consulting a doctor.
+6. Status options: "Normal" | "Low" | "High" | "Borderline Low" | "Borderline High" | "Critical Low" | "Critical High"
+7. Severity: "optimal" | "warning" | "attention" | "critical"
+
+Return ONLY this exact JSON (no markdown, no explanation):
+{
+  "report_type": "CBC",
+  "patient_name": null,
+  "collection_date": null,
+  "lab_name": null,
+  "diagnosis": null,
+  "doctor_name": null,
+  "summary": "3-4 sentence clinical summary of this specific report.",
+  "overall_status": "Normal | Borderline | Attention Needed | Critical",
+  "confidence_score": 96.5,
+  "risk_level": "Low | Moderate | Attention Needed",
+  "biomarkers": [
+    {
+      "name": "Hemoglobin",
+      "value": "11.2",
+      "numeric_value": 11.2,
+      "unit": "g/dL",
+      "normal_range": "12.0-15.5",
+      "status": "Low",
+      "severity": "attention",
+      "category": "CBC",
+      "explanation": "Hemoglobin is below the normal range for females, indicating mild anemia.",
+      "recommendation": "Discuss iron supplementation and dietary changes with your doctor."
+    }
+  ],
+  "abnormal_count": 2,
+  "normal_count": 5,
+  "critical_count": 0,
+  "recommended_specialist": "General Physician or Hematologist",
+  "recommended_specialist_reason": "Due to below-normal hemoglobin levels.",
+  "lifestyle_recommendations": [
+    "Increase iron-rich foods: spinach, lentils, red meat",
+    "Take iron supplements as prescribed",
+    "Vitamin C helps iron absorption — take with meals"
+  ],
+  "key_findings": [
+    {
+      "biomarker": "Hemoglobin",
+      "value": "11.2 g/dL",
+      "range": "12.0-15.5",
+      "status": "Low",
+      "severity": "attention",
+      "title": "Low Hemoglobin",
+      "description": "Hemoglobin is below normal range. Mild anemia may be present."
+    }
+  ]
+}`;
+}
+
+/**
  * Perform Gemini API Report Analysis if Key Available
  */
 async function analyzeReportWithGemini(reportName, reportType, fileUrl, geminiApiKey) {
-  const prompt = `You are MEDITRACK AI Medical Report Analyzer — an expert clinical AI.
-
-Analyze the uploaded medical document:
-- Document Name: "${reportName}"
-- Document Type: "${reportType || 'Medical Document'}"
-
-CRITICAL INSTRUCTIONS:
-1. Identify if this is a Prescription (Rx), Blood Test Panel, MRI Scan, CT Scan, X-Ray, EKG, or General Medical Report.
-2. Produce a JSON object with this exact structure:
-{
-  "summary": "3-4 sentence clinical summary tailored specifically to this report.",
-  "confidence_score": 98.9,
-  "risk_level": "Low" | "Moderate" | "Attention Needed",
-  "key_findings": [
-    {
-      "biomarker": "Item / Medication / Structure Name",
-      "value": "Measured Value or Dose",
-      "range": "Normal Reference Range or Duration",
-      "status": "Normal" | "Active Rx" | "Attention",
-      "severity": "optimal" | "warning" | "attention",
-      "title": "Short Finding Title",
-      "description": "2 sentence clear clinical explanation."
-    }
-  ],
-  "recommended_specialist": "Specific Medical Specialist Title",
-  "recommended_specialist_reason": "Clear explanation of why this specialist is recommended.",
-  "lifestyle_recommendations": [
-    "Practical recommendation 1",
-    "Practical recommendation 2",
-    "Practical recommendation 3"
-  ]
-}
-
-Return ONLY valid JSON matching this schema. Do not include markdown block wrappers.`;
+  const prompt = buildReportAnalysisPrompt(reportName, reportType);
 
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
@@ -577,6 +613,7 @@ Return ONLY valid JSON matching this schema. Do not include markdown block wrapp
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 4096 },
       }),
     });
 
@@ -585,60 +622,53 @@ Return ONLY valid JSON matching this schema. Do not include markdown block wrapp
       let rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (rawText) {
         rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(rawText);
-        if (parsed && parsed.summary && parsed.key_findings) {
-          return parsed;
+        try {
+          const parsed = JSON.parse(rawText);
+          if (parsed && (parsed.biomarkers || parsed.key_findings)) {
+            // Ensure biomarkers always exists (bridge old key_findings if needed)
+            if (!parsed.biomarkers && parsed.key_findings) {
+              parsed.biomarkers = parsed.key_findings.map(kf => ({
+                name: kf.biomarker || kf.title || 'Unknown',
+                value: kf.value || '',
+                numeric_value: parseFloat(kf.value) || null,
+                unit: '',
+                normal_range: kf.range || '',
+                status: kf.status || 'Normal',
+                severity: kf.severity || 'optimal',
+                category: parsed.report_type || 'General',
+                explanation: kf.description || '',
+                recommendation: '',
+              }));
+            }
+            return parsed;
+          }
+        } catch(parseErr) {
+          // Try extracting JSON block
+          const match = rawText.match(/\{[\s\S]*\}/);
+          if (match) {
+            try {
+              const parsed = JSON.parse(match[0]);
+              if (parsed && (parsed.biomarkers || parsed.key_findings)) return parsed;
+            } catch {}
+          }
         }
       }
     }
-    console.warn(`[Gemini API Status ${res.status}] Gemini Report Analysis limit/quota reached. Automatically failing over to OpenRouter API...`);
+    console.warn(`[Gemini API Status ${res.status}] Failing over to OpenRouter...`);
   } catch (err) {
-    console.error('[Gemini Report Analysis Error]:', err.message, '-> Triggering OpenRouter failover...');
+    console.error('[Gemini Report Analysis Error]:', err.message);
   }
 
-  // AUTOMATIC FAILOVER TO OPENROUTER API
   return await analyzeReportWithOpenRouter(reportName, reportType, fileUrl, process.env.OPENROUTER_API_KEY || DEFAULT_OPENROUTER_KEY);
 }
 
+
 /**
- * Call OpenRouter API for Medical Report & Prescription Analysis (Automatic Failover)
+ * Call OpenRouter API for Medical Report Analysis (Automatic Failover)
  */
 async function analyzeReportWithOpenRouter(reportName, reportType, fileUrl, openrouterApiKey) {
   const apiKey = openrouterApiKey || process.env.OPENROUTER_API_KEY || DEFAULT_OPENROUTER_KEY;
-  const prompt = `You are MEDITRACK AI Medical Report Analyzer — an expert clinical AI.
-
-Analyze the uploaded medical document:
-- Document Name: "${reportName}"
-- Document Type: "${reportType || 'Medical Document'}"
-
-CRITICAL INSTRUCTIONS:
-1. Identify if this is a Prescription (Rx), Blood Test Panel, MRI Scan, CT Scan, X-Ray, EKG, or General Medical Report.
-2. Produce a JSON object with this exact structure:
-{
-  "summary": "3-4 sentence clinical summary tailored specifically to this report.",
-  "confidence_score": 98.9,
-  "risk_level": "Low" | "Moderate" | "Attention Needed",
-  "key_findings": [
-    {
-      "biomarker": "Item / Medication / Structure Name",
-      "value": "Measured Value or Dose",
-      "range": "Normal Reference Range or Duration",
-      "status": "Normal" | "Active Rx" | "Attention",
-      "severity": "optimal" | "warning" | "attention",
-      "title": "Short Finding Title",
-      "description": "2 sentence clear clinical explanation."
-    }
-  ],
-  "recommended_specialist": "Specific Medical Specialist Title",
-  "recommended_specialist_reason": "Clear explanation of why this specialist is recommended.",
-  "lifestyle_recommendations": [
-    "Practical recommendation 1",
-    "Practical recommendation 2",
-    "Practical recommendation 3"
-  ]
-}
-
-Return ONLY valid JSON matching this schema. Do not include markdown block wrappers.`;
+  const prompt = buildReportAnalysisPrompt(reportName, reportType);
 
   try {
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -647,14 +677,16 @@ Return ONLY valid JSON matching this schema. Do not include markdown block wrapp
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://meditrack-ai.com',
-        'X-Title': 'MediTrack AI',
+        'X-Title': 'MediTrack AI Report Analyzer',
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are an expert clinical diagnostic parser. Return ONLY raw valid JSON matching the schema.' },
+          { role: 'system', content: 'You are an expert clinical medical report analyst. Return ONLY raw valid JSON matching the schema. Never include markdown fences.' },
           { role: 'user', content: prompt },
         ],
+        temperature: 0.1,
+        max_tokens: 4096,
       }),
     });
 
@@ -663,10 +695,26 @@ Return ONLY valid JSON matching this schema. Do not include markdown block wrapp
       let rawText = data?.choices?.[0]?.message?.content;
       if (rawText) {
         rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(rawText);
-        if (parsed && parsed.summary && parsed.key_findings) {
-          return parsed;
-        }
+        try {
+          const parsed = JSON.parse(rawText);
+          if (parsed && (parsed.biomarkers || parsed.key_findings)) {
+            if (!parsed.biomarkers && parsed.key_findings) {
+              parsed.biomarkers = parsed.key_findings.map(kf => ({
+                name: kf.biomarker || kf.title || 'Unknown',
+                value: kf.value || '',
+                numeric_value: parseFloat(kf.value) || null,
+                unit: '',
+                normal_range: kf.range || '',
+                status: kf.status || 'Normal',
+                severity: kf.severity || 'optimal',
+                category: parsed.report_type || 'General',
+                explanation: kf.description || '',
+                recommendation: '',
+              }));
+            }
+            return { ...parsed, provider: 'OpenRouter' };
+          }
+        } catch {}
       }
     } else {
       console.warn(`[OpenRouter Report Analysis API returned status ${res.status}]`);
