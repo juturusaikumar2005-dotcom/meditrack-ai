@@ -653,88 +653,85 @@ function generateCategorySpecificAnalysis(reportName, reportType) {
 }
 
 /**
- * Build the Multi-Agent Specialized Clinical Extraction Prompt (8-Agent Architecture)
+ * Build the Exhaustive Medical Document Intelligence Prompt (14-Step Complete Pipeline)
  */
 function buildReportAnalysisPrompt(reportName, reportType) {
-  return `You are MEDITRACK AI — an 8-Agent Modular Clinical Extraction Engine (Document Classifier, Patient Info Extractor, Diagnosis Extractor, Medication Extractor, Lab Table Extractor, Abnormal Value Detector, Medical Knowledge Engine, Quality Checker).
+  return `You are MEDITRACK AI — a Principal Clinical Document Intelligence Engine.
 
-Analyze this medical document or multi-section hospital packet:
-- Document Name: "${reportName}"
-- Reported Type: "${reportType || 'Medical Document'}"
+CRITICAL MANDATE:
+Extract EVERYTHING present in this document or multi-page hospital packet. DO NOT summarize or skip table rows. If the document has 60 lab tests, extract ALL 60 rows. If it has 15 medicines, extract ALL 15 medicines. If it has radiology findings, billing, vitals, patient headers, or procedure notes, extract ALL of them.
 
-AGENT INSTRUCTIONS:
-1. AGENT 1 (Classifier): Identify primary document_type from: Prescription | Discharge Summary | CBC Report | Blood Report | LFT | KFT | RFT | Urine Report | MRI | CT Scan | X-Ray Report | ECG | Echo | Biopsy | Histopathology | Medical Bill | Insurance Document | Doctor Note | Operation Notes | ICU Summary | Lab Report | Health Checkup Report. Also list secondary document sections if multi-page/multi-type packet.
-2. AGENT 2 (Patient & Hospital Extractor): Extract patient name, age, gender, UHID, IP/OP number, blood group, doctor, hospital, department, admission date, discharge date, ward, bed.
-3. AGENT 3 (Diagnosis & History): Extract primary, secondary, provisional, differential diagnosis, and chief complaints (pain, fever, cough, etc.).
-4. AGENT 4 (Medication Extractor): Extract brand, generic, strength, dose, frequency, duration, morning/afternoon/night, food timing, purpose.
-5. AGENT 5 (Lab & Table Extractor): Parse EVERY lab table without skipping rows. Extract test name, value, numeric_value, unit, reference_range.
-6. AGENT 6 (Abnormal Detector): Flag status as "Normal" | "Low" | "High" | "Borderline Low" | "Borderline High" | "Critical Low" | "Critical High", severity as "optimal" | "warning" | "attention" | "critical".
-7. AGENT 7 (Knowledge Engine): Provide clinical explanation and recommendation for each biomarker.
-8. AGENT 8 (Summary & Organ Scores & Quality Check): Compute overallScore (0-100) and 8 organ health scores (bloodHealth, kidneyHealth, liverHealth, heartHealth, diabetesRisk, vitaminDeficiency, infectionIndicators, hydrationElectrolytes). Check for missing fields and calculate confidence_score.
+Document Name: "${reportName}"
+Reported Type: "${reportType || 'Medical Document'}"
+
+EXHAUSTIVE EXTRACTION STEPS:
+1. DOCUMENT CLASSIFIER: Detect exact document_type (Prescription, Discharge Summary, CBC, LFT, KFT, RFT, Urine, MRI, CT, X-Ray, ECG, Echo, Biopsy, Histopathology, Medical Bill, Insurance, Doctor Note, Health Checkup, etc.).
+2. PATIENT DETAILS: Extract patient name, age, gender, UHID, IP/OP number, blood group, mobile, address.
+3. HOSPITAL & DOCTOR: Extract hospital name, department, ward, bed number, primary doctor name, specialty, qualification.
+4. DIAGNOSIS & HISTORY: Extract primary diagnosis, secondary diagnosis, provisional, differential, chief complaints, present illness, medical history, surgical history, family history, allergies.
+5. VITALS: Extract blood pressure (BP), heart rate (HR), respiratory rate (RR), temperature, SpO2, BMI, weight, height, pain score.
+6. LABORATORY TABLES: Parse EVERY SINGLE ROW in every lab table. Extract test_name, value, numeric_value, unit, reference_range, status ("Normal" | "Low" | "High" | "Borderline Low" | "Borderline High" | "Critical Low" | "Critical High"), severity ("optimal" | "warning" | "attention" | "critical"), clinical_explanation, possible_significance, recommendation.
+7. RADIOLOGY & IMAGING: Extract scan_type, region, finding, impression, severity.
+8. MEDICATIONS: Extract brand_name, generic_name, strength, dosage, frequency, duration, morning (boolean), afternoon (boolean), night (boolean), food_timing, purpose, side_effects, precautions.
+9. PROCEDURES & INSTRUCTIONS: Extract procedures performed, discharge instructions, follow_up.
+10. BILLING & INSURANCE: Extract total_amount, paid, balance, currency, insurance_provider, policy_number, claim_status.
+11. ORGAN HEALTH SCORES: Compute 8 organ health scores (bloodHealth, kidneyHealth, liverHealth, heartHealth, diabetesRisk, vitaminDeficiency, infectionIndicators, hydrationElectrolytes).
+12. SUMMARY & ALERTS: Provide clinical summary, critical alerts, lifestyle guidance, recommended specialist.
 
 Return ONLY valid JSON matching this schema (no markdown block wrappers):
 {
   "document_type": "Discharge Summary / Lab Report",
-  "document_sections": ["Discharge Summary", "CBC Report", "Medicine List", "Hospital Bill"],
-  "hospital": { "name": null, "department": null, "ward": null, "bed": null },
-  "patient": { "name": null, "age": null, "gender": null, "uhid": null, "ip_number": null, "op_number": null, "blood_group": null, "admission_date": null, "discharge_date": null },
+  "document_sections": ["Patient Info", "Diagnosis", "Vitals", "Laboratory", "Medications", "Billing"],
+  "hospital": { "name": null, "department": null, "ward": null, "bed": null, "address": null },
+  "patient": { "name": null, "age": null, "gender": null, "uhid": null, "ip_number": null, "op_number": null, "blood_group": null, "mobile": null },
   "doctor": { "name": null, "specialty": null, "qualification": null },
   "diagnosis": { "primary": null, "secondary": null, "final": null, "provisional": null, "differential": null },
-  "complaints": [],
-  "vitals": { "bp": null, "hr": null, "temp": null, "spo2": null, "bmi": null, "weight": null },
+  "history": { "chief_complaints": [], "present_illness": null, "medical_history": null, "allergies": [] },
+  "vitals": { "bp": null, "hr": null, "rr": null, "temp": null, "spo2": null, "bmi": null, "weight": null, "height": null, "pain_score": null },
   "organ_health_scores": {
     "overallScore": 92,
-    "bloodHealth": { "status": "Optimal", "score": 94, "details": "RBC and Hemoglobin normal" },
-    "kidneyHealth": { "status": "Optimal", "score": 96, "details": "Creatinine & eGFR clear" },
+    "bloodHealth": { "status": "Optimal", "score": 94, "details": "All blood parameters evaluated" },
+    "kidneyHealth": { "status": "Optimal", "score": 96, "details": "Renal markers clear" },
     "liverHealth": { "status": "Optimal", "score": 90, "details": "Enzyme balance healthy" },
     "heartHealth": { "status": "Optimal", "score": 88, "details": "Cardio markers clear" },
     "diabetesRisk": { "status": "Low Risk", "score": 95, "details": "Glucose control optimal" },
-    "vitaminDeficiency": { "status": "Optimal", "score": 85, "details": "Vitamin D & B12 clear" },
-    "infectionIndicators": { "status": "Normal", "score": 95, "details": "WBC & CRP clear" },
+    "vitaminDeficiency": { "status": "Optimal", "score": 85, "details": "Vitamin levels optimal" },
+    "infectionIndicators": { "status": "Normal", "score": 95, "details": "WBC & inflammatory markers clear" },
     "hydrationElectrolytes": { "status": "Optimal", "score": 92, "details": "Electrolytes balanced" }
   },
-  "summary": "3-4 sentence clinical summary of this specific document.",
+  "summary": "Full clinical summary of the document.",
   "overall_status": "Normal | Borderline | Attention Needed | Critical",
   "confidence_score": 97.5,
   "risk_level": "Low | Moderate | Attention Needed",
   "biomarkers": [
     {
       "name": "Hemoglobin",
-      "value": "11.2",
-      "numeric_value": 11.2,
+      "value": "13.8",
+      "numeric_value": 13.8,
       "unit": "g/dL",
-      "normal_range": "12.0-15.5",
-      "status": "Low",
-      "severity": "attention",
+      "normal_range": "12.0 - 15.5",
+      "status": "Normal",
+      "severity": "optimal",
       "category": "CBC",
-      "explanation": "Hemoglobin is below normal range for females, indicating mild anemia.",
-      "recommendation": "Discuss iron supplementation and dietary changes with your doctor."
+      "explanation": "Normal oxygen-carrying protein capacity.",
+      "recommendation": "Maintain balanced diet."
     }
   ],
-  "medications": [
-    {
-      "name": "Metformin",
-      "generic": "Metformin HCl",
-      "strength": "500mg",
-      "dosage": "1 tablet",
-      "frequency": "Twice daily",
-      "duration": "30 days",
-      "timing": "After food",
-      "purpose": "Glycemic control"
-    }
-  ],
-  "abnormal_count": 1,
-  "normal_count": 6,
+  "radiology": [],
+  "medications": [],
+  "procedures": [],
+  "instructions": [],
+  "billing": { "total_amount": null, "paid": null, "currency": null },
+  "insurance": { "provider": null, "policy_number": null, "claim_status": null },
+  "abnormal_count": 0,
+  "normal_count": 1,
   "critical_count": 0,
-  "recommended_specialist": "General Physician or Hematologist",
-  "recommended_specialist_reason": "For low hemoglobin evaluation.",
-  "lifestyle_recommendations": [
-    "Increase iron-rich foods: spinach, lentils, dates",
-    "Pair iron intake with Vitamin C to improve absorption"
-  ],
+  "recommended_specialist": "General Physician",
+  "recommended_specialist_reason": "For routine clinical evaluation.",
+  "lifestyle_recommendations": [],
   "quality_check": {
     "missing_fields": [],
-    "verified_sections": ["Patient Info", "Lab Table", "Medications"],
+    "verified_sections": ["Patient Info", "Lab Table"],
     "extraction_quality": "High"
   },
   "disclaimer": "AI-generated analysis. Not a medical diagnosis. Consult your doctor."

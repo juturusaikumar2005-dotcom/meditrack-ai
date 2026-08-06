@@ -408,10 +408,10 @@ export default function AIAnalysisPage() {
               </motion.div>
             )}
 
-            {/* ── All Biomarkers ───────────────────── */}
+            {/* ── All Biomarkers / Laboratory Tests ─────────── */}
             {biomarkers.length > 0 && (
               <motion.div variants={fadeUp} custom={3} initial="hidden" animate="visible" className="space-y-3">
-                <SectionHeader icon="📋" label="All Results" count={biomarkers.length} />
+                <SectionHeader icon="📋" label="Laboratory Results & Biomarkers" count={biomarkers.length} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {biomarkers.map((b: any, i: number) => (
                     <LabValueCard
@@ -431,6 +431,56 @@ export default function AIAnalysisPage() {
                       needsManualReview={b.needs_manual_review}
                       index={i}
                     />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Dynamic Prescribed Medications ────────────── */}
+            {analysis?.medications?.length > 0 && (
+              <motion.div variants={fadeUp} custom={3.5} initial="hidden" animate="visible" className="space-y-3">
+                <SectionHeader icon="💊" label="Prescribed Medications" count={analysis.medications.length} color="text-emerald-800" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {analysis.medications.map((med: any, i: number) => (
+                    <div key={i} className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-4 space-y-2.5 hover:border-[#1A3C2B]/40 transition-all">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-['Space_Grotesk'] text-base font-bold text-[#111827]">{med.name || med.brand_name || 'Medication'}</p>
+                          {med.generic && <p className="font-['JetBrains_Mono'] text-[10px] text-[#3A3A38]">{med.generic || med.generic_name}</p>}
+                        </div>
+                        {med.strength && <span className="font-['JetBrains_Mono'] text-[10px] font-bold bg-[#1A3C2B]/10 text-[#1A3C2B] px-2 py-1 rounded-full">{med.strength}</span>}
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap text-xs font-['Public_Sans'] text-[#3A3A38]">
+                        {med.dosage && <span><strong>Dose:</strong> {med.dosage}</span>}
+                        {med.frequency && <span>• <strong>Frequency:</strong> {med.frequency}</span>}
+                        {med.duration && <span>• <strong>Duration:</strong> {med.duration}</span>}
+                      </div>
+
+                      {med.purpose && (
+                        <p className="font-['Public_Sans'] text-xs text-[#111827] bg-[#F7F7F5] p-2 rounded-[8px]">
+                          🎯 <strong>Purpose:</strong> {med.purpose}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Dynamic Radiology Findings ──────────────── */}
+            {analysis?.radiology?.length > 0 && (
+              <motion.div variants={fadeUp} custom={3.8} initial="hidden" animate="visible" className="space-y-3">
+                <SectionHeader icon="🩻" label="Radiology & Imaging Findings" count={analysis.radiology.length} color="text-indigo-800" />
+                <div className="space-y-3">
+                  {analysis.radiology.map((rad: any, i: number) => (
+                    <div key={i} className="bg-white border border-indigo-200 rounded-[14px] p-4 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-['Space_Grotesk'] text-sm font-bold text-indigo-900">{rad.scan_type || rad.title || 'Scan Finding'}</span>
+                        {rad.severity && <span className="font-['JetBrains_Mono'] text-[10px] font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full uppercase">{rad.severity}</span>}
+                      </div>
+                      <p className="font-['Public_Sans'] text-xs text-[#3A3A38] leading-relaxed">{rad.finding || rad.description || rad.impression}</p>
+                    </div>
                   ))}
                 </div>
               </motion.div>
