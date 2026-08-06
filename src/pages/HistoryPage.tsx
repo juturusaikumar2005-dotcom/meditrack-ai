@@ -241,8 +241,6 @@ export default function HistoryPage() {
           </div>
         </div>
       </main>
-
-      <FooterComponent />
     </div>
   );
 }

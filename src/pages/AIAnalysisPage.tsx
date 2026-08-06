@@ -637,8 +637,6 @@ export default function AIAnalysisPage() {
             </motion.div>
           </motion.div>
         )}
-
-        <FooterComponent />
       </div>
 
       {/* Clinician & Patient Field Correction Modal */}

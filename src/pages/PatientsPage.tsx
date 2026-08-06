@@ -448,8 +448,6 @@ export default function PatientsPage() {
         </motion.div>
 
       </main>
-
-      <FooterComponent />
     </div>
   );
 }

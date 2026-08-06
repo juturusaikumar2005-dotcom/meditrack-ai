@@ -965,8 +965,6 @@ export default function UploadPage() {
         fileName={coordinatorFileName}
         progressPercent={coordinatorProgress}
       />
-
-      <FooterComponent />
     </div>
   );
 }
