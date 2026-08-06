@@ -114,6 +114,7 @@ export default function UploadPage() {
   const [uploading, setUploading] = useState(false);
   const [uploads, setUploads] = useState<ReportRecord[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
+  const [selectedReportType, setSelectedReportType] = useState<string | null>(null);
 
   // Latest Analyzed Report Payload to Render Directly Below Upload
   const [latestAnalysisData, setLatestAnalysisData] = useState<any>(() => {
@@ -216,8 +217,9 @@ export default function UploadPage() {
       return;
     }
 
+    const effectiveReportType = selectedReportType || inferReportType(file.name);
     setUploading(true);
-    toast.loading(`Ingesting ${file.name}...`, { id: 'upload-toast' });
+    toast.loading(`Ingesting ${file.name} as [${effectiveReportType}]...`, { id: 'upload-toast' });
 
     try {
       // 3. Retrieve authenticated user before storage upload and database inserts
@@ -254,21 +256,19 @@ export default function UploadPage() {
         .getPublicUrl(uploadData?.path || storageFilePath);
 
       const fileUrl = urlData?.publicUrl || '';
-      const reportType = inferReportType(file.name);
-      const reportDate = new Date().toISOString().split('T')[0];
-
+      
       // 5. Insert Record Metadata into reports table
+      const effectiveReportType = selectedReportType || inferReportType(file.name);
       const newReport: ReportRecord = {
         id: `rep_${Date.now()}`,
         user_id: currentUserId,
         report_name: file.name,
-        report_type: reportType,
+        report_type: effectiveReportType,
         file_url: fileUrl,
-        file_size: formatFileSize(file.size),
-        upload_date: reportDate,
+        upload_date: new Date().toISOString().split('T')[0],
         status: 'Analyzed',
+        file_size: formatFileSize(file.size),
       };
-
       console.log('[Reports Table Insert Payload]', newReport);
 
       const { data: insertResult, error: insertError } = await supabase.from('reports').insert(newReport);
@@ -331,7 +331,7 @@ export default function UploadPage() {
           userId: currentUserId,
           reportName: file.name,
           fileUrl: fileUrl,
-          reportType: reportType,
+          reportType: effectiveReportType,
           imageBase64,
           mimeType: file.type || 'image/jpeg',
         }),
@@ -553,6 +553,22 @@ export default function UploadPage() {
                 <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">
                   Supports PDF, JPG, JPEG, and PNG format (Maximum size: 20MB)
                 </p>
+                {selectedReportType && (
+                  <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-[#1A3C2B] text-[#9EFFBF] font-['JetBrains_Mono'] text-xs font-bold rounded-full">
+                    <span>🎯 Active Target Mode: {selectedReportType}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedReportType(null);
+                      }}
+                      className="ml-1 hover:text-white"
+                      title="Clear pre-selected document mode"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-3 pt-2">
@@ -573,9 +589,20 @@ export default function UploadPage() {
 
         {/* Supported Document Types Cards */}
         <motion.div variants={slideUp} className="space-y-4">
-          <h3 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
-            Supported Medical Documents
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
+              Supported Medical Documents
+            </h3>
+            {selectedReportType && (
+              <button
+                type="button"
+                onClick={() => setSelectedReportType(null)}
+                className="font-['JetBrains_Mono'] text-xs text-[#1A3C2B] font-bold hover:underline"
+              >
+                Clear Selection
+              </button>
+            )}
+          </div>
 
           <motion.div
             variants={{ visible: { transition: { staggerChildren: 0.07 } } } as Variants}
@@ -583,25 +610,53 @@ export default function UploadPage() {
           >
             {fileTypeGrid.map((item, idx) => {
               const Icon = item.icon;
+              const isSelected = selectedReportType === item.title;
+
+              const handleCardClick = () => {
+                setSelectedReportType(item.title);
+                toast.success(`Selected ${item.title} mode. Choose a file to analyze.`, { icon: '🎯' });
+                setTimeout(() => {
+                  fileInputRef.current?.click();
+                }, 150);
+              };
+
               return (
-                <motion.div
+                <motion.button
                   key={idx}
+                  type="button"
+                  onClick={handleCardClick}
                   variants={slideUp}
-                  whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(26,60,43,0.10)' }}
+                  whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(26,60,43,0.14)' }}
+                  whileTap={{ scale: 0.98 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                  className="bg-white border border-[#3A3A38]/20 p-5 rounded-[14px] flex items-start gap-4 hover:border-[#1A3C2B] transition-colors shadow-xs"
+                  className={`text-left p-5 rounded-[14px] flex items-start gap-4 transition-all cursor-pointer shadow-xs border ${
+                    isSelected
+                      ? 'bg-[#9EFFBF]/20 border-[#1A3C2B] ring-2 ring-[#1A3C2B]/30 shadow-md'
+                      : 'bg-white border-[#3A3A38]/20 hover:border-[#1A3C2B]'
+                  }`}
                 >
                   <motion.div
                     whileHover={{ rotate: [0, -8, 8, 0], scale: 1.12 }}
                     transition={{ duration: 0.4 }}
-                    className="p-2.5 bg-[#1A3C2B]/10 rounded-[10px] text-[#1A3C2B] shrink-0"
+                    className={`p-2.5 rounded-[10px] shrink-0 transition-colors ${
+                      isSelected ? 'bg-[#1A3C2B] text-[#9EFFBF]' : 'bg-[#1A3C2B]/10 text-[#1A3C2B]'
+                    }`}
                   >
-                    <Icon className="h-5 w-5 text-[#1A3C2B]" />
+                    <Icon className="h-5 w-5" />
                   </motion.div>
-                  <div className="space-y-1">
-                    <h4 className="font-['Space_Grotesk'] font-bold text-sm text-[#111827]">
-                      {item.title}
-                    </h4>
+
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center justify-between gap-1">
+                      <h4 className="font-['Space_Grotesk'] font-bold text-sm text-[#111827]">
+                        {item.title}
+                      </h4>
+                      {isSelected && (
+                        <span className="font-['JetBrains_Mono'] text-[9px] font-bold bg-[#1A3C2B] text-[#9EFFBF] px-2 py-0.5 rounded-full uppercase">
+                          ✓ Active
+                        </span>
+                      )}
+                    </div>
+
                     <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">
                       {item.desc}
                     </p>
@@ -609,7 +664,7 @@ export default function UploadPage() {
                       {item.ext}
                     </span>
                   </div>
-                </motion.div>
+                </motion.button>
               );
             })}
           </motion.div>
