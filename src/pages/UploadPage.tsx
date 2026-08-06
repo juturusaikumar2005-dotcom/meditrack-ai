@@ -1,6 +1,24 @@
 import { useState, useEffect, useRef, type ChangeEvent, type DragEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+
+/* ─────────────── Entrance Animation Variants ─────────────── */
+const pageVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.6 } },
+};
+const slideUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+};
+const slideLeft = {
+  hidden: { opacity: 0, x: -30 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+};
+const popIn = {
+  hidden: { opacity: 0, scale: 0.88 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
+};
 import {
   UploadCloud,
   FileText,
@@ -416,31 +434,69 @@ export default function UploadPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none">
+    <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none relative overflow-x-hidden">
 
-      <main className="py-12 px-4 sm:px-8 max-w-[80rem] mx-auto w-full space-y-12">
+      {/* ── UNIQUE PAGE ENTRANCE: Medical curtain wipe + scan line ── */}
+      <AnimatePresence>
+        {/* Dark curtain that slides upward and disappears */}
+        <motion.div
+          key="curtain"
+          className="fixed inset-0 z-50 bg-[#1A3C2B] flex flex-col items-center justify-center pointer-events-none"
+          initial={{ y: 0 }}
+          animate={{ y: '-100%' }}
+          transition={{ duration: 0.75, delay: 0.25, ease: [0.76, 0, 0.24, 1] }}
+        >
+          {/* Glowing scan line that sweeps down during wipe */}
+          <motion.div
+            className="absolute left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-[#9EFFBF] to-transparent shadow-[0_0_18px_4px_rgba(158,255,191,0.6)]"
+            initial={{ top: '0%' }}
+            animate={{ top: '100%' }}
+            transition={{ duration: 0.7, delay: 0.25, ease: 'linear' }}
+          />
+          {/* Logo mark in center of curtain */}
+          <motion.div
+            initial={{ opacity: 1, scale: 0.9 }}
+            animate={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="flex flex-col items-center gap-3"
+          >
+            <div className="h-14 w-14 bg-[#9EFFBF]/20 border border-[#9EFFBF]/40 rounded-2xl flex items-center justify-center">
+              <UploadCloud className="h-7 w-7 text-[#9EFFBF]" />
+            </div>
+            <span className="font-['JetBrains_Mono'] text-xs tracking-widest text-[#9EFFBF] uppercase">Initialising Document Ingestion</span>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+
+      <motion.main
+        variants={pageVariants}
+        initial="hidden"
+        animate="visible"
+        className="py-12 px-4 sm:px-8 max-w-[80rem] mx-auto w-full space-y-12">
         {/* Page Header */}
-        <div className="border-b border-[#3A3A38]/15 pb-6 space-y-2">
-          <span className="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-[#1A3C2B]">
+        <motion.div variants={slideUp} className="border-b border-[#3A3A38]/15 pb-6 space-y-2">
+          <motion.span variants={slideLeft} className="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-[#1A3C2B] block">
             DOCUMENT INGESTION
-          </span>
-          <h1 className="font-['Space_Grotesk'] text-4xl sm:text-5xl font-bold text-[#111827]">
+          </motion.span>
+          <motion.h1 variants={slideUp} className="font-['Space_Grotesk'] text-4xl sm:text-5xl font-bold text-[#111827]">
             Upload Medical Report
-          </h1>
-          <p className="font-['Public_Sans'] text-sm sm:text-base text-[#3A3A38] max-w-3xl">
+          </motion.h1>
+          <motion.p variants={slideUp} className="font-['Public_Sans'] text-sm sm:text-base text-[#3A3A38] max-w-3xl">
             Upload blood test panels, MRI/CT scans, or physician prescriptions for instant AI clinical parsing, biomarker interpretation, and specialist triage.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Drag & Drop Upload Zone */}
-        <div className="space-y-4">
-          <div
+        <motion.div variants={popIn} className="space-y-4">
+          <motion.div
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
             onDrop={onDrop}
-            className={`border-2 border-dashed rounded-[16px] p-8 sm:p-12 text-center transition-all bg-white shadow-xs ${
+            animate={dragOver ? { scale: 1.015, borderColor: '#1A3C2B' } : { scale: 1 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className={`border-2 border-dashed rounded-[16px] p-8 sm:p-12 text-center transition-colors bg-white shadow-xs ${
               dragOver
-                ? 'border-[#1A3C2B] bg-[#9EFFBF]/10 scale-[1.01]'
+                ? 'border-[#1A3C2B] bg-[#9EFFBF]/10'
                 : 'border-[#3A3A38]/30 hover:border-[#1A3C2B]'
             }`}
           >
@@ -453,9 +509,19 @@ export default function UploadPage() {
             />
 
             <div className="flex flex-col items-center space-y-4 max-w-md mx-auto">
-              <div className="h-16 w-16 bg-[#1A3C2B] text-[#9EFFBF] rounded-2xl flex items-center justify-center shadow-md">
-                <UploadCloud className="h-8 w-8 text-[#9EFFBF]" />
-              </div>
+              {/* Animated pulsing upload icon */}
+              <motion.div
+                animate={{ boxShadow: ['0 0 0 0px rgba(158,255,191,0.4)', '0 0 0 14px rgba(158,255,191,0)', '0 0 0 0px rgba(158,255,191,0)'] }}
+                transition={{ repeat: Infinity, duration: 2.2, ease: 'easeOut' }}
+                className="h-16 w-16 bg-[#1A3C2B] text-[#9EFFBF] rounded-2xl flex items-center justify-center shadow-md"
+              >
+                <motion.div
+                  animate={{ y: [0, -4, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
+                >
+                  <UploadCloud className="h-8 w-8 text-[#9EFFBF]" />
+                </motion.div>
+              </motion.div>
 
               <div className="space-y-1">
                 <h3 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
@@ -467,36 +533,48 @@ export default function UploadPage() {
               </div>
 
               <div className="flex items-center gap-3 pt-2">
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
                   className="px-6 py-3 bg-[#1A3C2B] text-white font-['Public_Sans'] font-semibold text-xs rounded-[12px] hover:bg-[#1A3C2B]/90 transition-colors shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   {uploading ? 'Processing File...' : 'Browse Files'}
-                </button>
+                </motion.button>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Supported Document Types Cards */}
-        <div className="space-y-4">
+        <motion.div variants={slideUp} className="space-y-4">
           <h3 className="font-['Space_Grotesk'] text-xl font-bold text-[#111827]">
             Supported Medical Documents
           </h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <motion.div
+            variants={{ visible: { transition: { staggerChildren: 0.07 } } }}
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+          >
             {fileTypeGrid.map((item, idx) => {
               const Icon = item.icon;
               return (
-                <div
+                <motion.div
                   key={idx}
+                  variants={slideUp}
+                  whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(26,60,43,0.10)' }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   className="bg-white border border-[#3A3A38]/20 p-5 rounded-[14px] flex items-start gap-4 hover:border-[#1A3C2B] transition-colors shadow-xs"
                 >
-                  <div className="p-2.5 bg-[#1A3C2B]/10 rounded-[10px] text-[#1A3C2B] shrink-0">
+                  <motion.div
+                    whileHover={{ rotate: [0, -8, 8, 0], scale: 1.12 }}
+                    transition={{ duration: 0.4 }}
+                    className="p-2.5 bg-[#1A3C2B]/10 rounded-[10px] text-[#1A3C2B] shrink-0"
+                  >
                     <Icon className="h-5 w-5 text-[#1A3C2B]" />
-                  </div>
+                  </motion.div>
                   <div className="space-y-1">
                     <h4 className="font-['Space_Grotesk'] font-bold text-sm text-[#111827]">
                       {item.title}
@@ -508,11 +586,11 @@ export default function UploadPage() {
                       {item.ext}
                     </span>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* ── AI ANALYSIS RESULTS (RENDERED DIRECTLY BELOW UPLOADER ON SAME PAGE) ─ */}
         {latestAnalysisData && (
@@ -812,7 +890,7 @@ export default function UploadPage() {
             )}
           </div>
         </div>
-      </main>
+      </motion.main>
 
       <AICaseCoordinatorModal
         isOpen={coordinatorOpen}
