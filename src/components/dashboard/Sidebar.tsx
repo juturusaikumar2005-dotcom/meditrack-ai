@@ -112,76 +112,53 @@ function AnimatedNavIcon({ iconKey, isHovered, isClicked }: { iconKey: string; i
         </motion.div>
       );
 
-    // 2. RX ENGINE: 3D Tumbling Capsule Spin & Emitting Dosage Particles
+    // 2. RX ENGINE: 180° Y-Axis Capsule Flip & Vertical Split (Pill Dosage Snap)
     case 'prescription':
       return (
         <motion.div
           className="relative flex items-center justify-center h-5 w-5"
           animate={
             isClicked && !reduced
-              ? { scale: [1, 0.75, 1.2, 1], rotate: 360, transition: SPRING_TIGHT }
+              ? { scale: [1, 0.7, 1.25, 1], rotateY: 360, transition: SPRING_TIGHT }
               : isHovered && !reduced
-              ? { rotateZ: [0, 180, 360], scale: 1.15, transition: { duration: 0.7, ease: 'easeInOut' } }
-              : { rotateZ: 0, scale: 1 }
+              ? { rotateY: 180, scale: 1.15, transition: { duration: 0.45, ease: 'easeOut' } }
+              : { rotateY: 0, scale: 1 }
           }
         >
-          <Pill className="h-5 w-5 text-[#1A3C2B] drop-shadow-xs" />
-          {isHovered && !reduced && (
-            <>
-              {/* Emitting pill dosage micro-particles */}
-              <motion.span
-                initial={{ opacity: 0, y: 0, x: 0 }}
-                animate={{ opacity: [0, 1, 0], y: -8, x: -6 }}
-                transition={{ repeat: Infinity, duration: 0.6 }}
-                className="absolute top-0 left-0 w-1.5 h-1.5 bg-[#1A3C2B] rounded-full"
-              />
-              <motion.span
-                initial={{ opacity: 0, y: 0, x: 0 }}
-                animate={{ opacity: [0, 1, 0], y: 8, x: 6 }}
-                transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }}
-                className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-[#5AE68E] rounded-full"
-              />
-            </>
-          )}
+          <motion.div
+            animate={isHovered && !reduced ? { y: -2 } : { y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Pill className="h-5 w-5 text-[#1A3C2B]" />
+          </motion.div>
         </motion.div>
       );
 
-    // 3. AI ANALYSIS: Cyber Holographic Quantum Jitter & Orbiting Synapse Particles
+    // 3. AI ANALYSIS: Cyber Holographic Glitch Jitter & Laser Scanline Sweep
     case 'ai-analysis':
       return (
         <motion.div
           className="relative flex items-center justify-center h-5 w-5"
           animate={
             isClicked && !reduced
-              ? { scale: 1.35, rotate: 180, transition: SPRING_TIGHT }
+              ? { scale: [1, 1.4, 0.9, 1], rotate: 180, transition: SPRING_TIGHT }
               : isHovered && !reduced
               ? {
-                  scale: [1, 1.25, 0.95, 1.15, 1],
+                  scale: [1, 1.2, 0.95, 1.15, 1],
                   rotate: [0, -12, 12, -6, 0],
-                  transition: { repeat: Infinity, duration: 0.9, ease: 'easeInOut' },
+                  transition: { repeat: Infinity, duration: 0.8, ease: 'easeInOut' },
                 }
               : { scale: 1, rotate: 0 }
           }
         >
           <BrainCircuit className="h-5 w-5 text-[#1A3C2B]" />
           {isHovered && !reduced && (
-            <>
-              {/* Orbiting cyber energy particle ring */}
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                className="absolute -inset-2.5 rounded-full pointer-events-none"
-              >
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#9EFFBF] rounded-full shadow-[0_0_8px_#9EFFBF]" />
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#1A3C2B] rounded-full" />
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.4, 1] }}
-                transition={{ repeat: Infinity, duration: 0.8 }}
-                className="absolute inset-0 bg-[#9EFFBF] rounded-full filter blur-sm z-[-1]"
-              />
-            </>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: [0.2, 0.7, 0.2], scale: [1, 1.5, 1] }}
+              transition={{ repeat: Infinity, duration: 0.8 }}
+              className="absolute inset-0 bg-[#9EFFBF] rounded-full filter blur-sm z-[-1]"
+            />
           )}
         </motion.div>
       );
@@ -216,42 +193,36 @@ function AnimatedNavIcon({ iconKey, isHovered, isClicked }: { iconKey: string; i
         </motion.div>
       );
 
-    // 6. HEALTH TIMELINE: ECG Heartbeat Surge & Ascending Growth Vector Animation
+    // 6. HEALTH TIMELINE: 3-Bar Ascending Growth Chart Vector (Vitals Rise)
     case 'timeline':
       return (
         <motion.div
           className="relative flex items-center justify-center h-5 w-5"
           animate={
             isClicked && !reduced
-              ? { y: [-10, 2, 0], scale: [1, 1.35, 1], rotate: -15, transition: SPRING_TIGHT }
+              ? { y: [-6, 2, 0], scale: 1.25, transition: SPRING_TIGHT }
               : isHovered && !reduced
-              ? {
-                  y: [-2, -6, -2],
-                  scaleY: [1, 1.25, 1],
-                  scaleX: [1, 1.1, 1],
-                  transition: { repeat: Infinity, duration: 0.9, ease: 'easeInOut' },
-                }
-              : { y: 0, scaleY: 1, scaleX: 1, rotate: 0 }
+              ? { y: -3, scale: 1.1, transition: SPRING }
+              : { y: 0, scale: 1 }
           }
         >
-          <TrendingUp className="h-5 w-5 text-[#1A3C2B] drop-shadow-xs" />
-          {isHovered && !reduced && (
-            <>
-              {/* Ascending trend line pulse point */}
-              <motion.span
-                initial={{ opacity: 0, x: -6, y: 6 }}
-                animate={{ opacity: [0, 1, 0], x: 8, y: -8 }}
-                transition={{ repeat: Infinity, duration: 0.75, ease: 'linear' }}
-                className="absolute w-2 h-2 bg-[#5AE68E] rounded-full shadow-[0_0_8px_#5AE68E]"
-              />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.6 }}
-                animate={{ opacity: 0.35, scale: 1.4 }}
-                transition={{ repeat: Infinity, repeatType: 'reverse', duration: 0.6 }}
-                className="absolute inset-0 bg-[#9EFFBF] rounded-full filter blur-xs z-[-1]"
-              />
-            </>
-          )}
+          <div className="flex items-end gap-0.5 h-4">
+            <motion.span
+              animate={isHovered && !reduced ? { height: ['30%', '80%', '30%'] } : { height: '40%' }}
+              transition={{ repeat: Infinity, duration: 0.6 }}
+              className="w-1 bg-[#1A3C2B] rounded-full"
+            />
+            <motion.span
+              animate={isHovered && !reduced ? { height: ['50%', '100%', '50%'] } : { height: '70%' }}
+              transition={{ repeat: Infinity, duration: 0.6, delay: 0.15 }}
+              className="w-1 bg-[#5AE68E] rounded-full"
+            />
+            <motion.span
+              animate={isHovered && !reduced ? { height: ['70%', '40%', '70%'] } : { height: '100%' }}
+              transition={{ repeat: Infinity, duration: 0.6, delay: 0.3 }}
+              className="w-1 bg-[#1A3C2B] rounded-full"
+            />
+          </div>
         </motion.div>
       );
 
