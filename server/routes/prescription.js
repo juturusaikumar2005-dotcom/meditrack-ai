@@ -196,53 +196,67 @@ async function analyzePrescriptionWithOpenRouter(imageBase64, mimeType, openrout
   return null;
 }
 
-// ── Prompt Builder ─────────────────────────────────────────────────────────
-function buildPrescriptionPrompt() {
-  return `You are MEDITRACK AI — an expert clinical prescription analyst.
+// ── Prompt Builder (14-Step Exhaustive Clinical Prescription Engine) ────────
+function buildPrescriptionPrompt(isRetry = false) {
+  return `You are MEDITRACK AI — a Senior Clinical Pharmacist and Vision AI OCR Expert.
 
-Analyze this prescription image carefully and extract ALL information.
+${isRetry ? 'IMPORTANT RETRY INSTRUCTION: The previous pass found 0 medicines. Please scan harder for handwritten brand names, abbreviated dosages (e.g. Tab Dolo 650 1-0-1, Cap Azax 500, Inj/Syr), Rx symbols, and dosage lines.' : ''}
 
-CRITICAL RULES:
-- NEVER hallucinate medicine names. If unsure, use "unidentified".
-- NEVER invent dosage, frequency, or duration.
-- If confidence for any field is below 0.85, mark it explicitly.
-- Decode doctor notations: 1-0-1 = Morning+Night, 1-1-1 = Three times daily, BD = Twice daily, TDS = Three times daily, OD = Once daily, SOS = As needed, HS = At bedtime, AC = Before food, PC = After food.
-- Extract ALL visible medicines, even if handwriting is poor.
+Analyze this prescription image (handwritten or printed) and extract EVERY SINGLE medicine, dosage, timing, duration, and doctor instruction.
 
-Return ONLY this exact JSON (no markdown, no explanation):
+EXACT PARSING RULES:
+1. MEDICINE ENTITY EXTRACTION: Extract brand name and generic name for every medicine (e.g., Paracetamol, Dolo 650, Crocin, Azax 500, Azee, Pan 40, Pantop, Augmentin, Metformin, Telma 40, Montek LC, Cetirizine, Amoxicillin). Do NOT skip any medicine!
+2. FREQUENCY DECODING: Decode medical shorthand:
+   - 1-0-1 or BD/BID = Morning + Night (Twice daily)
+   - 1-1-1 or TDS/TID = Morning + Afternoon + Night (Three times daily)
+   - 0-0-1 or HS = Night (Bedtime)
+   - 1-0-0 or OD = Morning (Once daily)
+   - 0-1-0 = Afternoon (Once daily)
+   - QID = 4 times daily
+   - SOS/PRN = Only if required
+   - STAT = Immediately
+3. TIMING & FOOD: Decode AC = Before Food / Empty Stomach, PC = After Food.
+4. DURATION: Extract exact days/weeks (3 days, 5 days, 7 days, 1 month, or SOS).
+5. DOCTOR INSTRUCTIONS & NOTES: Extract diet, hydration, rest, exercise, and follow-up advice.
+6. PRECAUTIONS & INTERACTIONS: Provide side effects, food/alcohol warnings, pregnancy precautions, and missed dose advice for each drug.
 
+Return ONLY raw valid JSON (no markdown fences, no leading text):
 {
   "prescription_date": "YYYY-MM-DD or null",
-  "doctor_name": "name or null",
-  "hospital_name": "name or null",
-  "patient_name": "name or null",
-  "diagnosis": "diagnosis text or null",
-  "doctor_notes": "any additional notes or null",
+  "doctor_name": "Doctor name or null",
+  "hospital_name": "Hospital/Clinic name or null",
+  "patient_name": "Patient name or null",
+  "diagnosis": "Clinical diagnosis or null",
+  "doctor_notes": "Dietary/lifestyle or follow-up instructions or null",
   "ocr_confidence": 0.95,
   "medicines": [
     {
-      "brand_name": "exact name from prescription or unidentified",
-      "generic_name": "generic name if known or null",
-      "strength": "e.g. 500mg or null",
-      "dosage": "e.g. 1 tablet or null",
-      "frequency": "raw notation e.g. 1-0-1 or BD or TDS",
-      "frequency_decoded": "human readable e.g. Morning + Night",
-      "timing": "Before Food or After Food or As directed",
-      "duration": "e.g. 30 days or null",
-      "purpose": "clinical purpose e.g. controls blood sugar or null",
-      "precautions": ["precaution 1", "precaution 2"],
-      "side_effects_common": ["nausea", "headache"],
-      "side_effects_rare": ["liver damage"],
-      "side_effects_emergency": ["difficulty breathing — call emergency services"],
-      "drug_interactions": ["avoid with warfarin"],
-      "food_interactions": ["avoid grapefruit"],
+      "brand_name": "exact brand name (e.g., Dolo 650, Azax 500, Pan 40)",
+      "generic_name": "generic name (e.g., Paracetamol, Azithromycin, Pantoprazole)",
+      "strength": "e.g., 500mg, 650mg, 40mg",
+      "dosage": "1 tablet",
+      "frequency": "1-0-1 or BD or TDS",
+      "frequency_decoded": "Morning + Night",
+      "timing": "After Food",
+      "before_after_food": "After Food",
+      "morning": true,
+      "afternoon": false,
+      "night": true,
+      "duration": "5 days",
+      "purpose": "Fever and pain relief",
+      "precautions": ["Take with food", "Do not exceed 4g daily"],
+      "side_effects_common": ["Nausea", "Stomach upset"],
+      "side_effects_rare": ["Allergic rash"],
+      "side_effects_emergency": ["Severe skin peeling or shortness of breath — call ER"],
+      "drug_interactions": ["Avoid alcohol"],
+      "food_interactions": ["Take after meal"],
       "alcohol_warning": true,
       "driving_warning": false,
-      "pregnancy_warning": "Consult doctor before use or null",
-      "missed_dose": "Take as soon as remembered. Skip if next dose is near. Never double dose.",
-      "storage": "Store below 25 degrees C, away from moisture and light",
-      "water_recommendation": "Take with a full glass of water",
-      "ai_confidence": 0.97
+      "pregnancy_warning": "Safe in pregnancy under supervision",
+      "missed_dose": "Take as soon as remembered.",
+      "storage": "Store below 25°C",
+      "water_recommendation": "Take with full glass of water",
+      "ai_confidence": 0.96
     }
   ]
 }`;
@@ -437,23 +451,43 @@ router.post('/analyze-prescription', async (req, res) => {
     let rawPrescription = null;
     let provider = 'Fallback';
 
-    // 1. Try Gemini Vision
+    // 1. Try Gemini Vision First Pass
     if (geminiApiKey && geminiApiKey !== 'your_gemini_api_key_here') {
-      console.log('[Prescription Engine] Attempting Gemini Vision API...');
+      console.log('[Prescription Engine] Pass 1: Attempting Gemini Vision API...');
       rawPrescription = await analyzePrescriptionWithGemini(imageBase64, mimeType, geminiApiKey);
-      if (rawPrescription) provider = 'Google Gemini Vision';
+      if (rawPrescription && rawPrescription.medicines?.length > 0) provider = 'Google Gemini Vision';
     }
 
-    // 2. Fallback to OpenRouter Vision
-    if (!rawPrescription && openrouterKey) {
-      console.log('[Prescription Engine] Falling back to OpenRouter Vision...');
+    // 2. Try OpenRouter Vision First Pass
+    if ((!rawPrescription || !rawPrescription.medicines?.length) && openrouterKey) {
+      console.log('[Prescription Engine] Pass 1: Attempting OpenRouter Vision...');
       rawPrescription = await analyzePrescriptionWithOpenRouter(imageBase64, mimeType, openrouterKey);
-      if (rawPrescription) provider = 'OpenRouter Vision';
+      if (rawPrescription && rawPrescription.medicines?.length > 0) provider = 'OpenRouter Vision';
     }
 
-    // 3. Final fallback
+    // 3. QUALITY CHECK RETRY STEP: If Medicine Count = 0, retry Vision AI with handwriting retry prompt
+    if (!rawPrescription || !rawPrescription.medicines || rawPrescription.medicines.length === 0) {
+      console.log('[Prescription Engine Quality Check] ⚠️ 0 medicines detected on Pass 1. Triggering High-Sensitivity Extraction Retry...');
+      
+      if (geminiApiKey && geminiApiKey !== 'your_gemini_api_key_here') {
+        const retryResult = await analyzePrescriptionWithGemini(imageBase64, mimeType, geminiApiKey, true);
+        if (retryResult && retryResult.medicines?.length > 0) {
+          rawPrescription = retryResult;
+          provider = 'Google Gemini Vision (Retry Pass)';
+        }
+      }
+      if ((!rawPrescription || !rawPrescription.medicines?.length) && openrouterKey) {
+        const retryResult = await analyzePrescriptionWithOpenRouter(imageBase64, mimeType, openrouterKey, true);
+        if (retryResult && retryResult.medicines?.length > 0) {
+          rawPrescription = retryResult;
+          provider = 'OpenRouter Vision (Retry Pass)';
+        }
+      }
+    }
+
+    // 4. Final fallback if retry also failed
     if (!rawPrescription) {
-      console.warn('[Prescription Engine] All AI providers failed. Returning fallback.');
+      console.warn('[Prescription Engine] All AI providers and retries returned empty. Generating fallback response.');
       rawPrescription = generateFallbackPrescription(fileName);
       provider = 'Fallback';
     }
