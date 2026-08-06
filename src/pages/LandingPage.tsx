@@ -381,7 +381,7 @@ export default function LandingPage() {
             <div className="bg-[#F7F7F5] border border-[#3A3A38]/15 p-3.5 rounded-[12px] space-y-1">
               <span className="font-['JetBrains_Mono'] text-[10px] text-[#3A3A38]">YOU</span>
               <p className="font-['Public_Sans'] text-xs sm:text-sm text-[#111827]">
-                "My blood test shows Ferritin at 14 ng/mL. What does this mean?"
+                "Can you explain the key findings and recommendations in my uploaded medical report?"
               </p>
             </div>
 
@@ -392,7 +392,7 @@ export default function LandingPage() {
                 <span className="font-['JetBrains_Mono'] text-[10px] text-slate-300">JUST NOW</span>
               </div>
               <p className="font-['Public_Sans'] text-xs sm:text-sm text-slate-200 leading-relaxed">
-                A Ferritin level of 14 ng/mL is on the lower bound of standard reference ranges (typically 12–150 ng/mL for women). This indicates low iron stores, which can lead to fatigue.
+                Your report analysis is complete. Values extracted from your document have been parsed against established clinical reference bounds.
               </p>
               <div className="pt-1 text-[11px] font-['JetBrains_Mono'] text-[#9EFFBF] flex items-center gap-1">
                 <Stethoscope className="h-3.5 w-3.5" />
@@ -442,21 +442,21 @@ export default function LandingPage() {
                   ATTENTION NEEDED
                 </span>
                 <h4 className="font-['Space_Grotesk'] font-bold text-lg text-[#111827]">
-                  Iron Deficiency
+                  Targeted Lab Variations
                 </h4>
                 <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">
-                  Ferritin 14 ng/mL (Low)
+                  Automated Low / High Bounds Detection
                 </p>
               </motion.div>
               <motion.div whileHover={{ y: -3 }} className="bg-[#F7F7F5] border border-[#3A3A38]/15 p-4 rounded-[12px] border-l-4 border-l-[#9EFFBF]">
                 <span className="font-['JetBrains_Mono'] text-[10px] text-[#3A3A38] uppercase font-semibold">
-                  STABLE BIOMARKER
+                  STABLE BIOMARKERS
                 </span>
                 <h4 className="font-['Space_Grotesk'] font-bold text-lg text-[#111827]">
-                  Blood Glucose
+                  Glycemic &amp; Lipid Panels
                 </h4>
                 <p className="font-['Public_Sans'] text-xs text-[#3A3A38]">
-                  Fasting 92 mg/dL (Normal)
+                  Extracted Range Bounds (Optimal)
                 </p>
               </motion.div>
               <motion.div whileHover={{ y: -3 }} className="bg-[#F7F7F5] border border-[#3A3A38]/15 p-4 rounded-[12px] border-l-4 border-l-[#F4D35E]">

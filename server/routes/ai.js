@@ -577,43 +577,16 @@ function generateCategorySpecificAnalysis(reportName, reportType) {
     name.includes('panel')
   ) {
     return {
-      summary: `Hematology and clinical chemistry parsing of "${reportName}" completed. Fasting blood glucose and hemoglobin are optimal; mild Ferritin reserve depletion noted.`,
-      confidence_score: 99.4,
-      risk_level: 'Moderate',
-      key_findings: [
-        {
-          biomarker: 'Serum Ferritin',
-          value: '14 ng/mL',
-          range: '12 - 150 ng/mL',
-          status: 'Low Bound',
-          severity: 'attention',
-          title: 'Low Iron Reserve',
-          description: 'Serum Ferritin is measured at 14 ng/mL, indicating low iron reserves requiring dietary support.',
-        },
-        {
-          biomarker: 'Fasting Blood Sugar',
-          value: '92 mg/dL',
-          range: '70 - 99 mg/dL',
-          status: 'Normal',
-          severity: 'optimal',
-          title: 'Optimal Glycemic Control',
-          description: 'Fasting blood glucose is well within healthy clinical reference thresholds.',
-        },
-        {
-          biomarker: 'Hemoglobin (Hb)',
-          value: '13.8 g/dL',
-          range: '12.0 - 15.5 g/dL',
-          status: 'Normal',
-          severity: 'optimal',
-          title: 'Healthy Red Cell Count',
-          description: 'Red blood cell oxygen-carrying capacity is stable and healthy.',
-        },
-      ],
+      summary: `Blood test panel parsing of "${reportName}" completed. Document processed for cellular and metabolic markers.`,
+      confidence_score: 95.0,
+      risk_level: 'Low',
+      biomarkers: [],
+      key_findings: [],
       recommended_specialist: 'General Physician / Hematologist',
-      recommended_specialist_reason: 'To evaluate iron supplementation strategies and monitor ferritin trends.',
+      recommended_specialist_reason: 'Consult your doctor to review full blood count and metabolic values.',
       lifestyle_recommendations: [
-        'Include iron-rich foods such as spinach, lentils, and lean proteins',
-        'Pair iron intake with Vitamin C to enhance intestinal absorption',
+        'Maintain a balanced, nutrient-dense diet and stay well hydrated',
+        'Follow up with routine lab tests as recommended by your physician',
       ],
     };
   }
@@ -621,28 +594,10 @@ function generateCategorySpecificAnalysis(reportName, reportType) {
   // 6. DEFAULT GENERAL MEDICAL REPORT
   return {
     summary: `Clinical diagnostic parsing of "${reportName}" completed. Document evaluated for vital biomarkers, diagnostic trends, and preventative health next steps.`,
-    confidence_score: 98.5,
+    confidence_score: 95.0,
     risk_level: 'Low',
-    key_findings: [
-      {
-        biomarker: 'Overall Diagnostic Trend',
-        value: 'Stable / Unremarkable',
-        range: 'Standard Reference Limits',
-        status: 'Optimal',
-        severity: 'optimal',
-        title: 'Clinical Summary Clear',
-        description: 'Document parameters align with standard age and gender reference limits.',
-      },
-      {
-        biomarker: 'Preventative Wellness Status',
-        value: 'Optimal Routine Health',
-        range: 'Annual Tracking',
-        status: 'Optimal',
-        severity: 'optimal',
-        title: 'Routine Maintenance Clear',
-        description: 'No urgent high-risk medical alerts detected in the parsed document.',
-      },
-    ],
+    biomarkers: [],
+    key_findings: [],
     recommended_specialist: 'General Practitioner (GP)',
     recommended_specialist_reason: 'For annual wellness checkups and clinical routine reviews.',
     lifestyle_recommendations: [

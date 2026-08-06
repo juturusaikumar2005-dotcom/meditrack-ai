@@ -4,7 +4,7 @@ import { Bell, AlertTriangle, CheckCircle2, Info, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const seedNotifications = [
-  { id: 'n-1', title: 'Blood Panel Ingested & Parsed', message: 'Serum Ferritin measured at 14 ng/mL (Lower reference bound).', time: '10m ago', read: false, type: 'alert' },
+  { id: 'n-1', title: 'Medical Report Ingested & Parsed', message: 'Document Vision AI parsing completed successfully.', time: '10m ago', read: false, type: 'alert' },
   { id: 'n-[#1A3C2B]', title: 'Specialist Match Verified', message: 'Dr. Sarah Jenkins (Hematologist / GP) available for consultation.', time: '1h ago', read: false, type: 'success' },
   { id: 'n-3', title: '256-bit Encrypted Backup', message: 'Diagnostic records backed up securely in your encrypted vault.', time: '1d ago', read: true, type: 'info' },
 ];

@@ -99,7 +99,7 @@ export default function DashboardPage() {
   const latestReport = safeReports[0];
   const summaryText = typeof latestAnalysis?.parsed?.summary === 'string' && latestAnalysis.parsed.summary.length > 0
     ? latestAnalysis.parsed.summary
-    : 'Comprehensive clinical parsing completed. Results indicate stable blood glucose and hemoglobin levels alongside mild iron reserve (Ferritin) depletion.';
+    : (latestReport ? `Latest report (${latestReport.report_name}) uploaded and parsed successfully.` : 'No reports uploaded yet. Upload a medical document to view AI interpretation.');
 
   return (
     <motion.div

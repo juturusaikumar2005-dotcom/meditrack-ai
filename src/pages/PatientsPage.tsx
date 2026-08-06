@@ -139,7 +139,7 @@ export default function PatientsPage() {
             custom={2}
             className="font-['Public_Sans'] text-sm sm:text-base text-[#3A3A38]"
           >
-            Matched directly to your low Ferritin (14 ng/mL) &amp; Vitamin D diagnostic findings.
+            Matched directly to your parsed medical report &amp; diagnostic findings.
           </motion.p>
         </motion.div>
 
@@ -158,12 +158,10 @@ export default function PatientsPage() {
             <span className="font-['JetBrains_Mono'] text-xs text-[#3A3A38]">MATCH ACCURACY: 98.2%</span>
           </div>
           <h3 className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827]">
-            Primary Need: Iron Metabolism &amp; General Wellness Assessment
+            Primary Need: General Clinical Evaluation &amp; Wellness Assessment
           </h3>
           <p className="font-['Public_Sans'] text-xs sm:text-sm text-[#3A3A38] leading-relaxed">
-            Your recent laboratory upload indicated lower-bound Serum Ferritin (14 ng/mL) and sub-optimal Vitamin D.
-            Consulting an Internal Medicine General Practitioner or Clinical Nutritionist is recommended to review oral
-            supplementation and dietary optimization.
+            Based on your uploaded medical document findings, consulting a General Practitioner or Clinical Specialist is recommended to review overall health status and diagnostic guidance.
           </p>
         </motion.div>
 

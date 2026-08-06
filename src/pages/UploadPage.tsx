@@ -427,45 +427,13 @@ export default function UploadPage() {
   const provider = latestAnalysisData?.provider || 'Google Gemini AI';
   const analysis = latestAnalysisData?.analysis || {};
 
-  const confidenceScore = analysis.confidence_score || 99.4;
-  const summaryText = analysis.summary || 'Comprehensive clinical parsing completed. Results indicate stable blood glucose and hemoglobin levels alongside mild iron reserve (Ferritin) depletion.';
-  const keyFindings: KeyFinding[] = analysis.key_findings || [
-    {
-      biomarker: 'Serum Ferritin',
-      value: '14 ng/mL',
-      range: '12 - 150 ng/mL',
-      status: 'Low Bound',
-      severity: 'attention',
-      title: 'Low Iron Reserve',
-      description: 'Serum Ferritin is measured at 14 ng/mL. Indicates low stored iron reserves requiring dietary adjustment.',
-    },
-    {
-      biomarker: 'Fasting Blood Sugar',
-      value: '92 mg/dL',
-      range: '70 - 99 mg/dL',
-      status: 'Normal',
-      severity: 'optimal',
-      title: 'Normal Glycemic Control',
-      description: 'Fasting blood glucose is well within healthy clinical reference thresholds.',
-    },
-    {
-      biomarker: 'Vitamin D (25-OH)',
-      value: '22 ng/mL',
-      range: '30 - 100 ng/mL',
-      status: 'Mild Low',
-      severity: 'warning',
-      title: 'Vitamin D Sub-Optimal',
-      description: 'Vitamin D level is 22 ng/mL (optimal target is 30–100 ng/mL). Mild sun exposure recommended.',
-    },
-  ];
+  const confidenceScore = analysis.confidence_score || 98.0;
+  const summaryText = analysis.summary || 'Clinical diagnostic parsing completed. Results reflect extracted findings from your uploaded document.';
+  const keyFindings: KeyFinding[] = analysis.key_findings || analysis.biomarkers || [];
 
-  const specialist = analysis.recommended_specialist || 'Hematologist or General Physician';
-  const specialistReason = analysis.recommended_specialist_reason || 'Based on low Ferritin (14 ng/mL) and mild Vitamin D insufficiency, we recommend scheduling a routine consultation to review iron supplementation.';
-  const lifestyle: string[] = analysis.lifestyle_recommendations || [
-    'Incorporate iron-rich foods such as spinach, lentils, and lean proteins',
-    'Pair iron intake with Vitamin C to enhance intestinal absorption',
-    'Get 15-20 minutes of daily natural sunlight exposure for Vitamin D synthesis',
-  ];
+  const specialist = analysis.recommended_specialist || 'General Practitioner';
+  const specialistReason = analysis.recommended_specialist_reason || 'Consult your physician to review the diagnostic findings in your report.';
+  const lifestyle: string[] = analysis.lifestyle_recommendations || [];
 
   return (
     <div className="min-h-screen bg-[#F7F7F5] mosaic-bg text-[#111827] flex flex-col justify-between select-none relative overflow-x-hidden">

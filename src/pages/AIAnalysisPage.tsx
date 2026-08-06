@@ -115,6 +115,15 @@ export default function AIAnalysisPage() {
   useEffect(() => {
     let isMounted = true;
     async function loadLatestResult() {
+      // 1. Check local storage first
+      const stored = localStorage.getItem('meditrack_latest_analysis');
+      if (stored && isMounted) {
+        try {
+          const parsedLocal = JSON.parse(stored);
+          setAnalysisData(parsedLocal);
+        } catch {}
+      }
+
       if (!userId) return;
       try {
         const { data } = await (supabase as any)
@@ -129,8 +138,18 @@ export default function AIAnalysisPage() {
         }
       } catch {}
     }
+
     loadLatestResult();
-    return () => { isMounted = false; };
+
+    const handleUploadEvent = () => {
+      loadLatestResult();
+    };
+    window.addEventListener('meditrack_report_uploaded', handleUploadEvent);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('meditrack_report_uploaded', handleUploadEvent);
+    };
   }, [userId]);
 
   const analysis = analysisData?.analysis || analysisData;
