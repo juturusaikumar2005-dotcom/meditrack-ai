@@ -472,31 +472,6 @@ export const supabase = {
       const supabaseUrl = getSupabaseUrl();
       const anonKey = getSupabaseAnonKey();
 
-      if (!isRealSupabaseConfigured()) {
-        // Fallback demo OAuth sign-in when real Supabase credentials are not configured
-        const userId = `usr-google-${Date.now()}`;
-        const mockUser: User = {
-          id: userId,
-          email: 'patient@meditrack.ai',
-          user_metadata: {
-            full_name: 'Patient Account',
-            role: 'patient',
-          },
-          created_at: new Date().toISOString(),
-        };
-
-        const mockSession: Session = {
-          access_token: createMockJwtToken(userId, 'patient@meditrack.ai'),
-          expires_at: Math.floor(Date.now() / 1000) + 7200,
-          user: mockUser,
-        };
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(mockSession));
-        notifyListeners('SIGNED_IN', mockSession);
-
-        return { data: { provider, user: mockUser, session: mockSession }, error: null };
-      }
-
       const redirectTo = options?.redirectTo || `${window.location.origin}/auth/callback`;
       const queryParams = options?.queryParams || {
         prompt: 'select_account',

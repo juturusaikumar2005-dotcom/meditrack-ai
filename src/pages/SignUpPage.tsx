@@ -84,27 +84,10 @@ export default function SignUpPage() {
   };
 
   const handleGoogleAuth = async () => {
-    if (!isRealSupabaseConfigured()) {
-      setShowGoogleModal(true);
-      return;
-    }
-
     const { error } = await signInWithGoogle();
     if (error) {
       toast.error(`Google Sign-In failed: ${error}`);
-    } else {
-      toast.success('Signed in with Google successfully');
-      navigate('/app/welcome');
     }
-  };
-
-  const handleCustomGoogleSelect = async (fullName: string, email: string) => {
-    setShowGoogleModal(false);
-    setLoading(true);
-    await signUp(email, 'google-oauth-pwd-123', fullName);
-    setLoading(false);
-    toast.success(`Signed in with Google as ${fullName}`);
-    navigate('/app/welcome');
   };
 
   return (
@@ -410,11 +393,6 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      <GoogleAccountModal
-        isOpen={showGoogleModal}
-        onClose={() => setShowGoogleModal(false)}
-        onSelectAccount={handleCustomGoogleSelect}
-      />
     </div>
   );
 }

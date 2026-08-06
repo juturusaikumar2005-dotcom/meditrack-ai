@@ -17,7 +17,6 @@ import {
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { useAuth } from '@/context/AuthContext';
 import { isRealSupabaseConfigured } from '@/lib/supabase';
-import { GoogleAccountModal } from '@/components/auth/GoogleAccountModal';
 import toast from 'react-hot-toast';
 
 type SignInForm = { email: string; password: string; remember: boolean };
@@ -48,7 +47,6 @@ export default function SignInPage() {
   const navigate = useNavigate();
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showGoogleModal, setShowGoogleModal] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -70,7 +68,6 @@ export default function SignInPage() {
     setLoading(false);
 
     if (error) {
-      // Automatic fallback sign in with typed email if Supabase auth is in demo mode
       await signUp(data.email, data.password || 'demopassword123', data.email.split('@')[0]);
       toast.success(`Welcome to MEDITRACK AI`);
       navigate('/app/welcome');
@@ -80,36 +77,11 @@ export default function SignInPage() {
     }
   };
 
-  const handleQuickDemoSignIn = async () => {
-    setLoading(true);
-    await signIn('patient@meditrack.ai', 'demo123');
-    setLoading(false);
-    toast.success('Signed in as Demo Patient');
-    navigate('/app/welcome');
-  };
-
   const handleGoogleAuth = async () => {
-    if (!isRealSupabaseConfigured()) {
-      setShowGoogleModal(true);
-      return;
-    }
-
     const { error } = await signInWithGoogle();
     if (error) {
       toast.error(`Google Sign-In failed: ${error}`);
-    } else {
-      toast.success('Signed in with Google successfully');
-      navigate('/app/welcome');
     }
-  };
-
-  const handleCustomGoogleSelect = async (fullName: string, email: string) => {
-    setShowGoogleModal(false);
-    setLoading(true);
-    await signUp(email, 'google-oauth-pwd-123', fullName);
-    setLoading(false);
-    toast.success(`Signed in with Google as ${fullName}`);
-    navigate('/app/welcome');
   };
 
   const handleForgotPassword = () => {
@@ -379,11 +351,6 @@ export default function SignInPage() {
         </div>
       </div>
 
-      <GoogleAccountModal
-        isOpen={showGoogleModal}
-        onClose={() => setShowGoogleModal(false)}
-        onSelectAccount={handleCustomGoogleSelect}
-      />
     </div>
   );
 }
