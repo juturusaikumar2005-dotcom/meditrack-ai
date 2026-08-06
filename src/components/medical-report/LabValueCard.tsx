@@ -13,6 +13,9 @@ interface LabValueCardProps {
   category?: string;
   explanation?: string;
   recommendation?: string;
+  confidence?: number;
+  validationStatus?: string;
+  needsManualReview?: boolean;
   index?: number;
 }
 
@@ -79,7 +82,8 @@ function RangeBar({ value, range }: { value: number | null | undefined; range: s
 
 export function LabValueCard({
   name, value, numericValue, unit, normalRange, status, severity,
-  category, explanation, recommendation, index = 0,
+  category, explanation, recommendation, confidence, validationStatus,
+  needsManualReview, index = 0,
 }: LabValueCardProps) {
   const [open, setOpen] = useState(false);
   const cfg = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.Normal;
@@ -129,6 +133,27 @@ export function LabValueCard({
             </span>
           </div>
         </div>
+
+        {/* Confidence & Manual Review indicators */}
+        {(confidence != null || needsManualReview || validationStatus) && (
+          <div className="flex items-center gap-2 pt-1">
+            {needsManualReview && (
+              <span className="font-['JetBrains_Mono'] text-[9px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full border border-red-300">
+                ⚠ NEEDS MANUAL REVIEW
+              </span>
+            )}
+            {validationStatus === 'Verified' && !needsManualReview && (
+              <span className="font-['JetBrains_Mono'] text-[9px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                ✓ VERIFIED
+              </span>
+            )}
+            {confidence != null && (
+              <span className="font-['JetBrains_Mono'] text-[9px] text-[#3A3A38]">
+                Conf: <strong className="text-[#1A3C2B]">{confidence}%</strong>
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Normal range */}
         {normalRange && (

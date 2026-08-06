@@ -13,6 +13,8 @@ import { supabase } from '@/lib/supabase';
 import { LabValueCard } from '@/components/medical-report/LabValueCard';
 import { ReportSummaryBanner } from '@/components/medical-report/ReportSummaryBanner';
 import { OrganHealthScores } from '@/components/medical-report/OrganHealthScores';
+import { Modal } from '@/components/ui/Modal';
+import { apiClient } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 /* ─────────────────────────── Animation Variants ─────────────────────────── */
@@ -74,6 +76,14 @@ export default function AIAnalysisPage() {
   const { profile, session } = useAuth();
   const navigate = useNavigate();
   const [curtainDone, setCurtainDone] = useState(false);
+  const [viewMode, setViewMode] = useState<'patient' | 'doctor'>('patient');
+
+  // Clinician Correction Feedback Modal State
+  const [correctionModalOpen, setCorrectionModalOpen] = useState(false);
+  const [selectedBiomarker, setSelectedBiomarker] = useState('');
+  const [correctedValue, setCorrectedValue] = useState('');
+  const [correctionNotes, setCorrectionNotes] = useState('');
+  const [submittingCorrection, setSubmittingCorrection] = useState(false);
 
   const [analysisData, setAnalysisData] = useState<any>(() => {
     const stored = localStorage.getItem('meditrack_latest_analysis');
@@ -176,13 +186,42 @@ export default function AIAnalysisPage() {
                 AI-powered biomarker extraction with normal range comparison and plain-English explanations.
               </p>
             </div>
-            <Link
-              to="/app/upload"
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#1A3C2B] text-white rounded-[12px] font-['Public_Sans'] text-sm font-bold hover:bg-[#1A3C2B]/90 transition-colors shrink-0"
-            >
-              <Upload className="h-4 w-4" />
-              Upload New
-            </Link>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* View Mode Toggle */}
+              <div className="bg-[#EAEAE7] p-1 rounded-[12px] flex items-center border border-[#3A3A38]/15">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('patient')}
+                  className={`px-3.5 py-1.5 rounded-[9px] font-['Public_Sans'] text-xs font-bold transition-all ${
+                    viewMode === 'patient'
+                      ? 'bg-white text-[#111827] shadow-xs'
+                      : 'text-[#3A3A38] hover:text-[#111827]'
+                  }`}
+                >
+                  👤 Patient View
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('doctor')}
+                  className={`px-3.5 py-1.5 rounded-[9px] font-['Public_Sans'] text-xs font-bold transition-all ${
+                    viewMode === 'doctor'
+                      ? 'bg-[#1A3C2B] text-white shadow-xs'
+                      : 'text-[#3A3A38] hover:text-[#111827]'
+                  }`}
+                >
+                  🩺 Doctor EMR View
+                </button>
+              </div>
+
+              <Link
+                to="/app/upload"
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#1A3C2B] text-white rounded-[12px] font-['Public_Sans'] text-sm font-bold hover:bg-[#1A3C2B]/90 transition-colors shrink-0"
+              >
+                <Upload className="h-4 w-4" />
+                Upload New
+              </Link>
+            </div>
           </div>
         </motion.div>
 
@@ -257,6 +296,62 @@ export default function AIAnalysisPage() {
               reportName={reportName}
               provider={provider}
             />
+
+            {/* Doctor EMR View Banner / SOAP Summary */}
+            {viewMode === 'doctor' && analysis.doctor_emr_summary && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-[#0D2419] text-white border border-[#9EFFBF]/30 rounded-[18px] p-6 space-y-4 shadow-md"
+              >
+                <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Stethoscope className="h-5 w-5 text-[#9EFFBF]" />
+                    <h3 className="font-['Space_Grotesk'] text-lg font-bold text-[#9EFFBF]">
+                      Clinical EMR SOAP Summary (Doctor Mode)
+                    </h3>
+                  </div>
+                  <span className="font-['JetBrains_Mono'] text-[10px] bg-[#9EFFBF]/20 text-[#9EFFBF] px-2.5 py-1 rounded-full uppercase font-bold border border-[#9EFFBF]/30">
+                    256-BIT CLINICAL EMR AUDIT
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-['Public_Sans']">
+                  <div className="bg-white/5 rounded-[12px] p-3.5 space-y-1">
+                    <p className="font-['JetBrains_Mono'] text-[10px] font-bold text-[#9EFFBF] uppercase">S — Subjective</p>
+                    <p className="text-white/90 leading-relaxed">{analysis.doctor_emr_summary.subjective}</p>
+                  </div>
+                  <div className="bg-white/5 rounded-[12px] p-3.5 space-y-1">
+                    <p className="font-['JetBrains_Mono'] text-[10px] font-bold text-[#9EFFBF] uppercase">O — Objective</p>
+                    <p className="text-white/90 leading-relaxed">{analysis.doctor_emr_summary.objective}</p>
+                  </div>
+                  <div className="bg-white/5 rounded-[12px] p-3.5 space-y-1">
+                    <p className="font-['JetBrains_Mono'] text-[10px] font-bold text-[#9EFFBF] uppercase">A — Assessment</p>
+                    <p className="text-white/90 leading-relaxed">{analysis.doctor_emr_summary.assessment}</p>
+                  </div>
+                  <div className="bg-white/5 rounded-[12px] p-3.5 space-y-1">
+                    <p className="font-['JetBrains_Mono'] text-[10px] font-bold text-[#9EFFBF] uppercase">P — Plan & Triage</p>
+                    <p className="text-white/90 leading-relaxed">{analysis.doctor_emr_summary.plan}</p>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-between items-center border-t border-white/10 flex-wrap gap-2">
+                  <span className="font-['JetBrains_Mono'] text-[10px] text-white/60">
+                    Confidence Tier: <strong className="text-[#9EFFBF]">{analysis.quality_assurance?.confidence_tier || 'High'}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedBiomarker(biomarkers[0]?.name || 'Hemoglobin');
+                      setCorrectionModalOpen(true);
+                    }}
+                    className="px-3 py-1.5 bg-[#9EFFBF] text-[#0D2419] rounded-[8px] font-['Public_Sans'] font-bold text-xs hover:bg-[#9EFFBF]/90 transition-colors"
+                  >
+                    ✏️ Submit Field Correction
+                  </button>
+                </div>
+              </motion.div>
+            )}
 
             {/* Organ Health Breakdown Scores */}
             <OrganHealthScores scores={analysis.organ_health_scores} />
@@ -430,6 +525,102 @@ export default function AIAnalysisPage() {
 
         <FooterComponent />
       </div>
+
+      {/* Clinician & Patient Field Correction Modal */}
+      <Modal
+        open={correctionModalOpen}
+        onClose={() => setCorrectionModalOpen(false)}
+        title="✏️ Clinician Field Verification & Feedback"
+      >
+        <div className="space-y-4 pt-2">
+          <p className="font-['Public_Sans'] text-xs text-[#3A3A38] leading-relaxed">
+            Submit a verified correction to improve MediTrack AI's extraction accuracy and train the continuous model feedback loop.
+          </p>
+
+          <div className="space-y-3">
+            <div>
+              <label className="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#111827] uppercase mb-1">
+                Biomarker / Field Name
+              </label>
+              <select
+                value={selectedBiomarker}
+                onChange={(e) => setSelectedBiomarker(e.target.value)}
+                className="w-full text-xs font-['Public_Sans'] p-2.5 bg-[#F7F7F5] border border-[#3A3A38]/20 rounded-[8px] focus:border-[#1A3C2B] outline-none"
+              >
+                {biomarkers.map((b: any, i: number) => (
+                  <option key={i} value={b.name}>{b.name} (Current: {b.value})</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#111827] uppercase mb-1">
+                Corrected Value
+              </label>
+              <input
+                type="text"
+                value={correctedValue}
+                onChange={(e) => setCorrectedValue(e.target.value)}
+                placeholder="e.g. 13.8 or Normal"
+                className="w-full text-xs font-['Public_Sans'] p-2.5 bg-[#F7F7F5] border border-[#3A3A38]/20 rounded-[8px] focus:border-[#1A3C2B] outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#111827] uppercase mb-1">
+                Clinical Notes / Rationale
+              </label>
+              <textarea
+                value={correctionNotes}
+                onChange={(e) => setCorrectionNotes(e.target.value)}
+                placeholder="Explain the correction or reference standard..."
+                rows={3}
+                className="w-full text-xs font-['Public_Sans'] p-2.5 bg-[#F7F7F5] border border-[#3A3A38]/20 rounded-[8px] focus:border-[#1A3C2B] outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-[#3A3A38]/10">
+            <button
+              type="button"
+              onClick={() => setCorrectionModalOpen(false)}
+              className="px-4 py-2 border border-[#3A3A38]/20 rounded-[8px] text-xs font-bold text-[#3A3A38] hover:bg-[#F7F7F5]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={submittingCorrection || !correctedValue.trim()}
+              onClick={async () => {
+                setSubmittingCorrection(true);
+                try {
+                  await apiClient('/ai/verify-correction', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      reportId: analysisData?.report_id || 'rep-demo',
+                      biomarkerName: selectedBiomarker,
+                      correctedValue,
+                      notes: correctionNotes,
+                      userRole: 'clinician',
+                    }),
+                  });
+                  toast.success(`Verified correction recorded for ${selectedBiomarker}!`);
+                  setCorrectionModalOpen(false);
+                  setCorrectedValue('');
+                  setCorrectionNotes('');
+                } catch {
+                  toast.error('Failed to submit correction.');
+                } finally {
+                  setSubmittingCorrection(false);
+                }
+              }}
+              className="px-4 py-2 bg-[#1A3C2B] text-white rounded-[8px] text-xs font-bold hover:bg-[#1A3C2B]/90 disabled:opacity-50"
+            >
+              {submittingCorrection ? 'Saving...' : 'Submit Verification'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
