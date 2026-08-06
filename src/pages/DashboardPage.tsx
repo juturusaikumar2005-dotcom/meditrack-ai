@@ -102,7 +102,12 @@ export default function DashboardPage() {
     : 'Comprehensive clinical parsing completed. Results indicate stable blood glucose and hemoglobin levels alongside mild iron reserve (Ferritin) depletion.';
 
   return (
-    <div className="space-y-10 select-none font-['Public_Sans'] pb-12">
+    <motion.div
+      initial={{ opacity: 0, y: 12, scale: 0.99 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className="space-y-10 select-none font-['Public_Sans'] pb-12"
+    >
       {/* 1. Welcome Card Banner */}
       <div className="bg-white border border-[#3A3A38]/20 rounded-[20px] p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
         <div className="space-y-1.5">
@@ -422,6 +427,6 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

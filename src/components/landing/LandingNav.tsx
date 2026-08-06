@@ -26,7 +26,7 @@ export function LandingNav() {
       className="fixed top-4 left-1/2 z-50 -translate-x-1/2 w-[calc(100%-2rem)] max-w-7xl"
     >
       <nav className="glass rounded-2xl px-4 sm:px-6 h-16 flex items-center justify-between shadow-[0_8px_30px_rgba(15,23,42,0.08)]">
-        <Link to="/" className="flex items-center gap-2 font-extrabold text-lg">
+        <Link to="/app/dashboard" className="flex items-center gap-2 font-extrabold text-lg">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-600/30">
             <Activity className="h-5 w-5 text-white" />
           </div>

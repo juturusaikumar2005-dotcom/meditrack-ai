@@ -136,17 +136,19 @@ function SidebarContent({
         )}
       >
         {collapsed && !mobile ? (
-          <div className="h-10 w-10 bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center rounded-[10px] border border-[#1A3C2B]">
+          <NavLink to="/app/dashboard" className="h-10 w-10 bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center rounded-[10px] border border-[#1A3C2B] hover:scale-105 transition-transform">
             <HeartHandshake className="h-6 w-6" />
-          </div>
+          </NavLink>
         ) : (
-          <div className="flex items-center gap-3 flex-1">
-            <div className="h-10 w-10 bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center rounded-[10px] shrink-0 border border-[#1A3C2B]">
-              <HeartHandshake className="h-6 w-6" />
-            </div>
-            <span className="font-['Space_Grotesk'] text-xl font-bold text-[#111827] tracking-tight">
-              MEDITRACK
-            </span>
+          <div className="flex items-center justify-between flex-1">
+            <NavLink to="/app/dashboard" className="flex items-center gap-3 group cursor-pointer">
+              <div className="h-10 w-10 bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center rounded-[10px] shrink-0 border border-[#1A3C2B] group-hover:scale-105 transition-transform">
+                <HeartHandshake className="h-6 w-6" />
+              </div>
+              <span className="font-['Space_Grotesk'] text-xl font-bold text-[#111827] tracking-tight group-hover:text-[#1A3C2B] transition-colors">
+                MEDITRACK
+              </span>
+            </NavLink>
             {mobile && (
               <button onClick={onClose} className="ml-auto p-1 text-[#3A3A38] hover:text-[#111827]">
                 <X className="h-6 w-6" />

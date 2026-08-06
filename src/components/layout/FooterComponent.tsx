@@ -30,7 +30,7 @@ export function FooterComponent({
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand Info Column */}
           <div className="md:col-span-2 space-y-4">
-            <Link to="/" className="flex items-center gap-2.5">
+            <Link to="/app/dashboard" className="flex items-center gap-2.5">
               <div className="h-9 w-9 bg-white text-[#1A3C2B] flex items-center justify-center rounded-[10px]">
                 <HeartHandshake className="h-5 w-5" />
               </div>

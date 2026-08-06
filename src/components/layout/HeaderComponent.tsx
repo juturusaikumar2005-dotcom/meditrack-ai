@@ -59,7 +59,7 @@ export function HeaderComponent({
     >
       <div className="max-w-[88rem] mx-auto w-full flex items-center justify-between gap-6">
         {/* Brand Logo & Application Name */}
-        <Link to="/" className="flex items-center gap-3 sm:gap-3.5 group shrink-0">
+        <Link to="/app/dashboard" className="flex items-center gap-3 sm:gap-3.5 group shrink-0">
           <div className="h-10 w-10 md:h-[44px] md:w-[44px] lg:h-12 lg:w-12 bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center rounded-[10px] transition-transform group-hover:scale-105 border border-[#1A3C2B]">
             <HeartHandshake className="h-6 w-6 lg:h-7 lg:w-7" />
           </div>

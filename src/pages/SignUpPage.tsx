@@ -117,18 +117,18 @@ export default function SignUpPage() {
           >
             {/* Brand Logo & Headline */}
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
+              <Link to="/app/dashboard" className="flex items-center gap-3 group cursor-pointer">
                 <motion.div
                   animate={{ y: [0, -4, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  className="h-11 w-11 rounded-[10px] bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center border border-[#1A3C2B]"
+                  className="h-11 w-11 rounded-[10px] bg-[#1A3C2B] text-[#9EFFBF] flex items-center justify-center border border-[#1A3C2B] group-hover:scale-105 transition-transform"
                 >
                   <HeartHandshake className="h-6 w-6" />
                 </motion.div>
-                <span className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827] tracking-tight">
+                <span className="font-['Space_Grotesk'] text-2xl font-bold text-[#111827] tracking-tight group-hover:text-[#1A3C2B] transition-colors">
                   MEDITRACK
                 </span>
-              </div>
+              </Link>
 
               <h1 className="font-['Space_Grotesk'] text-4xl xl:text-5xl font-bold text-[#111827] tracking-tight leading-tight">
                 Understand Your Health with AI.
