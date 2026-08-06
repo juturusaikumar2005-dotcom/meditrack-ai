@@ -247,6 +247,11 @@ export const supabase = {
       return { data: { session }, error: null };
     },
 
+    async getUser(): Promise<{ data: { user: User | null }; error: Error | null }> {
+      const session = await getOrRefreshSession();
+      return { data: { user: session?.user || null }, error: null };
+    },
+
     onAuthStateChange(callback: AuthChangeListener) {
       listeners.add(callback);
       getOrRefreshSession().then((session) => {

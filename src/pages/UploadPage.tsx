@@ -179,20 +179,13 @@ export default function UploadPage() {
     toast.loading(`Ingesting ${file.name}...`, { id: 'upload-toast' });
 
     try {
-      // 3. Ensure fresh authenticated user session before storage upload
-      const { data: { session: activeSession } } = await supabase.auth.getSession();
-      const user = activeSession?.user;
-
-      console.log('[Auth State Check]', {
-        sessionExists: !!activeSession,
-        userId: user?.id || 'none',
-        email: user?.email || 'none',
-      });
+      // Retrieve the authenticated user before uploading and inserting into reports
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user || !user.id) {
-        toast.error('Please sign in again to upload medical reports.', { id: 'upload-toast' });
-        setUploading(false);
-        return;
+        throw new Error('User not authenticated');
       }
 
       const currentUserId = user.id;
