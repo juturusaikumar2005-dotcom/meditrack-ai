@@ -194,14 +194,6 @@ router.post('/health-assistant', async (req, res) => {
   }
 });
 
-const ReportAnalysisSchema = z.object({
-  reportId: z.string().optional(),
-  userId: z.string().optional(),
-  reportName: z.string().min(1, 'Report name is required'),
-  fileUrl: z.string().optional(),
-  reportType: z.string().optional(),
-});
-
 /**
  * @route POST /api/ai/analyze-report
  * @desc AI Medical Report Analysis Pipeline — powered by Google Gemini API
