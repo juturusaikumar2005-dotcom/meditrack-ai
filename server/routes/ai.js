@@ -822,7 +822,7 @@ async function analyzeReportWithOpenRouter(reportName, reportType, fileUrl, open
           { role: 'user', content: imageBase64 ? messagesContent : prompt },
         ],
         temperature: 0.1,
-        max_tokens: 4096,
+        max_tokens: 8192,
       }),
     });
 
