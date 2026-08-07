@@ -37,13 +37,16 @@ import {
   MessageSquare,
   Share2,
   Scan,
+  Pill,
 } from 'lucide-react';
 import { FooterComponent } from '@/components/layout/FooterComponent';
 import { AICaseCoordinatorModal } from '@/components/ai-assistant/AICaseCoordinatorModal';
+import { PrescriptionReaderResult } from '@/components/prescription/PrescriptionReaderResult';
 import { useAuth } from '@/context/AuthContext';
 import { supabase, type ReportRecord } from '@/lib/supabase';
 import { apiClient } from '@/lib/apiClient';
 import { parseReportClientSide } from '@/lib/reportClientAnalyzer';
+import { runPrescriptionPipeline } from '@/lib/prescriptionPipeline';
 import toast from 'react-hot-toast';
 
 function fileToBase64(file: File): Promise<string> {
@@ -64,11 +67,11 @@ const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
 
 const fileTypeGrid = [
+  { title: 'Prescription Reader', desc: 'Handwritten & Printed Doctor Prescriptions', icon: Pill, ext: 'PDF, PNG, JPG, JPEG' },
   { title: 'Blood Test Report', desc: 'CBC, Lipid Panel, Metabolic', icon: Activity, ext: 'PDF, PNG, JPG' },
   { title: 'MRI Scan', desc: 'Brain, Spine, Joint Imaging', icon: FileText, ext: 'PDF, PNG, JPG' },
   { title: 'CT Scan', desc: 'Abdominal, Thoracic Imaging', icon: FileCheck, ext: 'PDF, PNG, JPG' },
   { title: 'X-Ray Image', desc: 'Skeletal & Chest X-Rays', icon: Eye, ext: 'PNG, JPG, PDF' },
-  { title: 'Physician Prescription', desc: 'Medication & Dosage Notes', icon: Sparkles, ext: 'PDF, JPG' },
   { title: 'Medical Summary', desc: 'Discharge Summaries & Labs', icon: FileText, ext: 'PDF, PNG' },
   { title: 'Full Body Scan', desc: 'Whole Body PET-CT & Total Imaging', icon: Scan, ext: 'PDF, PNG, JPG' },
 ];
@@ -355,29 +358,40 @@ export default function UploadPage() {
 
       let aiAnalysisResult: any = null;
 
-      try {
-        const aiRes = await apiClient<{ id: string; analysis: any }>('/ai/analyze-report', {
-          method: 'POST',
-          body: JSON.stringify({
-            reportId: newReport.id,
-            userId: currentUserId,
-            reportName: file.name,
-            fileUrl: fileUrl,
-            reportType: effectiveReportType,
-            imageBase64,
-            mimeType: file.type || 'image/jpeg',
-          }),
-        });
+      const isPrescriptionDoc =
+        effectiveReportType === 'Prescription Reader' ||
+        effectiveReportType === 'Prescription' ||
+        file.name.toLowerCase().includes('prescription') ||
+        file.name.toLowerCase().includes('rx');
 
-        if (aiRes.data && aiRes.data.analysis) {
-          aiAnalysisResult = aiRes.data.analysis;
-        } else {
-          console.warn('[AI API Warning]: Remote API returned empty response. Running failsafe clinical parser...');
+      if (isPrescriptionDoc) {
+        console.log('[Upload Pipeline] Running Prescription Reader Multi-Agent Pipeline...');
+        aiAnalysisResult = await runPrescriptionPipeline(file.name, imageBase64, file.type);
+      } else {
+        try {
+          const aiRes = await apiClient<{ id: string; analysis: any }>('/ai/analyze-report', {
+            method: 'POST',
+            body: JSON.stringify({
+              reportId: newReport.id,
+              userId: currentUserId,
+              reportName: file.name,
+              fileUrl: fileUrl,
+              reportType: effectiveReportType,
+              imageBase64,
+              mimeType: file.type || 'image/jpeg',
+            }),
+          });
+
+          if (aiRes.data && aiRes.data.analysis) {
+            aiAnalysisResult = aiRes.data.analysis;
+          } else {
+            console.warn('[AI API Warning]: Remote API returned empty response. Running failsafe clinical parser...');
+            aiAnalysisResult = parseReportClientSide(file.name, effectiveReportType);
+          }
+        } catch (e) {
+          console.error('[AI API Error - Fallback Triggered]:', e);
           aiAnalysisResult = parseReportClientSide(file.name, effectiveReportType);
         }
-      } catch (e) {
-        console.error('[AI API Error - Fallback Triggered]:', e);
-        aiAnalysisResult = parseReportClientSide(file.name, effectiveReportType);
       }
 
       console.timeEnd('Step 4: AI Analysis');
@@ -695,7 +709,11 @@ export default function UploadPage() {
             transition={{ duration: 0.6 }}
             className="pt-8 border-t-2 border-[#1A3C2B]/20 space-y-10"
           >
-            {/* Results Header */}
+            {analysis.medicines ? (
+              <PrescriptionReaderResult reportName={reportName} data={analysis} />
+            ) : (
+              <>
+                {/* Results Header */}
             <div className="bg-white border border-[#3A3A38]/20 rounded-[14px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
@@ -899,6 +917,8 @@ export default function UploadPage() {
                 </div>
               </div>
             </div>
+          </>
+        )}
           </motion.div>
         )}
 
