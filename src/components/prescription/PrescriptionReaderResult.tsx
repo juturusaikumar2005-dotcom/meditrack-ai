@@ -4,6 +4,7 @@ import {
   Pill,
   Clock,
   AlertTriangle,
+  AlertCircle,
   CheckCircle2,
   Calendar,
   FileText,
