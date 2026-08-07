@@ -34,6 +34,7 @@ const SignUpPage = lazyWithRetry(() => import('@/pages/SignUpPage'));
 const AuthCallbackPage = lazyWithRetry(() => import('@/pages/AuthCallbackPage'));
 const DashboardPage = lazyWithRetry(() => import('@/pages/DashboardPage'));
 const UploadPage = lazyWithRetry(() => import('@/pages/UploadPage'));
+const PrescriptionPage = lazyWithRetry(() => import('@/pages/PrescriptionPage'));
 const AIAnalysisPage = lazyWithRetry(() => import('@/pages/AIAnalysisPage'));
 const ChatPage = lazyWithRetry(() => import('@/pages/ChatPage'));
 const HistoryPage = lazyWithRetry(() => import('@/pages/HistoryPage'));
@@ -81,7 +82,7 @@ export default function App() {
                 <Route path="welcome" element={<WelcomeLandingPage />} />
                 <Route path="dashboard" element={<DashboardPage />} />
                 <Route path="upload" element={<UploadPage />} />
-                <Route path="prescription" element={<Navigate to="/app/upload" replace />} />
+                <Route path="prescription" element={<PrescriptionPage />} />
                 <Route path="ai-analysis" element={<AIAnalysisPage />} />
                 <Route path="history" element={<HistoryPage />} />
                 <Route path="timeline" element={<HealthTimelinePage />} />
