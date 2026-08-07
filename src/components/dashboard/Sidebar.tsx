@@ -111,25 +111,6 @@ function AnimatedNavIcon({ iconKey, isHovered, isClicked }: { iconKey: string; i
         </motion.div>
       );
 
-    // 2. RX ENGINE: 180° Y-Axis Capsule Flip & Vertical Split (Pill Dosage Snap)
-    case 'prescription':
-      return (
-        <motion.div
-          className="relative flex items-center justify-center h-5 w-5"
-          animate={
-            isClicked && !reduced
-              ? { scale: [1, 0.7, 1.25, 1], rotateY: 360, transition: SPRING_TIGHT }
-              : isHovered && !reduced
-              ? { rotateY: 180, scale: 1.15, transition: { duration: 0.45, ease: 'easeOut' } }
-              : { rotateY: 0, scale: 1 }
-          }
-        >
-          <motion.div
-            animate={isHovered && !reduced ? { y: -2 } : { y: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Pill className="h-5 w-5 text-[#1A3C2B]" />
-          </motion.div>
         </motion.div>
       );
 
@@ -544,7 +525,7 @@ function SidebarButton({
     : location.pathname.startsWith(to);
 
   // Custom text slide distances per item type
-  const textSlideDistance = iconKey === 'prescription' ? 4 : iconKey === 'upload' ? 6 : 8;
+  const textSlideDistance = iconKey === 'upload' ? 6 : 8;
 
   // Handle click with custom spring feedback
   const handleClick = useCallback(
