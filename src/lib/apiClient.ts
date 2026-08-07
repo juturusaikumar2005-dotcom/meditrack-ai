@@ -15,10 +15,16 @@ export async function apiClient<T>(
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     const result = await response.json();
 
@@ -28,9 +34,10 @@ export async function apiClient<T>(
 
     return { data: result as T, error: null };
   } catch (err) {
+    const isAbort = err instanceof Error && err.name === 'AbortError';
     return {
       data: null,
-      error: err instanceof Error ? err.message : 'Network error connecting to API',
+      error: isAbort ? 'API Request timed out after 25 seconds' : err instanceof Error ? err.message : 'Network error connecting to API',
     };
   }
 }
