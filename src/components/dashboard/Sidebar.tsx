@@ -111,9 +111,6 @@ function AnimatedNavIcon({ iconKey, isHovered, isClicked }: { iconKey: string; i
         </motion.div>
       );
 
-        </motion.div>
-      );
-
     // 3. AI ANALYSIS: Cyber Holographic Glitch Jitter & Laser Scanline Sweep
     case 'ai-analysis':
       return (
