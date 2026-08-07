@@ -10,10 +10,7 @@ import {
   User,
   Sparkles,
   Upload,
-  Pill,
   MessageSquare,
-  Activity,
-  CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { SignOutModal } from '@/components/auth/SignOutModal';
