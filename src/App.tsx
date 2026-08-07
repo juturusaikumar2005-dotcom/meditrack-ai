@@ -8,7 +8,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 import LandingPage from '@/pages/LandingPage';
 
-// Self-healing lazy loader for dynamic imports across Vercel deployments
+// MediTrack AI Application Entry (Production Build)
 const lazyWithRetry = (componentImport: () => Promise<any>) =>
   lazy(async () => {
     const pageHasBeenRefreshed = JSON.parse(
