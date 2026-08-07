@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { FooterComponent } from '@/components/layout/FooterComponent';
 import { AICaseCoordinatorModal } from '@/components/ai-assistant/AICaseCoordinatorModal';
+import { useAuth } from '@/context/AuthContext';
 import { supabase, type ReportRecord } from '@/lib/supabase';
 import { apiClient } from '@/lib/apiClient';
 import { parseReportClientSide } from '@/lib/reportClientAnalyzer';
