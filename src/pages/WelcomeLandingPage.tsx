@@ -231,6 +231,7 @@ export default function WelcomeLandingPage() {
               >
                 <MessageSquare className="h-3.5 w-3.5 text-[#5AE68E]" />
                 <span>AI Health Assistant</span>
+              </button>
             </div>
           </div>
         </motion.div>
