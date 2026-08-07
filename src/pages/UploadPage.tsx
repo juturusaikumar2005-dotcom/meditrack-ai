@@ -269,24 +269,30 @@ export default function UploadPage() {
       }
       const currentUserId = user.id;
 
-      // Fast Checksum Cache Return (< 0.05s)
+      // Fast Checksum Cache Return (< 0.05s) if not containing old demo payload
       if (cachedAnalysis) {
         try {
-          console.log('[Upload Pipeline] Returning cached analysis payload');
           const parsedCache = JSON.parse(cachedAnalysis);
-          setCoordinatorStep(6);
-          setCoordinatorProgress(90);
-          setLatestAnalysisData(parsedCache);
-          setUploading(false);
-          toast.success(`Loaded analysis from cache for ${file.name}!`, { id: 'upload-toast' });
-          setCoordinatorStep(7);
-          setCoordinatorProgress(100);
-          console.timeEnd('Total Upload Pipeline');
-          setTimeout(() => {
-            setCoordinatorOpen(false);
-            navigate('/app/ai-analysis');
-          }, 300);
-          return;
+          const hasStaleDemoMeds = parsedCache?.analysis?.medicines?.some(
+            (m: any) => m.name?.includes('Metformin') || m.name?.includes('Telmisartan') || m.name?.includes('Atorvastatin')
+          );
+
+          if (!hasStaleDemoMeds) {
+            console.log('[Upload Pipeline] Returning verified cached analysis payload');
+            setCoordinatorStep(6);
+            setCoordinatorProgress(90);
+            setLatestAnalysisData(parsedCache);
+            setUploading(false);
+            toast.success(`Loaded analysis from cache for ${file.name}!`, { id: 'upload-toast' });
+            setCoordinatorStep(7);
+            setCoordinatorProgress(100);
+            console.timeEnd('Total Upload Pipeline');
+            setTimeout(() => {
+              setCoordinatorOpen(false);
+              navigate('/app/ai-analysis');
+            }, 300);
+            return;
+          }
         } catch (e) {
           console.error('[Cache Parse Error]:', e);
         }

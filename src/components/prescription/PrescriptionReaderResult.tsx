@@ -227,7 +227,18 @@ export function PrescriptionReaderResult({
             </span>
           </div>
 
-          {data.medicines?.map((med, idx) => {
+          {(!data.medicines || data.medicines.length === 0) ? (
+            <div className="bg-white border border-[#3A3A38]/20 rounded-[20px] p-8 text-center space-y-3 shadow-xs">
+              <AlertCircle className="h-10 w-10 text-amber-500 mx-auto" />
+              <h4 className="font-['Space_Grotesk'] text-lg font-bold text-[#111827]">
+                No Medicines Detected
+              </h4>
+              <p className="text-xs text-[#3A3A38] max-w-md mx-auto leading-relaxed">
+                Medicine could not be read clearly from this document. Please ensure the prescription image is clear, well-lit, and uncropped.
+              </p>
+            </div>
+          ) : (
+            data.medicines.map((med, idx) => {
             const isExpanded = expandedMedIndex === idx;
             return (
               <div
@@ -360,7 +371,7 @@ export function PrescriptionReaderResult({
                 )}
               </div>
             );
-          })}
+          }))}
         </div>
 
         {/* Right Column: Special Instructions, Investigations & Unreadable Handwriting Notes */}
