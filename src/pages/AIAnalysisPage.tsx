@@ -12,7 +12,6 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { LabValueCard } from '@/components/medical-report/LabValueCard';
 import { ReportSummaryBanner } from '@/components/medical-report/ReportSummaryBanner';
-import { OrganHealthScores } from '@/components/medical-report/OrganHealthScores';
 import { Modal } from '@/components/ui/Modal';
 import { apiClient } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
@@ -384,8 +383,7 @@ export default function AIAnalysisPage() {
               </motion.div>
             )}
 
-            {/* Organ Health Breakdown Scores */}
-            <OrganHealthScores scores={analysis.organ_health_scores} />
+
 
             {/* ── Critical / Abnormal Values First ──── */}
             {abnormalBiomarkers.length > 0 && (
