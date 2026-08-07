@@ -1,13 +1,6 @@
 /**
- * Specialized Multi-Pipeline Medical Document Classifier & Specialized AI Analyzers
- * 
- * Pipelines:
- * - CBC (Complete Blood Count) Analyzer
- * - LFT (Liver Function Test) Analyzer
- * - KFT (Kidney Function Test) Analyzer
- * - Lipid Profile Analyzer
- * - Radiology (MRI / CT / X-Ray / PET) Analyzer
- * - Discharge Summary & General Lab Analyzer
+ * Specialized Multi-Pipeline Medical Document Classifier & Specialized AI Vision Prompts
+ * (Google Health / Microsoft Nuance Clinical Precision Standard)
  */
 
 export type DocumentCategory =
@@ -41,8 +34,11 @@ export function classifyDocumentType(fileName: string = '', reportType: string =
   if (name.includes('thyroid') || name.includes('tsh') || name.includes('t3') || name.includes('t4')) {
     return 'Thyroid';
   }
-  if (name.includes('hba1c') || name.includes('glycated') || name.includes('sugar') || name.includes('glucose')) {
+  if (name.includes('hba1c') || name.includes('glycated') || name.includes('sugar') || name.includes('glucose') || name.includes('diabetes')) {
     return 'HbA1c';
+  }
+  if (name.includes('vitamin') || name.includes('b12') || name.includes('vit d') || name.includes('ferritin') || name.includes('iron')) {
+    return 'Vitamin Panel';
   }
   if (name.includes('mri') || name.includes('ct') || name.includes('x-ray') || name.includes('xray') || name.includes('pet') || name.includes('scan') || name.includes('imaging')) {
     return 'Radiology';
@@ -58,110 +54,85 @@ export function classifyDocumentType(fileName: string = '', reportType: string =
 }
 
 export function getSpecializedPrompt(category: DocumentCategory): string {
+  const BASE_SCHEMA = `
+Return ONLY valid JSON matching this schema:
+{
+  "document_type": "string (e.g. CBC, LFT, Lipid Profile, Radiology)",
+  "patient_name": "string (or null)",
+  "lab_hospital_name": "string (or null)",
+  "report_date": "YYYY-MM-DD (or string)",
+  "summary": "Full clinical summary based ONLY on extracted values. 2-4 sentences explaining patient condition.",
+  "confidence_score": 98.0,
+  "risk_level": "Optimal | Mild | Moderate | High Risk",
+  "recommended_specialist": "Physician Specialty (e.g., Hematologist, Cardiologist, Endocrinologist)",
+  "recommended_specialist_reason": "Clinical justification for this specialist",
+  "biomarkers": [
+    {
+      "name": "Exact Biomarker Test Name",
+      "value": "13.5",
+      "numeric_value": 13.5,
+      "unit": "g/dL",
+      "normal_range": "12.0 - 15.5",
+      "status": "Normal | High | Low | Critical",
+      "severity": "optimal | attention | critical",
+      "category": "${category}",
+      "explanation": "Simple language explanation of what this test measures and what this value means.",
+      "recommendation": "Specific clinical or lifestyle recommendation"
+    }
+  ],
+  "key_findings": ["Array of critical extracted clinical observations"],
+  "recommendations": ["Array of specific medical follow-up actions"],
+  "lifestyle_recommendations": ["Array of dietary, exercise, or lifestyle habits"]
+}
+`;
+
   switch (category) {
     case 'CBC':
-      return `You are a Specialist Hematologist AI. Analyze the provided CBC (Complete Blood Count) report image/PDF.
-Extract EVERY visible hematological biomarker (Hemoglobin, RBC, WBC, Platelets, Hematocrit, MCV, MCH, MCHC, RDW, Neutrophils, Lymphocytes, Monocytes, Eosinophils, Basophils).
-For every biomarker: extract exact numeric value, unit, reference range, status (normal, high, low, critical), and clinical meaning.
-Return ONLY structured JSON:
-{
-  "document_type": "CBC (Complete Blood Count)",
-  "summary": "Specific hematological summary based ONLY on extracted CBC values.",
-  "biomarkers": [
-    {
-      "name": "Biomarker Name",
-      "value": "13.5",
-      "unit": "g/dL",
-      "reference": "12.0 - 15.5",
-      "status": "normal",
-      "meaning": "Clinical implication of this specific CBC parameter",
-      "recommendation": "Specific advice"
-    }
-  ],
-  "organ_scores": [
-    { "organ": "Blood & Oxygen Capacity", "score": 95, "status": "Optimal", "detail": "Hemoglobin & Hematocrit levels" },
-    { "organ": "Immune Response System", "score": 92, "status": "Optimal", "detail": "WBC differential count" },
-    { "organ": "Coagulation & Platelet Status", "score": 90, "status": "Optimal", "detail": "Platelet count" }
-  ],
-  "overall_score": 93,
-  "recommendations": ["Array of specific hematology recommendations based on findings"]
-}`;
+      return `You are MediTrack AI's Lead Clinical Hematologist. Analyze the provided CBC (Complete Blood Count) report.
+Extract EVERY visible biomarker: Hemoglobin, RBC, WBC, Platelets, Hematocrit (HCT), MCV, MCH, MCHC, RDW, Neutrophils, Lymphocytes, Monocytes, Eosinophils, Basophils, Absolute Neutrophil Count (ANC).
+Extract exact test values, units, reference ranges, and evaluate if values indicate anemia, infection, inflammation, or clotting abnormalities.
+${BASE_SCHEMA}`;
 
     case 'LFT':
-      return `You are a Specialist Hepatologist AI. Analyze the provided LFT (Liver Function Test) report image/PDF.
-Extract EVERY visible liver enzyme and protein (SGPT/ALT, SGOT/AST, Total Bilirubin, Direct Bilirubin, Alkaline Phosphatase ALP, Serum Albumin, Serum Globulin, A/G Ratio, GGT).
-For every biomarker: extract exact value, unit, reference range, status, and clinical meaning.
-Return ONLY structured JSON:
-{
-  "document_type": "LFT (Liver Function Test)",
-  "summary": "Hepatic function summary based ONLY on extracted liver enzymes and proteins.",
-  "biomarkers": [ ... ],
-  "organ_scores": [
-    { "organ": "Hepatic Enzyme Activity", "score": 90, "status": "Optimal", "detail": "SGPT & SGOT levels" },
-    { "organ": "Bilirubin & Excretory Function", "score": 94, "status": "Optimal", "detail": "Total & Direct Bilirubin" },
-    { "organ": "Protein Synthesis", "score": 92, "status": "Optimal", "detail": "Serum Albumin & Globulin" }
-  ],
-  "overall_score": 92,
-  "recommendations": ["Array of hepatic health recommendations"]
-}`;
+      return `You are MediTrack AI's Lead Hepatologist. Analyze the provided LFT (Liver Function Test) report.
+Extract EVERY visible biomarker: SGPT (ALT), SGOT (AST), Total Bilirubin, Direct Bilirubin, Indirect Bilirubin, Alkaline Phosphatase (ALP), Total Protein, Serum Albumin, Serum Globulin, A/G Ratio, GGT.
+Evaluate liver enzyme elevation, biliary flow, and synthetic liver capacity.
+${BASE_SCHEMA}`;
 
     case 'KFT':
-      return `You are a Specialist Nephrologist AI. Analyze the provided KFT (Kidney Function Test) report image/PDF.
-Extract EVERY renal biomarker (Serum Creatinine, Blood Urea Nitrogen BUN, eGFR, Uric Acid, Serum Sodium, Potassium, Chloride, Calcium).
-Return ONLY structured JSON with exact values, units, reference ranges, organ scores for Renal Filtration & Electrolytes, overall score, and recommendations.`;
+      return `You are MediTrack AI's Lead Nephrologist. Analyze the provided KFT (Kidney Function Test / Renal Panel) report.
+Extract EVERY visible biomarker: Serum Creatinine, Blood Urea Nitrogen (BUN), eGFR (Estimated Glomerular Filtration Rate), Serum Uric Acid, Sodium, Potassium, Chloride, Calcium, Phosphorus.
+Evaluate renal clearance, electrolyte balance, and filtration capacity.
+${BASE_SCHEMA}`;
 
     case 'Lipid Profile':
-      return `You are a Specialist Preventive Cardiologist AI. Analyze the provided Lipid Profile report image/PDF.
-Extract EVERY lipid parameter (Total Cholesterol, Triglycerides, HDL Cholesterol, LDL Cholesterol, VLDL Cholesterol, Total/HDL Ratio).
-Return ONLY structured JSON with exact values, units, reference ranges, organ scores for Cardiovascular & Lipid Status, overall score, and recommendations.`;
+      return `You are MediTrack AI's Lead Preventive Cardiologist. Analyze the provided Lipid Profile report.
+Extract EVERY lipid parameter: Total Cholesterol, Triglycerides, HDL Cholesterol, LDL Cholesterol, VLDL Cholesterol, Non-HDL Cholesterol, Total/HDL Ratio, Triglyceride/HDL Ratio.
+Assess cardiovascular risk stratification and atherogenic lipoprotein burden.
+${BASE_SCHEMA}`;
+
+    case 'Thyroid':
+      return `You are MediTrack AI's Lead Endocrinologist. Analyze the provided Thyroid Panel report.
+Extract EVERY thyroid biomarker: TSH (Thyroid Stimulating Hormone), Total T3, Total T4, Free T3, Free T4, Anti-TPO Antibodies, Anti-Thyroglobulin Antibodies.
+Evaluate for hypothyroidism, hyperthyroidism, or autoimmune thyroid disease.
+${BASE_SCHEMA}`;
+
+    case 'HbA1c':
+      return `You are MediTrack AI's Lead Diabetologist & Metabolic Specialist. Analyze the provided Diabetes / Glycemic report.
+Extract EVERY biomarker: HbA1c (Glycated Hemoglobin), Fasting Blood Glucose (FBS), Postprandial Blood Glucose (PPBS), Estimated Average Glucose (eAG), Fasting Insulin.
+Classify glycemic status: Normal (<5.7%), Prediabetes (5.7%-6.4%), Diabetes (>=6.5%).
+${BASE_SCHEMA}`;
 
     case 'Radiology':
-      return `You are a Specialist Radiologist AI. Analyze the provided MRI / CT / X-Ray imaging scan report.
-Extract patient info, study type, anatomical region, technique, detailed findings, and final radiologist impression.
-Return ONLY structured JSON:
-{
-  "document_type": "Radiology Imaging Scan",
-  "summary": "Detailed radiologist summary of structural findings.",
-  "biomarkers": [
-    {
-      "name": "Anatomical Structure",
-      "value": "Normal / Abnormal Finding",
-      "unit": "Interpretation",
-      "reference": "Unremarkable",
-      "status": "normal",
-      "meaning": "Detailed radiologist description of finding",
-      "recommendation": "Follow-up clinical correlation"
-    }
-  ],
-  "organ_scores": [
-    { "organ": "Structural Integrity", "score": 95, "status": "Optimal", "detail": "No focal lesions or cortical break" }
-  ],
-  "overall_score": 95,
-  "recommendations": ["Specific clinical or orthopedic follow-up recommendations"]
-}`;
+      return `You are MediTrack AI's Lead Consultant Radiologist. Analyze the provided MRI / CT / X-Ray / PET Scan report.
+Extract study type, anatomical region, technical protocol, detailed structural findings, and radiologist impression.
+Map each structural finding into the "biomarkers" array (e.g. Name: Anatomical Region, Value: Normal / Degenerative / Focal Lesion, Status: Normal/High/Critical).
+${BASE_SCHEMA}`;
 
     default:
-      return `You are MediTrack AI's Lead Diagnostic Intelligence Specialist. Analyze the provided medical report.
-Extract EVERY visible laboratory test, measurement, reference range, unit, patient data, and doctor notes.
-Do NOT invent test results. If 10 biomarkers are present, return 10. If 4 are present, return 4.
-Return ONLY structured JSON:
-{
-  "document_type": "Diagnostic Report",
-  "summary": "Clinical summary of extracted diagnostic findings.",
-  "biomarkers": [
-    {
-      "name": "Biomarker Name",
-      "value": "Value",
-      "unit": "Unit",
-      "reference": "Range",
-      "status": "normal|high|low|critical",
-      "meaning": "Clinical implication",
-      "recommendation": "Guidance"
-    }
-  ],
-  "organ_scores": [],
-  "overall_score": 90,
-  "recommendations": []
-}`;
+      return `You are MediTrack AI's Lead Medical Diagnostic Specialist (Google Health & Nuance Standard). Analyze the provided medical report.
+Extract EVERY visible biomarker, laboratory measurement, unit, reference range, patient detail, doctor note, and impression.
+Do NOT omit any biomarker. If 15 biomarkers are present, return 15. If 5 are present, return 5.
+${BASE_SCHEMA}`;
   }
 }

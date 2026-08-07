@@ -337,18 +337,21 @@ export default function UploadPage() {
       setCoordinatorStep(5);
       let aiAnalysisResult: any = null;
       const category = classifyDocumentType(file.name, effectiveReportType);
+      console.log(`[Document Classifier] Classified "${file.name}" as Category: [${category}]`);
+
       const isPrescriptionDoc = category === 'Prescription' || effectiveReportType === 'Prescription Reader';
 
       if (isPrescriptionDoc) {
-        console.log('[Upload Pipeline] Running Specialized Prescription Multi-Agent Pipeline...');
+        console.log('[Upload Pipeline] Switching automatically to Prescription Reader Multi-Agent Pipeline...');
         aiAnalysisResult = await runPrescriptionPipeline(file.name, imageBase64, file.type);
       } else {
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY;
 
         if (apiKey && apiKey !== 'your_gemini_api_key_here' && imageBase64) {
           try {
-            console.log(`[Upload Pipeline] Running Specialized ${category} Gemini 1.5 Flash Vision Pipeline...`);
+            console.log(`[OCR & Vision Execution] Running Specialized ${category} Gemini 1.5 Flash Vision Pipeline...`);
             const specializedPrompt = getSpecializedPrompt(category);
+            console.log(`[Gemini Vision Prompt] Executing prompt tailored for ${category}`);
 
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             const parts: any[] = [
@@ -362,7 +365,7 @@ export default function UploadPage() {
             ];
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 20000);
+            const timeoutId = setTimeout(() => controller.abort(), 25000);
 
             const res = await fetch(url, {
               method: 'POST',
@@ -383,13 +386,18 @@ export default function UploadPage() {
             if (res.ok) {
               const json = await res.json();
               let rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+              console.log(`[Gemini Vision Raw JSON Response]:`, rawText);
+
               if (rawText) {
                 rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
                 aiAnalysisResult = JSON.parse(rawText);
+                console.log(`[Parsed Biomarkers Count]: ${aiAnalysisResult?.biomarkers?.length || 0} biomarkers extracted from ${file.name}`);
               }
+            } else {
+              console.warn(`[Gemini API HTTP Error]: Status ${res.status}`);
             }
           } catch (e) {
-            console.warn(`[Specialized ${category} Pipeline Warning]:`, e);
+            console.warn(`[Specialized ${category} Pipeline Exception]:`, e);
           }
         }
 
