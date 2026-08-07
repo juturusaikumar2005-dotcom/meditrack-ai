@@ -63,10 +63,15 @@ export async function runPrescriptionPipeline(
   imageBase64?: string,
   mimeType?: string
 ): Promise<PrescriptionAnalysisData> {
+  console.log(`[Step 2: File Arrival] Name: "${fileName}", Mime: "${mimeType || 'unknown'}", Base64 Length: ${imageBase64 ? imageBase64.length : 0}`);
+
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY;
 
   if (apiKey && apiKey !== 'your_gemini_api_key_here' && imageBase64) {
     try {
+      console.log('[Step 3: Vision OCR Execution] Transmitting image payload to Gemini 1.5 Flash Vision...');
+      console.log(`[Step 4: LLM Prompt] Executing multi-agent clinical prompt on image data...`);
+
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
       const parts: any[] = [
         {
@@ -100,20 +105,28 @@ export async function runPrescriptionPipeline(
       if (res.ok) {
         const json = await res.json();
         let rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+        console.log('[Step 5: RAW LLM Response Received]:', rawText);
+
         if (rawText) {
           rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
           const parsed = JSON.parse(rawText);
-          if (parsed && parsed.medicines && parsed.medicines.length > 0) {
+          console.log(`[Step 6: Parsed JSON Result] Extracted ${parsed?.medicines?.length || 0} medicines directly from document:`, parsed);
+
+          if (parsed && Array.isArray(parsed.medicines)) {
             return parsed as PrescriptionAnalysisData;
           }
         }
+      } else {
+        console.warn(`[Step 5 Warning]: Gemini API HTTP status ${res.status}`);
       }
     } catch (e) {
-      console.warn('[Prescription Gemini Vision Pipeline Warning]:', e);
+      console.error('[Step 5 Error - Gemini Vision Pipeline Failed]:', e);
     }
+  } else {
+    console.warn('[Step 3 Warning]: No Gemini API Key found or base64 image data missing.');
   }
 
-  // Failsafe Clinical Prescription Fallback
+  console.log('[Step 6: Empty Extraction] Document did not contain readable prescription medicines.');
   return fallbackPrescriptionAnalysis(fileName);
 }
 
