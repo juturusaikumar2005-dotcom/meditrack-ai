@@ -159,7 +159,7 @@ export default function WelcomeLandingPage() {
                     Go to Dashboard
                   </h2>
                   <p className="font-['Public_Sans'] text-sm text-slate-300 mt-2 leading-relaxed">
-                    Access your complete medical command center — report history, AI lab analysis, organ health scores, and prescription engine.
+                    Access your complete medical command center — report history, AI lab analysis, and organ health scores.
                   </p>
                 </div>
               </div>
@@ -226,19 +226,11 @@ export default function WelcomeLandingPage() {
                 <span>Upload Report</span>
               </button>
               <button
-                onClick={() => navigate('/app/prescription')}
-                className="px-3.5 py-1.5 bg-[#F7F7F5] border border-[#3A3A38]/20 hover:border-[#1A3C2B] text-[#1A3C2B] text-xs font-semibold rounded-[10px] inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <Pill className="h-3.5 w-3.5 text-[#FF8C69]" />
-                <span>Rx Engine</span>
-              </button>
-              <button
                 onClick={() => navigate('/app/chat')}
                 className="px-3.5 py-1.5 bg-[#F7F7F5] border border-[#3A3A38]/20 hover:border-[#1A3C2B] text-[#1A3C2B] text-xs font-semibold rounded-[10px] inline-flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <MessageSquare className="h-3.5 w-3.5 text-[#5AE68E]" />
                 <span>AI Health Assistant</span>
-              </button>
             </div>
           </div>
         </motion.div>

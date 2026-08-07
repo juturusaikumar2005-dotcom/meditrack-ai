@@ -33,7 +33,6 @@ import { SignOutModal } from '@/components/auth/SignOutModal';
 const publicNav = [
   { to: '/app/dashboard', label: 'Dashboard', iconKey: 'dashboard' },
   { to: '/app/upload', label: 'Upload Reports', iconKey: 'upload' },
-  { to: '/app/prescription', label: 'Rx Engine', iconKey: 'prescription' },
   { to: '/app/ai-analysis', label: 'AI Analysis', iconKey: 'ai-analysis' },
   { to: '/app/history', label: 'Report History', iconKey: 'history' },
   { to: '/app/timeline', label: 'Health Timeline', iconKey: 'timeline' },

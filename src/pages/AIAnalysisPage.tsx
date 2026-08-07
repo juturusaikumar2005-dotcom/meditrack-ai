@@ -298,13 +298,6 @@ export default function AIAnalysisPage() {
                 <Upload className="h-4 w-4" />
                 Upload a Report
               </Link>
-              <Link
-                to="/app/prescription"
-                className="inline-flex items-center gap-2 px-6 py-3 border border-[#3A3A38]/25 rounded-[12px] font-['Public_Sans'] text-sm font-bold text-[#3A3A38] hover:border-[#1A3C2B] hover:text-[#1A3C2B] transition-colors"
-              >
-                <Sparkles className="h-4 w-4" />
-                Analyse Prescription
-              </Link>
             </div>
           </motion.div>
         )}

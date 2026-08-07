@@ -18,13 +18,6 @@ const routeVariants: Record<string, Variants> = {
     exit: { opacity: 0, y: 25 },
   },
 
-  // 3. Rx Engine: Prescription Pill Cascade Slide
-  '/app/prescription': {
-    initial: { opacity: 0, x: -40 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 40 },
-  },
-
   // 4. AI Analysis: Cyber Neural Hologram Scale
   '/app/ai-analysis': {
     initial: { opacity: 0, scale: 0.93 },
@@ -72,7 +65,6 @@ const routeVariants: Record<string, Variants> = {
 const routeTransitions: Record<string, any> = {
   '/app/dashboard': { type: 'spring', stiffness: 300, damping: 24 },
   '/app/upload': { type: 'spring', stiffness: 340, damping: 28 },
-  '/app/prescription': { type: 'spring', stiffness: 300, damping: 24 },
   '/app/ai-analysis': { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
   '/app/history': { type: 'spring', stiffness: 320, damping: 26 },
   '/app/timeline': { type: 'spring', stiffness: 280, damping: 24 },

@@ -39,7 +39,6 @@ const ChatPage = lazyWithRetry(() => import('@/pages/ChatPage'));
 const HistoryPage = lazyWithRetry(() => import('@/pages/HistoryPage'));
 const ProfilePage = lazyWithRetry(() => import('@/pages/ProfilePage'));
 const SettingsPage = lazyWithRetry(() => import('@/pages/SettingsPage'));
-const PrescriptionPage = lazyWithRetry(() => import('@/pages/PrescriptionPage'));
 const HealthTimelinePage = lazyWithRetry(() => import('@/pages/HealthTimelinePage'));
 const WelcomeLandingPage = lazyWithRetry(() => import('@/pages/WelcomeLandingPage'));
 
@@ -82,7 +81,7 @@ export default function App() {
                 <Route path="welcome" element={<WelcomeLandingPage />} />
                 <Route path="dashboard" element={<DashboardPage />} />
                 <Route path="upload" element={<UploadPage />} />
-                <Route path="prescription" element={<PrescriptionPage />} />
+                <Route path="prescription" element={<Navigate to="/app/upload" replace />} />
                 <Route path="ai-analysis" element={<AIAnalysisPage />} />
                 <Route path="history" element={<HistoryPage />} />
                 <Route path="timeline" element={<HealthTimelinePage />} />
