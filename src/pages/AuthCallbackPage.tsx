@@ -45,7 +45,7 @@ export default function AuthCallbackPage() {
               await upsertUserProfile(session.user);
               await refreshProfile();
               toast.success(`Signed in as ${session.user.email}`);
-              navigate('/app/welcome', { replace: true });
+              navigate('/app/dashboard', { replace: true });
             }
           });
 
@@ -69,7 +69,7 @@ export default function AuthCallbackPage() {
 
           if (isMounted) {
             toast.success(`Signed in as ${currentUser.email}`);
-            navigate('/app/welcome', { replace: true });
+            navigate('/app/dashboard', { replace: true });
           }
         }
       } catch (err: any) {

@@ -40,34 +40,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const initAuth = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        const { data: { session } } = await supabase.auth.getSession();
-        if (mounted) {
-          setSupabaseSession(session);
-          setSupabaseUser(user ?? session?.user ?? null);
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error('[Auth Init Error]:', err);
-        if (mounted) setLoading(false);
-      }
-    };
+    // Detect if current URL has OAuth params (code or access_token or callback route)
+    const hasOAuthParams =
+      window.location.hash.includes('access_token') ||
+      window.location.hash.includes('error') ||
+      window.location.search.includes('code') ||
+      window.location.pathname.includes('/auth/callback');
 
-    initAuth();
+    console.log('[Auth Context Init] OAuth redirect params present:', hasOAuthParams, 'Location:', window.location.href);
 
-    // Official Supabase Auth Listener
+    // Official Supabase Auth Listener (Fires automatically on token exchange)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(`[Supabase AuthStateChange] Event: "${event}", User: ${session?.user?.email ?? 'none'}, Token: ${session?.access_token ? 'Present' : 'None'}`);
+
       if (mounted) {
-        if (session?.user) {
-          console.log('[Supabase Auth Listener] User Email:', session.user.email);
-        }
         setSupabaseSession(session);
         setSupabaseUser(session?.user ?? null);
         setLoading(false);
       }
     });
+
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        console.log('[Auth Init getSession]:', session ? `Session Active (${session.user.email})` : 'No Active Session');
+
+        if (mounted) {
+          if (session || user) {
+            setSupabaseSession(session);
+            setSupabaseUser(user ?? session?.user ?? null);
+            setLoading(false);
+          } else if (!hasOAuthParams) {
+            // Only set loading = false if NOT waiting for OAuth redirect token exchange
+            setLoading(false);
+          }
+        }
+      } catch (err) {
+        console.error('[Auth Init Error]:', err);
+        if (mounted && !hasOAuthParams) setLoading(false);
+      }
+    };
+
+    initAuth();
 
     return () => {
       mounted = false;
