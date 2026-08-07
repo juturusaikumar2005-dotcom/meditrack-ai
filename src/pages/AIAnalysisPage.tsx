@@ -12,6 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { LabValueCard } from '@/components/medical-report/LabValueCard';
 import { ReportSummaryBanner } from '@/components/medical-report/ReportSummaryBanner';
+import { PrescriptionReaderResult } from '@/components/prescription/PrescriptionReaderResult';
 import { Modal } from '@/components/ui/Modal';
 import { apiClient } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
@@ -119,7 +120,9 @@ export default function AIAnalysisPage() {
       if (stored && isMounted) {
         try {
           const parsedLocal = JSON.parse(stored);
-          setAnalysisData(parsedLocal);
+          if (parsedLocal) {
+            setAnalysisData(parsedLocal);
+          }
         } catch {}
       }
 
@@ -131,11 +134,26 @@ export default function AIAnalysisPage() {
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
           .limit(1);
+
         if (isMounted && data?.[0]) {
-          const merged = { ...data[0], ...(data[0].analysis_payload || {}) };
+          let record = data[0];
+          let parsedAnalysis = record.result_json;
+          if (typeof parsedAnalysis === 'string') {
+            try {
+              parsedAnalysis = JSON.parse(parsedAnalysis);
+            } catch {}
+          }
+          const merged = {
+            id: record.id,
+            report_name: record.report_name || 'Medical Report',
+            provider: 'Google Gemini AI',
+            analysis: parsedAnalysis || record,
+          };
           setAnalysisData(merged);
         }
-      } catch {}
+      } catch (err) {
+        console.error('[AI Analysis Load Error]:', err);
+      }
     }
 
     loadLatestResult();
@@ -308,9 +326,12 @@ export default function AIAnalysisPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: curtainDone ? 1 : 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            {/* Summary Banner */}
-            <ReportSummaryBanner
+            {analysis.medicines ? (
+              <PrescriptionReaderResult reportName={reportName} data={analysis} />
+            ) : (
+              <>
+                {/* Summary Banner */}
+                <ReportSummaryBanner
               reportType={reportType}
               overallStatus={analysis.overall_status || analysis.risk_level}
               riskLevel={analysis.risk_level}
@@ -624,9 +645,9 @@ export default function AIAnalysisPage() {
                   AI-generated analysis may contain errors. This is not a medical diagnosis. Normal ranges may vary by laboratory.
                   Always discuss your results with a qualified healthcare professional before making any health decisions.
                 </p>
-              </div>
+              </>
+            )}
             </motion.div>
-          </motion.div>
         )}
       </div>
 
