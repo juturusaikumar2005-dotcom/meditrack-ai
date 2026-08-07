@@ -47,6 +47,7 @@ import { supabase, type ReportRecord } from '@/lib/supabase';
 import { apiClient } from '@/lib/apiClient';
 import { parseReportClientSide } from '@/lib/reportClientAnalyzer';
 import { runPrescriptionPipeline } from '@/lib/prescriptionPipeline';
+import { classifyDocumentType, getSpecializedPrompt } from '@/lib/specializedAnalyzers';
 import toast from 'react-hot-toast';
 
 function fileToBase64(file: File): Promise<string> {
@@ -334,43 +335,87 @@ export default function UploadPage() {
       setCoordinatorProgress(65);
 
       setCoordinatorStep(5);
-      setCoordinatorProgress(80);
-
       let aiAnalysisResult: any = null;
-
-      const isPrescriptionDoc =
-        effectiveReportType === 'Prescription Reader' ||
-        effectiveReportType === 'Prescription' ||
-        file.name.toLowerCase().includes('prescription') ||
-        file.name.toLowerCase().includes('rx');
+      const category = classifyDocumentType(file.name, effectiveReportType);
+      const isPrescriptionDoc = category === 'Prescription' || effectiveReportType === 'Prescription Reader';
 
       if (isPrescriptionDoc) {
-        console.log('[Upload Pipeline] Running Prescription Reader Multi-Agent Pipeline...');
+        console.log('[Upload Pipeline] Running Specialized Prescription Multi-Agent Pipeline...');
         aiAnalysisResult = await runPrescriptionPipeline(file.name, imageBase64, file.type);
       } else {
-        try {
-          const aiRes = await apiClient<{ id: string; analysis: any }>('/ai/analyze-report', {
-            method: 'POST',
-            body: JSON.stringify({
-              reportId: newReport.id,
-              userId: currentUserId,
-              reportName: file.name,
-              fileUrl: fileUrl,
-              reportType: effectiveReportType,
-              imageBase64,
-              mimeType: file.type || 'image/jpeg',
-            }),
-          });
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY;
 
-          if (aiRes.data && aiRes.data.analysis) {
-            aiAnalysisResult = aiRes.data.analysis;
-          } else {
-            console.warn('[AI API Warning]: Remote API returned empty response. Running failsafe clinical parser...');
+        if (apiKey && apiKey !== 'your_gemini_api_key_here' && imageBase64) {
+          try {
+            console.log(`[Upload Pipeline] Running Specialized ${category} Gemini 1.5 Flash Vision Pipeline...`);
+            const specializedPrompt = getSpecializedPrompt(category);
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            const parts: any[] = [
+              {
+                inlineData: {
+                  data: imageBase64,
+                  mimeType: file.type || 'image/jpeg',
+                },
+              },
+              { text: specializedPrompt },
+            ];
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+            const res = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts }],
+                generationConfig: {
+                  temperature: 0.1,
+                  maxOutputTokens: 4096,
+                  responseMimeType: 'application/json',
+                },
+              }),
+              signal: controller.signal,
+            });
+
+            clearTimeout(timeoutId);
+
+            if (res.ok) {
+              const json = await res.json();
+              let rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (rawText) {
+                rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+                aiAnalysisResult = JSON.parse(rawText);
+              }
+            }
+          } catch (e) {
+            console.warn(`[Specialized ${category} Pipeline Warning]:`, e);
+          }
+        }
+
+        if (!aiAnalysisResult) {
+          try {
+            const aiRes = await apiClient<{ id: string; analysis: any }>('/ai/analyze-report', {
+              method: 'POST',
+              body: JSON.stringify({
+                reportId: newReport.id,
+                userId: currentUserId,
+                reportName: file.name,
+                fileUrl: fileUrl,
+                reportType: effectiveReportType,
+                imageBase64,
+                mimeType: file.type || 'image/jpeg',
+              }),
+            });
+
+            if (aiRes.data && aiRes.data.analysis) {
+              aiAnalysisResult = aiRes.data.analysis;
+            } else {
+              aiAnalysisResult = parseReportClientSide(file.name, effectiveReportType);
+            }
+          } catch (e) {
             aiAnalysisResult = parseReportClientSide(file.name, effectiveReportType);
           }
-        } catch (e) {
-          console.error('[AI API Error - Fallback Triggered]:', e);
-          aiAnalysisResult = parseReportClientSide(file.name, effectiveReportType);
         }
       }
 
