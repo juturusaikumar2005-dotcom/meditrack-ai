@@ -740,7 +740,7 @@ async function analyzeReportWithGemini(reportName, reportType, fileUrl, geminiAp
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts }],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 8192 },
+        generationConfig: { temperature: 0.1, maxOutputTokens: 8192, responseMimeType: 'application/json' },
       }),
     });
 
